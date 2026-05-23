@@ -1,10 +1,21 @@
 from flask import Flask, request, jsonify, session, render_template_string
+from flask_mail import Mail, Message
 import requests
 import time
-from datetime import date
+from datetime import date, datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "bookcompass_secret_key_12345"
+# Email configuration
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = 'bookcompass.app@gmail.com'  # Your email
+app.config['MAIL_PASSWORD'] = 'pacfnlkpltbvqywi'  # The 16-character app password (remove spaces)
+app.config['MAIL_DEFAULT_SENDER'] = 'bookcompass.app@gmail.com'
+
+mail = Mail(app)
 # Your Rainforest API Key (keep this secret)
 YOUR_API_KEY = "846F7338358746F88A3667FCC1540938"
 
@@ -99,8 +110,8 @@ def home():
                 <h2 style="text-align: center;">Simple, Transparent Pricing</h2>
                 <div class="pricing-grid">
                     <div class="plan"><h3>Free</h3><div class="price">$0</div><p>3 searches/day</p><ul style="text-align: left;"><li>✓ Basic keyword analysis</li><li>✓ Search volume data</li><li>✓ Competition check</li></ul><a href="/signup"><button>Start Free</button></a></div>
-                    <div class="plan featured"><h3>Starter</h3><div class="price">$9<span style="font-size: 14px;">/month</span></div><p>20 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Free</li><li>✓ 10x more searches</li><li>✓ Bulk research (30 keywords)</li><li>✓ Priority support</li></ul><a href="/signup"><button>Choose Starter</button></a></div>
-                    <div class="plan"><h3>Pro</h3><div class="price">$19<span style="font-size: 14px;">/month</span></div><p>100 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Starter</li><li>✓ 4x more searches</li><li>✓ Bulk research (100 keywords)</li><li>✓ Export to CSV</li></ul><a href="/signup"><button>Choose Pro</button></a></div>
+                    <div class="plan featured"><h3>Starter</h3><div class="price">$12<span style="font-size: 14px;">/month</span></div><p>20 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Free</li><li>✓ 10x more searches</li><li>✓ Bulk research (30 keywords)</li><li>✓ Priority support</li></ul><a href="/signup"><button>Choose Starter</button></a></div>
+                    <div class="plan"><h3>Pro</h3><div class="price">$25<span style="font-size: 14px;">/month</span></div><p>100 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Starter</li><li>✓ 4x more searches</li><li>✓ Bulk research (100 keywords)</li><li>✓ Export to CSV</li></ul><a href="/signup"><button>Choose Pro</button></a></div>
                 </div>
             </div>
             <div class="card cta"><h2>Ready to Find Your Next Winning Keyword?</h2><p>Join KDP publishers using BookCompass to find profitable niches.</p><a href="/signup"><button style="background: #ff9900; font-size: 18px;">Create Free Account →</button></a></div>
@@ -116,24 +127,42 @@ def home():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    referral_code = request.args.get('ref', '')
+    referral_username = request.args.get('ref', '')
     
     if request.method == 'POST':
+        username = request.form.get('username', '').strip()
         email = request.form['email']
         password = request.form['password']
         promo_code = request.form.get('promo_code', '').upper()
-        referred_by = request.form.get('referred_by', '')
+        referred_by_username = request.form.get('referred_by', '')
         
+        # Validate username
+        if not username or len(username) < 3:
+            return '<div style="text-align:center; margin-top:50px;"><h2>Username must be at least 3 characters</h2><a href="/signup">Try again</a></div>'
+        
+        # Check if email exists
         if email in users:
             return '<div style="text-align:center; margin-top:50px;"><h2>Email already exists</h2><a href="/login">Login here</a></div>'
         
+        # Check if username already exists
+        for existing_email, existing_user in users.items():
+            if existing_user.get('username') == username:
+                return '<div style="text-align:center; margin-top:50px;"><h2>Username already taken</h2><a href="/signup">Try another</a></div>'
+        
+        # Find referrer email from username
+        referred_by_email = None
+        if referred_by_username:
+            for existing_email, existing_user in users.items():
+                if existing_user.get('username') == referred_by_username:
+                    referred_by_email = existing_email
+                    break        
         from datetime import datetime, timedelta
         promo_data = None
         promo_expires = None
         
         # Check if this is a referral signup (referral takes priority)
-        if referred_by and referred_by in users:
-            # Referee (new user) gets 10% off for 1 month
+        # Check if this is a referral signup (referral takes priority)
+        if referred_by_email and referred_by_email in users:
             promo_data = {"discount": 10, "months": 1}
             promo_expires = (datetime.now() + timedelta(days=30)).isoformat()
             
@@ -141,8 +170,8 @@ def signup():
             promo_code = "REFERRAL10"
             
             # Add referral credit to referrer (for their future discount)
-            users[referred_by]['referral_count'] = users[referred_by].get('referral_count', 0) + 1
-            users[referred_by]['referral_credit'] = users[referred_by].get('referral_credit', 0) + 1
+            users[referred_by_email]['referral_count'] = users[referred_by_email].get('referral_count', 0) + 1
+            users[referred_by_email]['referral_credit'] = users[referred_by_email].get('referral_credit', 0) + 1
             
         # Only check manual promo code if NOT a referral signup
         elif promo_code in PROMO_CODES:
@@ -151,19 +180,63 @@ def signup():
         
         # Create user
         users[email] = {
+            'username': username,
             'password': password, 
             'plan': 'free', 
             'api_key': '',
             'promo_code': promo_code if promo_data else None,
             'promo_expires': promo_expires,
-            'referred_by': referred_by if referred_by in users else None,
+            'referred_by': referred_by_email if referred_by_email else None,
             'referral_count': 0,
-            'referral_credit': 0
+            'referral_credit': 0,
+            'verified': False,
+            'verification_code': None,
+            'reset_token': None,
+            'reset_expires': None
         }
         
-        session['user_id'] = email
-        session['email'] = email
-        return '<script>window.location.href="/dashboard"</script>'
+                # Generate verification code
+        import random
+        import string
+        verification_code = ''.join(random.choices(string.digits, k=6))
+        users[email]['verification_code'] = verification_code
+        
+        # Send verification email
+        try:
+            msg = Message('Verify Your BookCompass Account',
+                          recipients=[email])
+            msg.body = f'''
+Hello,
+
+Thank you for signing up for BookCompass!
+
+Your verification code is: {verification_code}
+
+Enter this code on the verification page to activate your account.
+
+This code expires in 1 hour.
+
+If you didn't create this account, please ignore this email.
+
+Best regards,
+BookCompass Team
+'''
+            mail.send(msg)
+            
+            # Store email for verification page
+            session['pending_email'] = email
+            
+            return '<script>window.location.href="/verify-email"</script>'
+        except Exception as e:
+            print(f"Email error: {e}")
+            users.pop(email)  # Remove user if email fails
+            return f'''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Could not send verification email</h2>
+                <p>Please check your email address and try again.</p>
+                <a href="/signup">Back to Sign Up</a>
+            </div>
+            '''
     
     # Show signup form
     return f'''
@@ -184,13 +257,14 @@ def signup():
     <body>
         <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
         <div class="container">
-            {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_code else ""}
+            {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
             <h2>Create Account</h2>
             <form method="post">
+                <input type="text" name="username" placeholder="Username (e.g., JohnPublisher)" required>
                 <input type="email" name="email" placeholder="Email" required>
                 <input type="password" name="password" placeholder="Password" required>
                 <input type="text" name="promo_code" placeholder="Promo code (optional)" style="width: 100%; padding: 10px; margin: 10px 0;">
-                <input type="hidden" name="referred_by" value="{referral_code}">
+                <input type="hidden" name="referred_by" value="{referral_username}">
                 <button type="submit">Sign Up</button>
             </form>
             <p style="text-align:center"><a href="/login">Already have an account? Login</a></p>
@@ -209,6 +283,14 @@ def login():
         email = request.form['email']
         password = request.form['password']
         if email in users and users[email]['password'] == password:
+            if not users[email].get('verified', False):
+                return '''
+                <div style="text-align:center; margin-top:50px;">
+                    <h2>Email not verified</h2>
+                    <p>Please check your email for the verification code.</p>
+                    <a href="/resend-code">Resend code</a>
+                </div>
+                '''
             session['user_id'] = email
             session['email'] = email
             return '<script>window.location.href="/dashboard"</script>'
@@ -243,6 +325,7 @@ def login():
                 <button type="submit">Login</button>
             </form>
             <p style="text-align:center"><a href="/signup">No account? Sign Up</a></p>
+            <p style="text-align:center; margin-top:15px;"><a href="/forgot-password">Forgot Password?</a></p>
         </div>
     </body>
     </html>
@@ -310,7 +393,7 @@ def dashboard():
         <div class="header">
             <div class="logo">📚 Book<span>Compass</span></div>
             <div class="nav">
-                <span>Hi, {email}</span>
+                <span>Hi, {user.get('username', email)}</span>
                 <a href="/dashboard">Dashboard</a>
                 <a href="/how-it-works">How It Works</a>
                 <a href="/logout">Logout</a>
@@ -337,7 +420,7 @@ def dashboard():
                 <h3>👥 Referral Program</h3>
                 <p>Share your unique link and earn 10% off when friends sign up!</p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="referralLink" readonly value="http://127.0.0.1:5000/signup?ref={email}" style="flex: 1; background: #f5f5f5;">
+                    <input type="text" id="referralLink" readonly value="https://bookcompass-xxt9.onrender.com/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
                     <button onclick="copyReferralLink()">📋 Copy</button>
                 </div>
                 <p style="font-size: 12px; color: #666; margin-top: 10px;">
@@ -419,8 +502,15 @@ def dashboard():
             document.getElementById('loading').style.display = 'none';
             document.getElementById('results').style.display = 'block';
             
+            // Remove any existing completion message before adding a new one
+            const existingMsg = document.querySelector('.completion-message');
+            if (existingMsg) {{
+                existingMsg.remove();
+            }}
+            
             if (results.length > 0) {{
                 const msg = document.createElement('div');
+                msg.className = 'completion-message';
                 msg.style.background = '#e3f2fd';
                 msg.style.padding = '10px';
                 msg.style.borderRadius = '5px';
@@ -566,7 +656,7 @@ def upgrade():
         <div class="header">
             <div class="logo">📚 Book<span>Compass</span></div>
             <div class="nav">
-                <span>Hi, {email}</span>
+                <span>Hi, {users[email].get('username', email)}</span>
                 <a href="/dashboard">Dashboard</a>
                 <a href="/logout">Logout</a>
             </div>
@@ -584,12 +674,12 @@ def upgrade():
                 </div>
                 <div class="plan featured {'current' if current_plan == 'starter' else ''}">
                     {'<div class="badge">CURRENT PLAN</div>' if current_plan == 'starter' else '<div class="badge" style="background:#ff9900;">RECOMMENDED</div>'}
-                    <h3>Starter</h3><div class="price">$9<span style="font-size:14px">/month</span></div><p>20 searches/day</p>
+                    <h3>Starter</h3><div class="price">$12<span style="font-size:14px">/month</span></div><p>20 searches/day</p>
                     {'<button disabled style="background: #ccc; cursor: not-allowed;">Current Plan</button>' if current_plan == 'starter' else '<a href="/select_plan/starter"><button>Choose Starter</button></a>'}
                 </div>
                 <div class="plan {'current' if current_plan == 'pro' else ''}">
                     {'<div class="badge">CURRENT PLAN</div>' if current_plan == 'pro' else ''}
-                    <h3>Pro</h3><div class="price">$19<span style="font-size:14px">/month</span></div><p>100 searches/day</p>
+                    <h3>Pro</h3><div class="price">$25<span style="font-size:14px">/month</span></div><p>100 searches/day</p>
                     {'<button disabled style="background: #ccc; cursor: not-allowed;">Current Plan</button>' if current_plan == 'pro' else '<a href="/select_plan/pro"><button>Choose Pro</button></a>'}
                 </div>
             </div>
@@ -611,7 +701,7 @@ def select_plan(plan_name):
         email = session['user_id']
         user = users[email]
         
-        original_price = 9 if plan_name == 'starter' else 19
+        original_price = 12 if plan_name == 'starter' else 25
         final_price = original_price
         promo_message = ""
         
@@ -858,13 +948,13 @@ def how_it_works():
                     </div>
                     <div style="flex: 1; border: 2px solid #ff9900; border-radius: 10px; padding: 20px; text-align: center; background: #fff8f0;">
                         <h3>Starter</h3>
-                        <div style="font-size: 32px; color: #232f3e;">$9<span style="font-size: 14px;">/month</span></div>
+                        <div style="font-size: 32px; color: #232f3e;">$12<span style="font-size: 14px;">/month</span></div>
                         <p>20 searches/day</p>
                         <a href="/signup"><button style="padding: 8px 20px;">Choose Starter</button></a>
                     </div>
                     <div style="flex: 1; border: 1px solid #ddd; border-radius: 10px; padding: 20px; text-align: center;">
                         <h3>Pro</h3>
-                        <div style="font-size: 32px; color: #232f3e;">$19<span style="font-size: 14px;">/month</span></div>
+                        <div style="font-size: 32px; color: #232f3e;">$25<span style="font-size: 14px;">/month</span></div>
                         <p>100 searches/day</p>
                         <a href="/signup"><button style="padding: 8px 20px;">Choose Pro</button></a>
                     </div>
@@ -923,7 +1013,327 @@ def how_it_works():
     </body>
     </html>
     '''
+# ============================================
+# EMAIL VERIFICATION PAGE
+# ============================================
 
+@app.route('/verify-email', methods=['GET', 'POST'])
+def verify_email():
+    if 'pending_email' not in session:
+        return '<script>window.location.href="/signup"</script>'
+    
+    email = session['pending_email']
+    
+    if request.method == 'POST':
+        code = request.form.get('verification_code', '').strip()
+        
+        if email in users and users[email].get('verification_code') == code:
+            users[email]['verified'] = True
+            users[email]['verification_code'] = None
+            session['user_id'] = email
+            session['email'] = email
+            session.pop('pending_email', None)
+            return '<script>window.location.href="/dashboard"</script>'
+        else:
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Invalid verification code</h2>
+                <p>Please try again.</p>
+                <a href="/verify-email">Back</a>
+            </div>
+            '''
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Verify Email - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }}
+            .container {{ max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; }}
+            input {{ width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }}
+            button {{ background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer; }}
+            .header {{ background: #232f3e; color: white; padding: 15px 30px; }}
+            .logo {{ font-size: 24px; }}
+            .logo span {{ color: #ff9900; }}
+        </style>
+    </head>
+    <body>
+        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="container">
+            <h2>Verify Your Email</h2>
+            <p>We sent a 6-digit code to <strong>{email}</strong></p>
+            <form method="post">
+                <input type="text" name="verification_code" placeholder="Enter 6-digit code" required maxlength="6">
+                <button type="submit">Verify</button>
+            </form>
+            <p style="text-align:center; margin-top:20px;">
+                <a href="/resend-code">Resend code</a>
+            </p>
+        </div>
+    </body>
+    </html>
+    '''
+@app.route('/resend-code')
+def resend_code():
+    if 'pending_email' not in session:
+        return '<script>window.location.href="/signup"</script>'
+    
+    email = session['pending_email']
+    
+    if email in users:
+        import random
+        import string
+        new_code = ''.join(random.choices(string.digits, k=6))
+        users[email]['verification_code'] = new_code
+        
+        try:
+            msg = Message('Your New Verification Code - BookCompass',
+                          recipients=[email])
+            msg.body = f'''
+Your new verification code is: {new_code}
+
+Enter this code on the verification page to activate your account.
+
+This code expires in 1 hour.
+
+Best regards,
+BookCompass Team
+
+You received this email because you signed up for BookCompass.
+
+'''
+            mail.send(msg)
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>New code sent!</h2>
+                <p>Please check your email.</p>
+                <a href="/verify-email">Back to verification</a>
+            </div>
+            '''
+        except:
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Could not send email</h2>
+                <a href="/verify-email">Try again</a>
+            </div>
+            '''
+    
+    return '<script>window.location.href="/signup"</script>'
+# ============================================
+# FORGOT PASSWORD PAGE
+# ============================================
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        
+        if email not in users:
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Email not found</h2>
+                <p>No account exists with that email address.</p>
+                <a href="/forgot-password">Try again</a> | <a href="/signup">Sign Up</a>
+            </div>
+            '''
+        
+        # Generate reset token
+        import random
+        import string
+        reset_token = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+        users[email]['reset_token'] = reset_token
+        users[email]['reset_expires'] = (datetime.now() + timedelta(hours=1)).isoformat()
+        
+        # Send reset email
+        reset_link = f"http://127.0.0.1:5000/reset-password/{reset_token}"
+        
+        try:
+            msg = Message('Reset Your BookCompass Password',
+                          recipients=[email])
+            msg.body = f'''
+Hello,
+
+You requested to reset your BookCompass password.
+
+Click the link below to reset your password:
+
+{reset_link}
+
+This link expires in 1 hour.
+
+If you did not request this, please ignore this email.
+
+Best regards,
+BookCompass Team
+
+You received this email because you requested a password reset.
+'''
+            mail.send(msg)
+            
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Reset Link Sent!</h2>
+                <p>Check your email for the password reset link.</p>
+                <p>(Check your spam folder if you don't see it)</p>
+                <a href="/login">Back to Login</a>
+            </div>
+            '''
+        except Exception as e:
+            print(f"Reset email error: {e}")
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Could not send reset email</h2>
+                <p>Please try again later.</p>
+                <a href="/forgot-password">Back</a>
+            </div>
+            '''
+    
+    # GET request - show the form
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Forgot Password - BookCompass</title>
+        <style>
+            body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }
+            .container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; }
+            input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+            button { background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer; }
+            .header { background: #232f3e; color: white; padding: 15px 30px; }
+            .logo { font-size: 24px; }
+            .logo span { color: #ff9900; }
+        </style>
+    </head>
+    <body>
+        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="container">
+            <h2>Forgot Password</h2>
+            <p>Enter your email address and we'll send you a reset link.</p>
+            <form method="post">
+                <input type="email" name="email" placeholder="Email" required>
+                <button type="submit">Send Reset Link</button>
+            </form>
+            <p style="text-align:center; margin-top:15px;"><a href="/login">Back to Login</a></p>
+        </div>
+    </body>
+    </html>
+    '''
+# ============================================
+# RESET PASSWORD PAGE
+# ============================================
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    from datetime import datetime
+    
+    # Find user with this token
+    user_email = None
+    for email, user_data in users.items():
+        if user_data.get('reset_token') == token:
+            user_email = email
+            break
+    
+    if not user_email:
+        return '''
+        <div style="text-align:center; margin-top:50px;">
+            <h2>Invalid or expired link</h2>
+            <p>The password reset link is invalid or has expired.</p>
+            <a href="/forgot-password">Request a new one</a>
+        </div>
+        '''
+    
+    user = users[user_email]
+    
+    # Check if token expired
+    if 'reset_expires' in user:
+        expires = datetime.fromisoformat(user['reset_expires'])
+        if datetime.now() > expires:
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Link Expired</h2>
+                <p>The reset link has expired. Please request a new one.</p>
+                <a href="/forgot-password">Request New Link</a>
+            </div>
+            '''
+    
+    if request.method == 'POST':
+        new_password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        if new_password != confirm_password:
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Passwords do not match</h2>
+                <a href="javascript:history.back()">Try again</a>
+            </div>
+            '''
+        
+        if len(new_password) < 6:
+            return '''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Password too short</h2>
+                <p>Password must be at least 6 characters.</p>
+                <a href="javascript:history.back()">Try again</a>
+            </div>
+            '''
+        
+        # Update password
+        users[user_email]['password'] = new_password
+        # Clear reset token
+        users[user_email]['reset_token'] = None
+        users[user_email]['reset_expires'] = None
+        
+        return '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Password Reset - BookCompass</title>
+            <style>
+                body { font-family: Arial; text-align: center; margin-top: 100px; }
+                button { background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; }
+            </style>
+        </head>
+        <body>
+            <div style="background: white; max-width: 400px; margin: 0 auto; padding: 40px; border-radius: 10px;">
+                <h2>✅ Password Reset Successful!</h2>
+                <p>Your password has been changed.</p>
+                <a href="/login"><button>Login Now</button></a>
+            </div>
+        </body>
+        </html>
+        '''
+    
+    # GET request - show reset form
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Reset Password - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }}
+            .container {{ max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; }}
+            input {{ width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }}
+            button {{ background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer; }}
+            .header {{ background: #232f3e; color: white; padding: 15px 30px; }}
+            .logo {{ font-size: 24px; }}
+            .logo span {{ color: #ff9900; }}
+        </style>
+    </head>
+    <body>
+        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="container">
+            <h2>Reset Password</h2>
+            <p>Enter your new password for: <strong>{user_email}</strong></p>
+            <form method="post">
+                <input type="password" name="password" placeholder="New Password" required minlength="6">
+                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                <button type="submit">Reset Password</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    '''
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
     print("\n" + "="*50)
