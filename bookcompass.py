@@ -420,7 +420,7 @@ def dashboard():
                 <h3>👥 Referral Program</h3>
                 <p>Share your unique link and earn 10% off when friends sign up!</p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="referralLink" readonly value="https://bookcompass-xxt9.onrender.com/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
+                    <input type="text" id="referralLink" readonly value="https://bookcompass_1.onrender.com/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
                     <button onclick="copyReferralLink()">📋 Copy</button>
                 </div>
                 <p style="font-size: 12px; color: #666; margin-top: 10px;">
@@ -1146,7 +1146,7 @@ def forgot_password():
         users[email]['reset_expires'] = (datetime.now() + timedelta(hours=1)).isoformat()
         
         # Send reset email
-        reset_link = f"http://127.0.0.1:5000/reset-password/{reset_token}"
+        reset_link = f"https://bookcompass_1.onrender.com/reset-password/{reset_token}"
         
         try:
             msg = Message('Reset Your BookCompass Password',
