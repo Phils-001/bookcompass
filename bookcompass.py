@@ -1515,31 +1515,31 @@ def admin_panel():
         <!-- User Stats -->
         <div class="stats">
             <div class="stat">
-                <h2>{total_users}</h2>
+                <h2>{len(users)}</h2>
                 <p>Total Users</p>
             </div>
             <div class="stat">
-                <h2>{free_users}</h2>
+                <h2>{sum(1 for u in users.values() if u.get('plan') == 'free')}</h2>
                 <p>Free Plan</p>
             </div>
             <div class="stat">
-                <h2>{starter_users}</h2>
+                <h2>{sum(1 for u in users.values() if u.get('plan') == 'starter')}</h2>
                 <p>Starter Plan ($12)</p>
             </div>
             <div class="stat">
-                <h2>{pro_users}</h2>
+                <h2>{sum(1 for u in users.values() if u.get('plan') == 'pro')}</h2>
                 <p>Pro Plan ($25)</p>
             </div>
             <div class="stat">
-                <h2>{total_searches}</h2>
+                <h2>{sum(tracker.get(str(date.today()), 0) for tracker in usage_tracker.values())}</h2>
                 <p>Searches Today</p>
             </div>
             <div class="stat">
-                <h2>{verified_users}/{total_users}</h2>
+                <h2>{sum(1 for u in users.values() if u.get('verified', False))}/{len(users)}</h2>
                 <p>Verified Users</p>
             </div>
             <div class="stat">
-                <h2>{total_referrals}</h2>
+                <h2>{sum(u.get('referral_count', 0) for u in users.values())}</h2>
                 <p>Total Referrals</p>
             </div>
         </div>
