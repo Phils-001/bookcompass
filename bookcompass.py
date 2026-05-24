@@ -1386,8 +1386,7 @@ def record_payment(email, amount, plan, payment_method='monnify'):
 @app.route('/admin')
 def admin_panel():
     # Simple password protection
-    admin_password = request.args.get('password', '')
-    
+    admin_password = request.args.get('password', '') 
     if admin_password != 'BookCompassAdmin@@2026!':
         return '''
         <!DOCTYPE html>
