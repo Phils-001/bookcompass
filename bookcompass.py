@@ -114,8 +114,15 @@ def home():
             </div>
             <div class="card cta"><h2>Ready to Find Your Next Winning Keyword?</h2><p>Join KDP publishers using BookCompass to find profitable niches.</p><a href="/signup"><button style="background: #ff9900; font-size: 18px;">Create Free Account →</button></a></div>
         </div>
-    </body>
-    </html>
+        <div style="background: #232f3e; color: white; padding: 20px; text-align: center; margin-top: 40px;">
+    <p>&copy; 2026 BookCompass. All rights reserved.</p>
+    <p>
+        <a href="/terms" style="color: #ff9900; margin: 0 10px;">Terms of Service</a> |
+        <a href="/privacy" style="color: #ff9900; margin: 0 10px;">Privacy Policy</a>
+    </p>
+</div>
+</body>
+</html>
     '''
     return html
 
@@ -1379,8 +1386,7 @@ def record_payment(email, amount, plan, payment_method='monnify'):
 @app.route('/admin')
 def admin_panel():
     # Simple password protection
-    admin_password = request.args.get('password', '')
-    
+    admin_password = request.args.get('password', '') 
     if admin_password != 'BookCompassAdmin@@2026!':
         return '''
         <!DOCTYPE html>
