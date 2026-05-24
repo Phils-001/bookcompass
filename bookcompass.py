@@ -1414,30 +1414,21 @@ def admin_panel():
         </html>
         '''
     
-    # ========== CALCULATE ALL STATS ==========
-    
-    # User stats
+    # Calculate all stats
     total_users = len(users)
     free_users = sum(1 for u in users.values() if u.get('plan') == 'free')
     starter_users = sum(1 for u in users.values() if u.get('plan') == 'starter')
     pro_users = sum(1 for u in users.values() if u.get('plan') == 'pro')
     
-    # Total searches today
     today = str(date.today())
     total_searches = 0
     for email, tracker in usage_tracker.items():
         total_searches += tracker.get(today, 0)
     
-    # Verified vs unverified users
     verified_users = sum(1 for u in users.values() if u.get('verified', False))
-    
-    # Recent users (last 10)
     recent_users = list(users.keys())[-10:]
-    
-    # Total referral credits given
     total_referrals = sum(u.get('referral_count', 0) for u in users.values())
     
-    # Income calculations
     current_month = datetime.now().strftime('%Y-%m')
     last_month = (datetime.now().replace(day=1) - timedelta(days=1)).strftime('%Y-%m')
     
@@ -1457,39 +1448,37 @@ def admin_panel():
     monnify_count = sum(1 for p in payments if p.get('payment_method') == 'monnify')
     manual_count = sum(1 for p in payments if p.get('payment_method') == 'manual')
     
-    # ========== BUILD THE HTML ==========
-    
-    return f'''
+    # Pass all variables to template
+    return render_template_string('''
     <!DOCTYPE html>
     <html>
     <head>
         <title>Admin Dashboard - BookCompass</title>
         <style>
-            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
-            h1 {{ color: #232f3e; }}
-            h2 {{ color: #232f3e; border-bottom: 2px solid #ff9900; padding-bottom: 10px; }}
-            .stats {{ display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }}
-            .stat {{ flex: 1; background: #232f3e; color: white; padding: 20px; border-radius: 10px; text-align: center; min-width: 150px; }}
-            .stat h2 {{ margin: 0; font-size: 32px; }}
-            .stat p {{ margin: 10px 0 0; opacity: 0.8; }}
-            .stat-income {{ background: #2e7d32; }}
-            .stat-income-total {{ background: #ff6d00; }}
-            .card {{ background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-            table {{ width: 100%; border-collapse: collapse; }}
-            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
-            th {{ background: #ff9900; color: white; }}
-            tr:hover {{ background: #f5f5f5; }}
-            .plan-badge {{ display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; }}
-            .plan-free {{ background: #4CAF50; color: white; }}
-            .plan-starter {{ background: #ff9800; color: white; }}
-            .plan-pro {{ background: #f44336; color: white; }}
-            .verified {{ color: #4CAF50; }}
-            .unverified {{ color: #f44336; }}
-            .nav {{ margin-bottom: 20px; }}
-            .nav a {{ background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px; }}
-            .nav a:hover {{ background: #e68a00; }}
-            .income-positive {{ color: #2e7d32; font-weight: bold; }}
-            .income-negative {{ color: #f44336; font-weight: bold; }}
+            body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }
+            h1 { color: #232f3e; }
+            h2 { color: #232f3e; border-bottom: 2px solid #ff9900; padding-bottom: 10px; }
+            .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+            .stat { flex: 1; background: #232f3e; color: white; padding: 20px; border-radius: 10px; text-align: center; min-width: 150px; }
+            .stat h2 { margin: 0; font-size: 32px; }
+            .stat p { margin: 10px 0 0; opacity: 0.8; }
+            .stat-income { background: #2e7d32; }
+            .stat-income-total { background: #ff6d00; }
+            .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background: #ff9900; color: white; }
+            tr:hover { background: #f5f5f5; }
+            .plan-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; }
+            .plan-free { background: #4CAF50; color: white; }
+            .plan-starter { background: #ff9800; color: white; }
+            .plan-pro { background: #f44336; color: white; }
+            .verified { color: #4CAF50; }
+            .unverified { color: #f44336; }
+            .nav { margin-bottom: 20px; }
+            .nav a { background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px; }
+            .nav a:hover { background: #e68a00; }
+            .income-positive { color: #2e7d32; font-weight: bold; }
         </style>
     </head>
     <body>
@@ -1500,113 +1489,122 @@ def admin_panel():
         
         <h1>📊 BookCompass Admin Dashboard</h1>
         
-        <!-- User Stats -->
         <div class="stats">
-            <div class="stat"><h2>{total_users}</h2><p>Total Users</p></div>
-            <div class="stat"><h2>{free_users}</h2><p>Free Plan</p></div>
-            <div class="stat"><h2>{starter_users}</h2><p>Starter Plan ($12)</p></div>
-            <div class="stat"><h2>{pro_users}</h2><p>Pro Plan ($25)</p></div>
-            <div class="stat"><h2>{total_searches}</h2><p>Searches Today</p></div>
-            <div class="stat"><h2>{verified_users}/{total_users}</h2><p>Verified Users</p></div>
-            <div class="stat"><h2>{total_referrals}</h2><p>Total Referrals</p></div>
+            <div class="stat"><h2>{{ total_users }}</h2><p>Total Users</p></div>
+            <div class="stat"><h2>{{ free_users }}</h2><p>Free Plan</p></div>
+            <div class="stat"><h2>{{ starter_users }}</h2><p>Starter Plan ($12)</p></div>
+            <div class="stat"><h2>{{ pro_users }}</h2><p>Pro Plan ($25)</p></div>
+            <div class="stat"><h2>{{ total_searches }}</h2><p>Searches Today</p></div>
+            <div class="stat"><h2>{{ verified_users }}/{{ total_users }}</h2><p>Verified Users</p></div>
+            <div class="stat"><h2>{{ total_referrals }}</h2><p>Total Referrals</p></div>
         </div>
         
-        <!-- Income Overview -->
         <h2>💰 Income Overview</h2>
         <div class="stats">
-            <div class="stat stat-income"><h2>${current_month_income:.2f}</h2><p>This Month's Income</p></div>
-            <div class="stat stat-income"><h2>${last_month_income:.2f}</h2><p>Last Month's Income</p></div>
-            <div class="stat stat-income-total"><h2>${total_income_all_time:.2f}</h2><p>All Time Income</p></div>
+            <div class="stat stat-income"><h2>${{ "%.2f"|format(current_month_income) }}</h2><p>This Month's Income</p></div>
+            <div class="stat stat-income"><h2>${{ "%.2f"|format(last_month_income) }}</h2><p>Last Month's Income</p></div>
+            <div class="stat stat-income-total"><h2>${{ "%.2f"|format(total_income_all_time) }}</h2><p>All Time Income</p></div>
         </div>
         
-        <!-- MRR & Projections -->
         <div class="stats">
-            <div class="stat"><h2>${mrr:.2f}</h2><p>Monthly Recurring Revenue (MRR)</p><small>Based on active subscriptions</small></div>
-            <div class="stat"><h2>${potential_income:.2f}</h2><p>Potential Monthly Income</p><small>If all users upgraded</small></div>
-            <div class="stat"><h2>{total_payments}</h2><p>Total Payments Processed</p></div>
+            <div class="stat"><h2>${{ "%.2f"|format(mrr) }}</h2><p>Monthly Recurring Revenue (MRR)</p><small>Based on active subscriptions</small></div>
+            <div class="stat"><h2>${{ "%.2f"|format(potential_income) }}</h2><p>Potential Monthly Income</p><small>If all users upgraded</small></div>
+            <div class="stat"><h2>{{ total_payments }}</h2><p>Total Payments Processed</p></div>
         </div>
         
-        <!-- Income by Plan -->
         <div class="card">
             <h2>📈 Income by Plan</h2>
             <div class="stats" style="margin-top: 10px;">
-                <div class="stat" style="background: #ff9800;"><h2>${starter_income:.2f}</h2><p>From Starter Plan ($12)</p></div>
-                <div class="stat" style="background: #f44336;"><h2>${pro_income:.2f}</h2><p>From Pro Plan ($25)</p></div>
+                <div class="stat" style="background: #ff9800;"><h2>${{ "%.2f"|format(starter_income) }}</h2><p>From Starter Plan ($12)</p></div>
+                <div class="stat" style="background: #f44336;"><h2>${{ "%.2f"|format(pro_income) }}</h2><p>From Pro Plan ($25)</p></div>
             </div>
         </div>
         
-        <!-- Recent Payments -->
         <div class="card">
             <h2>💳 Recent Payments</h2>
-            {f'''
+            {% if recent_payments %}
             <table>
-                <thead>
-                    <tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Method</th></tr>
-                </thead>
+                <thead><tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Method</th></tr></thead>
                 <tbody>
-                    {''.join(f'''
+                    {% for p in recent_payments %}
                     <tr>
-                        <td>{p.get('date', 'N/A')}</td>
-                        <td>{p.get('username', p.get('email', 'N/A'))}</td>
-                        <td><span class="plan-badge plan-{p.get('plan', 'free')}">{p.get('plan', 'free').upper()}</span></td>
-                        <td class="income-positive">${p.get('amount', 0):.2f}</td>
-                        <td>{p.get('payment_method', 'unknown').upper()}</td>
+                        <td>{{ p.get('date', 'N/A') }}</td>
+                        <td>{{ p.get('username', p.get('email', 'N/A')) }}</td>
+                        <td><span class="plan-badge plan-{{ p.get('plan', 'free') }}">{{ p.get('plan', 'free').upper() }}</span></td>
+                        <td class="income-positive">${{ "%.2f"|format(p.get('amount', 0)) }}</td>
+                        <td>{{ p.get('payment_method', 'unknown').upper() }}</td>
                     </tr>
-                    ''' for p in recent_payments)}
+                    {% endfor %}
                 </tbody>
             </table>
-            ''' if recent_payments else '<p>No payments recorded yet.</p>'}
+            {% else %}
+            <p>No payments recorded yet.</p>
+            {% endif %}
         </div>
         
-        <!-- Recent Signups -->
         <div class="card">
             <h2>📝 Recent Signups (Last 10)</h2>
             <table>
-                <thead>
-                    <tr><th>Username</th><th>Email</th><th>Plan</th><th>Verified</th><th>Referrals</th><th>Joined</th></tr>
-                </thead>
+                <thead><tr><th>Username</th><th>Email</th><th>Plan</th><th>Verified</th><th>Referrals</th><th>Joined</th></tr></thead>
                 <tbody>
-                    {''.join(f'''
+                    {% for email in recent_users|reverse %}
                     <tr>
-                        <td>{users[email].get('username', 'N/A')}</td>
-                        <td>{email}</td>
-                        <td><span class="plan-badge plan-{users[email].get('plan', 'free')}">{users[email].get('plan', 'free').upper()}</span></td>
-                        <td class="{'verified' if users[email].get('verified') else 'unverified'}">{'✅' if users[email].get('verified') else '❌'}</td>
-                        <td>{users[email].get('referral_count', 0)}</td>
-                        <td>{users[email].get('created_at', 'N/A')}</td>
+                        <td>{{ users[email].get('username', 'N/A') }}</td>
+                        <td>{{ email }}</td>
+                        <td><span class="plan-badge plan-{{ users[email].get('plan', 'free') }}">{{ users[email].get('plan', 'free').upper() }}</span></td>
+                        <td class="{{ 'verified' if users[email].get('verified') else 'unverified' }}">{{ '✅' if users[email].get('verified') else '❌' }}</td>
+                        <td>{{ users[email].get('referral_count', 0) }}</td>
+                        <td>{{ users[email].get('created_at', 'N/A') }}</td>
                     </tr>
-                    ''' for email in recent_users[::-1])}
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
         
-        <!-- System Info -->
         <div class="card">
             <h2>⚙️ System Info</h2>
             <ul>
-                <li><strong>Server Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
-                <li><strong>Users in Memory:</strong> {total_users}</li>
-                <li><strong>Payments Recorded:</strong> {total_payments}</li>
-                <li><strong>API Key Status:</strong> {'✅ Active' if YOUR_API_KEY else '❌ Not Set'}</li>
-                <li><strong>Resend API Status:</strong> {'✅ Configured' if os.environ.get('RESEND_API_KEY') else '❌ Not Set'}</li>
-                <li><strong>Payment Methods:</strong> Monnify: {monnify_count}, Manual: {manual_count}</li>
+                <li><strong>Server Time:</strong> {{ now.strftime('%Y-%m-%d %H:%M:%S') }}</li>
+                <li><strong>Users in Memory:</strong> {{ total_users }}</li>
+                <li><strong>Payments Recorded:</strong> {{ total_payments }}</li>
+                <li><strong>API Key Status:</strong> {{ '✅ Active' if YOUR_API_KEY else '❌ Not Set' }}</li>
+                <li><strong>Resend API Status:</strong> {{ '✅ Configured' if resend_api_key else '❌ Not Set' }}</li>
+                <li><strong>Payment Methods:</strong> Monnify: {{ monnify_count }}, Manual: {{ manual_count }}</li>
             </ul>
         </div>
         
-        <!-- Comparison Note -->
         <div class="card">
             <h2>📌 Note on Income Tracking</h2>
-            <p>Current income shown is based on manual plan upgrades. When you integrate Monnify:</p>
-            <ul>
-                <li>Payments will be recorded automatically when Monnify confirms successful payment</li>
-                <li>You can compare this dashboard with Monnify's payout reports</li>
-                <li>Any discrepancy will indicate a bug in payment recording</li>
-            </ul>
+            <p>Current income shown is based on manual plan upgrades. When you integrate Monnify, payments will be recorded automatically when Monnify confirms successful payment.</p>
             <p><strong>Recommended:</strong> Reconcile this dashboard with Monnify payouts weekly to ensure accuracy.</p>
         </div>
     </body>
     </html>
-    '''
+    ''', 
+    total_users=total_users, 
+    free_users=free_users, 
+    starter_users=starter_users, 
+    pro_users=pro_users,
+    total_searches=total_searches,
+    verified_users=verified_users,
+    total_referrals=total_referrals,
+    current_month_income=current_month_income,
+    last_month_income=last_month_income,
+    total_income_all_time=total_income_all_time,
+    mrr=mrr,
+    potential_income=potential_income,
+    total_payments=total_payments,
+    starter_income=starter_income,
+    pro_income=pro_income,
+    recent_payments=recent_payments,
+    recent_users=recent_users,
+    users=users,
+    now=datetime.now(),
+    YOUR_API_KEY=YOUR_API_KEY,
+    resend_api_key=os.environ.get('RESEND_API_KEY'),
+    monnify_count=monnify_count,
+    manual_count=manual_count
+    )
 
 # ============================================
 # TERMS OF SERVICE PAGE
