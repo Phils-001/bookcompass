@@ -187,7 +187,8 @@ def signup():
             'verified': False,
             'verification_code': None,
             'reset_token': None,
-            'reset_expires': None
+            'reset_expires': None,
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         }
         
         # Generate verification code
@@ -1341,7 +1342,170 @@ def reset_password(token):
 # ============================================
 # RUN THE APP
 # ============================================
+# ============================================
+# ADMIN PANEL (Protected)
+# ============================================
 
+@app.route('/admin')
+def admin_panel():
+    # Simple password protection (CHANGE THIS PASSWORD)
+    admin_password = request.args.get('password', '')
+    
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Admin Access - BookCompass</title>
+            <style>
+                body { font-family: Arial; text-align: center; margin-top: 100px; background: #f0f0f0; }
+                .card { background: white; max-width: 400px; margin: 0 auto; padding: 40px; border-radius: 10px; }
+                input { padding: 10px; width: 80%; margin: 10px 0; }
+                button { background: #ff9900; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <h2>🔐 Admin Access</h2>
+                <p>Enter password to access admin dashboard.</p>
+                <form method="get">
+                    <input type="password" name="password" placeholder="Enter password">
+                    <br>
+                    <button type="submit">Login</button>
+                </form>
+            </div>
+        </body>
+        </html>
+        '''
+    
+    # Calculate stats
+    total_users = len(users)
+    free_users = sum(1 for u in users.values() if u.get('plan') == 'free')
+    starter_users = sum(1 for u in users.values() if u.get('plan') == 'starter')
+    pro_users = sum(1 for u in users.values() if u.get('plan') == 'pro')
+    
+    # Total searches today
+    today = str(date.today())
+    total_searches = 0
+    for email, tracker in usage_tracker.items():
+        total_searches += tracker.get(today, 0)
+    
+    # Verified vs unverified users
+    verified_users = sum(1 for u in users.values() if u.get('verified', False))
+    unverified_users = total_users - verified_users
+    
+    # Recent users (last 10)
+    recent_users = list(users.keys())[-10:]
+    
+    # Total referral credits given
+    total_referrals = sum(u.get('referral_count', 0) for u in users.values())
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Admin Dashboard - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
+            h1 {{ color: #232f3e; }}
+            .stats {{ display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }}
+            .stat {{ flex: 1; background: #232f3e; color: white; padding: 20px; border-radius: 10px; text-align: center; min-width: 150px; }}
+            .stat h2 {{ margin: 0; font-size: 32px; }}
+            .stat p {{ margin: 10px 0 0; opacity: 0.8; }}
+            .card {{ background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
+            th {{ background: #ff9900; color: white; }}
+            tr:hover {{ background: #f5f5f5; }}
+            .plan-badge {{ display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; }}
+            .plan-free {{ background: #4CAF50; color: white; }}
+            .plan-starter {{ background: #ff9800; color: white; }}
+            .plan-pro {{ background: #f44336; color: white; }}
+            .verified {{ color: #4CAF50; }}
+            .unverified {{ color: #f44336; }}
+            .nav {{ margin-bottom: 20px; }}
+            .nav a {{ background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+            .nav a:hover {{ background: #e68a00; }}
+        </style>
+    </head>
+    <body>
+        <div class="nav">
+            <a href="/dashboard">← Back to Dashboard</a>
+        </div>
+        
+        <h1>📊 BookCompass Admin Dashboard</h1>
+        
+        <div class="stats">
+            <div class="stat">
+                <h2>{total_users}</h2>
+                <p>Total Users</p>
+            </div>
+            <div class="stat">
+                <h2>{free_users}</h2>
+                <p>Free Plan</p>
+            </div>
+            <div class="stat">
+                <h2>{starter_users}</h2>
+                <p>Starter Plan ($12)</p>
+            </div>
+            <div class="stat">
+                <h2>{pro_users}</h2>
+                <p>Pro Plan ($25)</p>
+            </div>
+            <div class="stat">
+                <h2>{total_searches}</h2>
+                <p>Searches Today</p>
+            </div>
+            <div class="stat">
+                <h2>{verified_users}/{total_users}</h2>
+                <p>Verified Users</p>
+            </div>
+            <div class="stat">
+                <h2>{total_referrals}</h2>
+                <p>Total Referrals</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📝 Recent Signups (Last 10)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Plan</th>
+                        <th>Verified</th>
+                        <th>Referrals</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join(f'''
+                    <tr>
+                        <td>{users[email].get('username', 'N/A')}</td>
+                        <td>{email}</td>
+                        <td><span class="plan-badge plan-{users[email].get('plan', 'free')}">{users[email].get('plan', 'free').upper()}</span></td>
+                        <td class="{'verified' if users[email].get('verified') else 'unverified'}">{'✅' if users[email].get('verified') else '❌'}</td>
+                        <td>{users[email].get('referral_count', 0)}</td>
+                        <td>{users[email].get('created_at', 'N/A')}</td>
+                    </tr>
+                    ''' for email in recent_users[::-1])}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>⚙️ System Info</h2>
+            <ul>
+                <li><strong>Server Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+                <li><strong>Users in Memory:</strong> {total_users}</li>
+                <li><strong>API Key Status:</strong> {'✅ Active' if YOUR_API_KEY else '❌ Not Set'}</li>
+                <li><strong>Resend API Status:</strong> {'✅ Configured' if os.environ.get('RESEND_API_KEY') else '❌ Not Set'}</li>
+            </ul>
+        </div>
+    </body>
+    </html>
+    '''
 if __name__ == '__main__':
     print("\n" + "="*50)
     print("   🚀 BOOKCOMPASS IS RUNNING")
