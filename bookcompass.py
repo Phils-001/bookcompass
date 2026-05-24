@@ -1414,85 +1414,52 @@ def admin_panel():
         </html>
         '''
     
-    # Calculate stats - store in regular variables
-    total_users_count = len(users)
-    free_users_count = sum(1 for u in users.values() if u.get('plan') == 'free')
-    starter_users_count = sum(1 for u in users.values() if u.get('plan') == 'starter')
-    pro_users_count = sum(1 for u in users.values() if u.get('plan') == 'pro')
+    # ========== CALCULATE ALL STATS ==========
+    
+    # User stats
+    total_users = len(users)
+    free_users = sum(1 for u in users.values() if u.get('plan') == 'free')
+    starter_users = sum(1 for u in users.values() if u.get('plan') == 'starter')
+    pro_users = sum(1 for u in users.values() if u.get('plan') == 'pro')
     
     # Total searches today
-    today_str = str(date.today())
-    total_searches_count = 0
-    for tracker in usage_tracker.values():
-        total_searches_count += tracker.get(today_str, 0)
+    today = str(date.today())
+    total_searches = 0
+    for email, tracker in usage_tracker.items():
+        total_searches += tracker.get(today, 0)
     
-    # Verified users
-    verified_users_count = sum(1 for u in users.values() if u.get('verified', False))
+    # Verified vs unverified users
+    verified_users = sum(1 for u in users.values() if u.get('verified', False))
     
-    # Total referrals
-    total_referrals_count = sum(u.get('referral_count', 0) for u in users.values())
+    # Recent users (last 10)
+    recent_users = list(users.keys())[-10:]
     
-    # Recent users
-    recent_users_list = list(users.keys())[-10:]
+    # Total referral credits given
+    total_referrals = sum(u.get('referral_count', 0) for u in users.values())
     
     # Income calculations
     current_month = datetime.now().strftime('%Y-%m')
     last_month = (datetime.now().replace(day=1) - timedelta(days=1)).strftime('%Y-%m')
     
-    total_income = sum(p.get('amount', 0) for p in payments)
+    total_income_all_time = sum(p.get('amount', 0) for p in payments)
     current_month_income = sum(p.get('amount', 0) for p in payments if p.get('month') == current_month)
     last_month_income = sum(p.get('amount', 0) for p in payments if p.get('month') == last_month)
     
     starter_income = sum(p.get('amount', 0) for p in payments if p.get('plan') == 'starter')
     pro_income = sum(p.get('amount', 0) for p in payments if p.get('plan') == 'pro')
     
-    mrr = (starter_users_count * 12) + (pro_users_count * 25)
-    potential_income = (free_users_count * 12) + (starter_users_count * 12) + (pro_users_count * 25)
-    total_payments_count = len(payments)
+    mrr = (starter_users * 12) + (pro_users * 25)
+    potential_income = (free_users * 12) + (starter_users * 12) + (pro_users * 25)
+    total_payments = len(payments)
     
-    recent_payments_list = payments[-10:][::-1]
+    recent_payments = payments[-10:][::-1]
     
     monnify_count = sum(1 for p in payments if p.get('payment_method') == 'monnify')
     manual_count = sum(1 for p in payments if p.get('payment_method') == 'manual')
     
-    # Build recent payments HTML
-    recent_payments_html = ""
-    if recent_payments_list:
-        recent_payments_html = '<table><thead><tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Method</th></tr></thead><tbody>'
-        for p in recent_payments_list:
-            plan_class = p.get('plan', 'free')
-            recent_payments_html += f'''
-            <tr>
-                <td>{p.get('date', 'N/A')}</td>
-                <td>{p.get('username', p.get('email', 'N/A'))}</td>
-                <td><span class="plan-badge plan-{plan_class}">{p.get('plan', 'free').upper()}</span></td>
-                <td class="income-positive">${p.get('amount', 0):.2f}</td>
-                <td>{p.get('payment_method', 'unknown').upper()}</td>
-            </tr>
-            '''
-        recent_payments_html += '</tbody></table>'
-    else:
-        recent_payments_html = '<p>No payments recorded yet.</p>'
+    # ========== BUILD THE HTML ==========
     
-    # Build recent signups HTML
-    recent_signups_html = ""
-    for email in recent_users_list[::-1]:
-        user_data = users[email]
-        plan = user_data.get('plan', 'free')
-        verified_status = '✅' if user_data.get('verified') else '❌'
-        recent_signups_html += f'''
-        <tr>
-            <td>{user_data.get('username', 'N/A')}</td>
-            <td>{email}</td>
-            <td><span class="plan-badge plan-{plan}">{plan.upper()}</span></td>
-            <td class="{'verified' if user_data.get('verified') else 'unverified'}">{verified_status}</td>
-            <td>{user_data.get('referral_count', 0)}</td>
-            <td>{user_data.get('created_at', 'N/A')}</td>
-        </tr>
-        '''
-    
-    # Build the final HTML
-    html = f'''
+    return f'''
     <!DOCTYPE html>
     <html>
     <head>
@@ -1522,6 +1489,7 @@ def admin_panel():
             .nav a {{ background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px; }}
             .nav a:hover {{ background: #e68a00; }}
             .income-positive {{ color: #2e7d32; font-weight: bold; }}
+            .income-negative {{ color: #f44336; font-weight: bold; }}
         </style>
     </head>
     <body>
@@ -1534,28 +1502,28 @@ def admin_panel():
         
         <!-- User Stats -->
         <div class="stats">
-            <div class="stat"><h2>{total_users_count}</h2><p>Total Users</p></div>
-            <div class="stat"><h2>{free_users_count}</h2><p>Free Plan</p></div>
-            <div class="stat"><h2>{starter_users_count}</h2><p>Starter Plan ($12)</p></div>
-            <div class="stat"><h2>{pro_users_count}</h2><p>Pro Plan ($25)</p></div>
-            <div class="stat"><h2>{total_searches_count}</h2><p>Searches Today</p></div>
-            <div class="stat"><h2>{verified_users_count}/{total_users_count}</h2><p>Verified Users</p></div>
-            <div class="stat"><h2>{total_referrals_count}</h2><p>Total Referrals</p></div>
+            <div class="stat"><h2>{total_users}</h2><p>Total Users</p></div>
+            <div class="stat"><h2>{free_users}</h2><p>Free Plan</p></div>
+            <div class="stat"><h2>{starter_users}</h2><p>Starter Plan ($12)</p></div>
+            <div class="stat"><h2>{pro_users}</h2><p>Pro Plan ($25)</p></div>
+            <div class="stat"><h2>{total_searches}</h2><p>Searches Today</p></div>
+            <div class="stat"><h2>{verified_users}/{total_users}</h2><p>Verified Users</p></div>
+            <div class="stat"><h2>{total_referrals}</h2><p>Total Referrals</p></div>
         </div>
         
-        <!-- Income Stats -->
+        <!-- Income Overview -->
         <h2>💰 Income Overview</h2>
         <div class="stats">
             <div class="stat stat-income"><h2>${current_month_income:.2f}</h2><p>This Month's Income</p></div>
             <div class="stat stat-income"><h2>${last_month_income:.2f}</h2><p>Last Month's Income</p></div>
-            <div class="stat stat-income-total"><h2>${total_income:.2f}</h2><p>All Time Income</p></div>
+            <div class="stat stat-income-total"><h2>${total_income_all_time:.2f}</h2><p>All Time Income</p></div>
         </div>
         
         <!-- MRR & Projections -->
         <div class="stats">
-            <div class="stat"><h2>${mrr:.2f}</h2><p>Monthly Recurring Revenue (MRR)</p></div>
-            <div class="stat"><h2>${potential_income:.2f}</h2><p>Potential Monthly Income</p></div>
-            <div class="stat"><h2>{total_payments_count}</h2><p>Total Payments Processed</p></div>
+            <div class="stat"><h2>${mrr:.2f}</h2><p>Monthly Recurring Revenue (MRR)</p><small>Based on active subscriptions</small></div>
+            <div class="stat"><h2>${potential_income:.2f}</h2><p>Potential Monthly Income</p><small>If all users upgraded</small></div>
+            <div class="stat"><h2>{total_payments}</h2><p>Total Payments Processed</p></div>
         </div>
         
         <!-- Income by Plan -->
@@ -1570,15 +1538,45 @@ def admin_panel():
         <!-- Recent Payments -->
         <div class="card">
             <h2>💳 Recent Payments</h2>
-            {recent_payments_html}
+            {f'''
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>User</th><th>Plan</th><th>Amount</th><th>Method</th></tr>
+                </thead>
+                <tbody>
+                    {''.join(f'''
+                    <tr>
+                        <td>{p.get('date', 'N/A')}</td>
+                        <td>{p.get('username', p.get('email', 'N/A'))}</td>
+                        <td><span class="plan-badge plan-{p.get('plan', 'free')}">{p.get('plan', 'free').upper()}</span></td>
+                        <td class="income-positive">${p.get('amount', 0):.2f}</td>
+                        <td>{p.get('payment_method', 'unknown').upper()}</td>
+                    </tr>
+                    ''' for p in recent_payments)}
+                </tbody>
+            </table>
+            ''' if recent_payments else '<p>No payments recorded yet.</p>'}
         </div>
         
         <!-- Recent Signups -->
         <div class="card">
             <h2>📝 Recent Signups (Last 10)</h2>
             <table>
-                <thead><tr><th>Username</th><th>Email</th><th>Plan</th><th>Verified</th><th>Referrals</th><th>Joined</th></tr></thead>
-                <tbody>{recent_signups_html}</tbody>
+                <thead>
+                    <tr><th>Username</th><th>Email</th><th>Plan</th><th>Verified</th><th>Referrals</th><th>Joined</th></tr>
+                </thead>
+                <tbody>
+                    {''.join(f'''
+                    <tr>
+                        <td>{users[email].get('username', 'N/A')}</td>
+                        <td>{email}</td>
+                        <td><span class="plan-badge plan-{users[email].get('plan', 'free')}">{users[email].get('plan', 'free').upper()}</span></td>
+                        <td class="{'verified' if users[email].get('verified') else 'unverified'}">{'✅' if users[email].get('verified') else '❌'}</td>
+                        <td>{users[email].get('referral_count', 0)}</td>
+                        <td>{users[email].get('created_at', 'N/A')}</td>
+                    </tr>
+                    ''' for email in recent_users[::-1])}
+                </tbody>
             </table>
         </div>
         
@@ -1587,23 +1585,28 @@ def admin_panel():
             <h2>⚙️ System Info</h2>
             <ul>
                 <li><strong>Server Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
-                <li><strong>Users in Memory:</strong> {total_users_count}</li>
-                <li><strong>Payments Recorded:</strong> {total_payments_count}</li>
+                <li><strong>Users in Memory:</strong> {total_users}</li>
+                <li><strong>Payments Recorded:</strong> {total_payments}</li>
                 <li><strong>API Key Status:</strong> {'✅ Active' if YOUR_API_KEY else '❌ Not Set'}</li>
                 <li><strong>Resend API Status:</strong> {'✅ Configured' if os.environ.get('RESEND_API_KEY') else '❌ Not Set'}</li>
                 <li><strong>Payment Methods:</strong> Monnify: {monnify_count}, Manual: {manual_count}</li>
             </ul>
         </div>
         
+        <!-- Comparison Note -->
         <div class="card">
             <h2>📌 Note on Income Tracking</h2>
-            <p>Current income shown is based on manual plan upgrades. When you integrate Monnify, payments will be recorded automatically when Monnify confirms successful payment.</p>
+            <p>Current income shown is based on manual plan upgrades. When you integrate Monnify:</p>
+            <ul>
+                <li>Payments will be recorded automatically when Monnify confirms successful payment</li>
+                <li>You can compare this dashboard with Monnify's payout reports</li>
+                <li>Any discrepancy will indicate a bug in payment recording</li>
+            </ul>
             <p><strong>Recommended:</strong> Reconcile this dashboard with Monnify payouts weekly to ensure accuracy.</p>
         </div>
     </body>
     </html>
     '''
-    return html
 
 # ============================================
 # TERMS OF SERVICE PAGE
