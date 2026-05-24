@@ -18,6 +18,9 @@ YOUR_API_KEY = "846F7338358746F88A3667FCC1540938"
 users = {}
 usage_tracker = {}
 
+# Payment tracking
+payments = []  # List to store all payment records
+
 # Pricing plans
 PLANS = {
     "free": {"daily_limit": 3},
@@ -717,6 +720,12 @@ def select_plan(plan_name):
                     promo_message = f" (Promo {user['promo_code']}: {discount}% off applied)"
         
         users[email]['plan'] = plan_name
+
+        # Record payment (when payments are integrated)
+        # For now, this records plan changes for testing
+        # When you add Monnify, move this to after payment confirmation
+        if plan_name != 'free':
+            record_payment(email, final_price, plan_name, 'manual')
         
         return f'''
         <!DOCTYPE html>
@@ -1342,13 +1351,34 @@ def reset_password(token):
 # ============================================
 # RUN THE APP
 # ============================================
+
 # ============================================
-# ADMIN PANEL (Protected)
+# RECORD PAYMENT FUNCTION
+# ============================================
+
+def record_payment(email, amount, plan, payment_method='monnify'):
+    """Record a successful payment"""
+    payment_record = {
+        'email': email,
+        'username': users.get(email, {}).get('username', email),
+        'amount': amount,
+        'plan': plan,
+        'payment_method': payment_method,
+        'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'month': datetime.now().strftime('%Y-%m'),
+        'status': 'completed'
+    }
+    payments.append(payment_record)
+    print(f"💰 Payment recorded: {email} - ${amount} - {plan}")
+    return payment_record
+
+# ============================================
+# ADMIN PANEL WITH INCOME TRACKING
 # ============================================
 
 @app.route('/admin')
 def admin_panel():
-    # Simple password protection (CHANGE THIS PASSWORD)
+    # Simple password protection
     admin_password = request.args.get('password', '')
     
     if admin_password != 'BookCompassAdmin@@2026!':
@@ -1400,6 +1430,41 @@ def admin_panel():
     # Total referral credits given
     total_referrals = sum(u.get('referral_count', 0) for u in users.values())
     
+    # ========== INCOME CALCULATIONS ==========
+    
+    # Get current month
+    current_month = datetime.now().strftime('%Y-%m')
+    last_month = (datetime.now().replace(day=1) - timedelta(days=1)).strftime('%Y-%m')
+    
+    # Calculate income from payments
+    total_income_all_time = sum(p.get('amount', 0) for p in payments)
+    
+    # Current month income
+    current_month_income = sum(p.get('amount', 0) for p in payments if p.get('month') == current_month)
+    
+    # Last month income
+    last_month_income = sum(p.get('amount', 0) for p in payments if p.get('month') == last_month)
+    
+    # Income by plan
+    starter_income = sum(p.get('amount', 0) for p in payments if p.get('plan') == 'starter')
+    pro_income = sum(p.get('amount', 0) for p in payments if p.get('plan') == 'pro')
+    
+    # Monthly recurring revenue (MRR) - sum of active subscriptions
+    mrr = (starter_users * 12) + (pro_users * 25)
+    
+    # Potential income if all free users upgraded
+    potential_income = (free_users * 12) + (starter_users * 12) + (pro_users * 25)
+    
+    # Payment count
+    total_payments = len(payments)
+    
+    # Recent payments (last 10)
+    recent_payments = payments[-10:][::-1]
+    
+    # Payment methods breakdown
+    monnify_count = sum(1 for p in payments if p.get('payment_method') == 'monnify')
+    manual_count = sum(1 for p in payments if p.get('payment_method') == 'manual')
+    
     return f'''
     <!DOCTYPE html>
     <html>
@@ -1408,10 +1473,13 @@ def admin_panel():
         <style>
             body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
             h1 {{ color: #232f3e; }}
+            h2 {{ color: #232f3e; border-bottom: 2px solid #ff9900; padding-bottom: 10px; }}
             .stats {{ display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }}
             .stat {{ flex: 1; background: #232f3e; color: white; padding: 20px; border-radius: 10px; text-align: center; min-width: 150px; }}
             .stat h2 {{ margin: 0; font-size: 32px; }}
             .stat p {{ margin: 10px 0 0; opacity: 0.8; }}
+            .stat-income {{ background: #2e7d32; }}
+            .stat-income-total {{ background: #ff6d00; }}
             .card {{ background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
             table {{ width: 100%; border-collapse: collapse; }}
             th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
@@ -1424,17 +1492,21 @@ def admin_panel():
             .verified {{ color: #4CAF50; }}
             .unverified {{ color: #f44336; }}
             .nav {{ margin-bottom: 20px; }}
-            .nav a {{ background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+            .nav a {{ background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px; }}
             .nav a:hover {{ background: #e68a00; }}
+            .income-positive {{ color: #2e7d32; font-weight: bold; }}
+            .income-negative {{ color: #f44336; font-weight: bold; }}
         </style>
     </head>
     <body>
         <div class="nav">
             <a href="/dashboard">← Back to Dashboard</a>
+            <a href="/admin?password=BookCompassAdmin2026">Refresh</a>
         </div>
         
         <h1>📊 BookCompass Admin Dashboard</h1>
         
+        <!-- User Stats -->
         <div class="stats">
             <div class="stat">
                 <h2>{total_users}</h2>
@@ -1466,6 +1538,86 @@ def admin_panel():
             </div>
         </div>
         
+        <!-- Income Stats -->
+        <h2>💰 Income Overview</h2>
+        <div class="stats">
+            <div class="stat stat-income">
+                <h2>${current_month_income:.2f}</h2>
+                <p>This Month's Income</p>
+            </div>
+            <div class="stat stat-income">
+                <h2>${last_month_income:.2f}</h2>
+                <p>Last Month's Income</p>
+            </div>
+            <div class="stat stat-income-total">
+                <h2>${total_income_all_time:.2f}</h2>
+                <p>All Time Income</p>
+            </div>
+        </div>
+        
+        <!-- MRR & Projections -->
+        <div class="stats">
+            <div class="stat">
+                <h2>${mrr:.2f}</h2>
+                <p>Monthly Recurring Revenue (MRR)</p>
+                <small>Based on active subscriptions</small>
+            </div>
+            <div class="stat">
+                <h2>${potential_income:.2f}</h2>
+                <p>Potential Monthly Income</p>
+                <small>If all users upgraded</small>
+            </div>
+            <div class="stat">
+                <h2>{total_payments}</h2>
+                <p>Total Payments Processed</p>
+            </div>
+        </div>
+        
+        <!-- Income by Plan -->
+        <div class="card">
+            <h2>📈 Income by Plan</h2>
+            <div class="stats" style="margin-top: 10px;">
+                <div class="stat" style="background: #ff9800;">
+                    <h2>${starter_income:.2f}</h2>
+                    <p>From Starter Plan ($12)</p>
+                </div>
+                <div class="stat" style="background: #f44336;">
+                    <h2>${pro_income:.2f}</h2>
+                    <p>From Pro Plan ($25)</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Payments -->
+        <div class="card">
+            <h2>💳 Recent Payments</h2>
+            {f'''
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join(f'''
+                    <tr>
+                        <td>{p.get('date', 'N/A')}</td>
+                        <td>{p.get('username', p.get('email', 'N/A'))}</td>
+                        <td><span class="plan-badge plan-{p.get('plan', 'free')}">{p.get('plan', 'free').upper()}</span></td>
+                        <td class="income-positive">${p.get('amount', 0):.2f}</td>
+                        <td>{p.get('payment_method', 'unknown').upper()}</td>
+                    </tr>
+                    ''' for p in recent_payments)}
+                </tbody>
+            </table>
+            ''' if recent_payments else '<p>No payments recorded yet.</p>'}
+        </div>
+        
+        <!-- Recent Signups -->
         <div class="card">
             <h2>📝 Recent Signups (Last 10)</h2>
             <table>
@@ -1494,14 +1646,29 @@ def admin_panel():
             </table>
         </div>
         
+        <!-- System Info -->
         <div class="card">
             <h2>⚙️ System Info</h2>
             <ul>
                 <li><strong>Server Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
                 <li><strong>Users in Memory:</strong> {total_users}</li>
+                <li><strong>Payments Recorded:</strong> {total_payments}</li>
                 <li><strong>API Key Status:</strong> {'✅ Active' if YOUR_API_KEY else '❌ Not Set'}</li>
                 <li><strong>Resend API Status:</strong> {'✅ Configured' if os.environ.get('RESEND_API_KEY') else '❌ Not Set'}</li>
+                <li><strong>Payment Methods:</strong> Monnify: {monnify_count}, Manual: {manual_count}</li>
             </ul>
+        </div>
+        
+        <!-- Comparison Note -->
+        <div class="card">
+            <h2>📌 Note on Income Tracking</h2>
+            <p>Current income shown is based on manual plan upgrades. When you integrate Monnify:</p>
+            <ul>
+                <li>Payments will be recorded automatically when Monnify confirms successful payment</li>
+                <li>You can compare this dashboard with Monnify's payout reports</li>
+                <li>Any discrepancy will indicate a bug in payment recording</li>
+            </ul>
+            <p><strong>Recommended:</strong> Reconcile this dashboard with Monnify payouts weekly to ensure accuracy.</p>
         </div>
     </body>
     </html>
