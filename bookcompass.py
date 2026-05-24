@@ -121,9 +121,8 @@ def home():
         <a href="/privacy" style="color: #ff9900; margin: 0 10px;">Privacy Policy</a>
     </p>
 </div>
-'''
-    </body>
-    </html>
+</body>
+</html>
     '''
     return html
 
