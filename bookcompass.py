@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, session, render_template_string
-from flask_mail import Mail, Message
 import requests
 import time
 from datetime import date, datetime, timedelta
@@ -8,15 +7,9 @@ import resend
 
 app = Flask(__name__)
 app.secret_key = "bookcompass_secret_key_12345"
-# Email configuration
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'bookcompass.app@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', '')
-app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_USERNAME', 'bookcompass.app@gmail.com')
-# Resend Configuration
+
+# Resend Configuration (This is all you need)
+import resend
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
 mail = Mail(app)
@@ -199,48 +192,53 @@ def signup():
             'reset_expires': None
         }
         
-                # Generate verification code
+        # Generate verification code
         import random
         import string
         verification_code = ''.join(random.choices(string.digits, k=6))
         users[email]['verification_code'] = verification_code
         
-                    # Send verification email using Resend
-            try:
-                params = {
-                    "from": "BookCompass <onboarding@resend.dev>",
-                    "to": [email],
-                    "subject": "Verify Your BookCompass Account",
-                    "html": f"""
-                    <html>
-                    <body>
-                        <h2>BookCompass Email Verification</h2>
-                        <p>Your verification code is:</p>
-                        <h1 style="font-size: 32px; color: #ff9900;">{verification_code}</h1>
-                        <p>Enter this code on the verification page to activate your account.</p>
-                        <p>This code expires in 1 hour.</p>
-                        <hr>
-                        <p>If you did not create an account, please ignore this email.</p>
-                        <p style="font-size: 12px; color: #666;">You received this email because you signed up for BookCompass.</p>
-                    </body>
-                    </html>
-                    """
-                }
-                resend.Emails.send(params)
-                
-                session['pending_email'] = email
-                return '<script>window.location.href="/verify-email"</script>'
-            except Exception as e:
-                print(f"Resend error: {e}")
-                users.pop(email)
-                return f'''
-                <div style="text-align:center; margin-top:50px;">
-                    <h2>Could not send verification email</h2>
-                    <p>Error: {str(e)}</p>
-                    <p>Please try again later.</p>
-                    <a href="/signup">Back to Sign Up</a>
-                </div>
-                '''
+        # Generate verification code
+        import random
+        import string
+        verification_code = ''.join(random.choices(string.digits, k=6))
+        users[email]['verification_code'] = verification_code
+        
+        # Send verification email using Resend
+        try:
+            params = {
+                "from": "BookCompass <onboarding@resend.dev>",
+                "to": [email],
+                "subject": "Verify Your BookCompass Account",
+                "html": f"""
+                <html>
+                <body>
+                    <h2>BookCompass Email Verification</h2>
+                    <p>Your verification code is:</p>
+                    <h1 style="font-size: 32px; color: #ff9900;">{verification_code}</h1>
+                    <p>Enter this code on the verification page to activate your account.</p>
+                    <p>This code expires in 1 hour.</p>
+                    <hr>
+                    <p>If you did not create an account, please ignore this email.</p>
+                </body>
+                </html>
+                """
+            }
+            resend.Emails.send(params)
+            
+            session['pending_email'] = email
+            return '<script>window.location.href="/verify-email"</script>'
+        except Exception as e:
+            print(f"Resend error: {e}")
+            users.pop(email)
+            return f'''
+            <div style="text-align:center; margin-top:50px;">
+                <h2>Could not send verification email</h2>
+                <p>Error: {str(e)}</p>
+                <p>Please try again later.</p>
+                <a href="/signup">Back to Sign Up</a>
+            </div>
+            '''
     
     # Show signup form
     return f'''
@@ -1091,7 +1089,7 @@ def resend_code():
         new_code = ''.join(random.choices(string.digits, k=6))
         users[email]['verification_code'] = new_code
         
-                    try:
+            try:
                 params = {
                     "from": "BookCompass <onboarding@resend.dev>",
                     "to": [email],
@@ -1153,7 +1151,7 @@ def forgot_password():
         users[email]['reset_token'] = reset_token
         users[email]['reset_expires'] = (datetime.now() + timedelta(hours=1)).isoformat()
         
-                    # Send reset email using Resend
+        # Send reset email using Resend
             try:
                 reset_link = f"http://bookcompass-1.onrender.com/reset-password/{reset_token}"  # Update this to your Render URL
                 params = {
