@@ -114,6 +114,14 @@ def home():
             </div>
             <div class="card cta"><h2>Ready to Find Your Next Winning Keyword?</h2><p>Join KDP publishers using BookCompass to find profitable niches.</p><a href="/signup"><button style="background: #ff9900; font-size: 18px;">Create Free Account →</button></a></div>
         </div>
+        <div style="background: #232f3e; color: white; padding: 20px; text-align: center; margin-top: 40px;">
+    <p>&copy; 2026 BookCompass. All rights reserved.</p>
+    <p>
+        <a href="/terms" style="color: #ff9900; margin: 0 10px;">Terms of Service</a> |
+        <a href="/privacy" style="color: #ff9900; margin: 0 10px;">Privacy Policy</a>
+    </p>
+</div>
+'''
     </body>
     </html>
     '''
@@ -1673,6 +1681,243 @@ def admin_panel():
     </body>
     </html>
     '''
+# ============================================
+# TERMS OF SERVICE PAGE
+# ============================================
+
+@app.route('/terms')
+def terms():
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Terms of Service - BookCompass</title>
+        <style>
+            body { font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }
+            .header { background: #232f3e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+            .logo { font-size: 24px; font-weight: bold; }
+            .logo span { color: #ff9900; }
+            .nav a { color: white; margin-left: 20px; text-decoration: none; }
+            .container { max-width: 900px; margin: 0 auto; padding: 30px; }
+            .card { background: white; border-radius: 10px; padding: 30px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            h1 { color: #232f3e; }
+            h2 { color: #ff9900; margin-top: 20px; }
+            .last-updated { color: #666; font-style: italic; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+            .back-link { margin-top: 20px; display: inline-block; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/how-it-works">How It Works</a>
+                <a href="/login">Login</a>
+                <a href="/signup">Sign Up</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h1>Terms of Service</h1>
+                <p class="last-updated">Last Updated: May 24, 2026</p>
+                
+                <p>Welcome to BookCompass ("we," "our," or "us"). By accessing or using our website and keyword research tool, you agree to be bound by these Terms of Service.</p>
+                
+                <h2>1. Acceptance of Terms</h2>
+                <p>By creating an account, using our services, or accessing our website, you confirm that you have read, understood, and agree to be bound by these Terms.</p>
+                
+                <h2>2. Description of Service</h2>
+                <p>BookCompass provides keyword research tools for Amazon KDP authors. Our service analyzes Amazon search data to help users find low-competition, high-opportunity keywords for their books.</p>
+                
+                <h2>3. User Accounts</h2>
+                <p>To use our service, you must create an account. You are responsible for:</p>
+                <ul>
+                    <li>Maintaining the confidentiality of your password</li>
+                    <li>All activities that occur under your account</li>
+                    <li>Providing accurate and complete registration information</li>
+                </ul>
+                <p>You must be at least 18 years old to use BookCompass.</p>
+                
+                <h2>4. Subscription Plans and Payments</h2>
+                <p>BookCompass offers free and paid subscription plans ("Starter" and "Pro"). By subscribing to a paid plan, you agree to pay the applicable fees.</p>
+                <ul>
+                    <li><strong>Free Plan:</strong> 3 searches per day at no cost</li>
+                    <li><strong>Starter Plan:</strong> $12 per month for 20 searches per day</li>
+                    <li><strong>Pro Plan:</strong> $25 per month for 100 searches per day</li>
+                </ul>
+                <p>Payments are processed through Monnify (or another third-party payment processor). You agree to provide accurate billing information.</p>
+                
+                <h2>5. Refund Policy</h2>
+                <p>Due to the digital nature of our service, we generally do not offer refunds. However, we will consider refund requests on a case-by-case basis if you experience technical issues that we cannot resolve.</p>
+                
+                <h2>6. Cancellation and Termination</h2>
+                <p>You may cancel your subscription at any time through your dashboard. Upon cancellation, your account will revert to the Free Plan at the end of your current billing cycle.</p>
+                <p>We reserve the right to suspend or terminate your account if you violate these Terms.</p>
+                
+                <h2>7. Acceptable Use</h2>
+                <p>You agree not to:</p>
+                <ul>
+                    <li>Use our service for any illegal purpose</li>
+                    <li>Attempt to bypass our daily search limits</li>
+                    <li>Share your account credentials with others</li>
+                    <li>Use automated scripts or bots to access our service</li>
+                    <li>Reverse engineer or copy our software</li>
+                </ul>
+                
+                <h2>8. Intellectual Property</h2>
+                <p>All content, features, and functionality of BookCompass (including software, text, graphics, logos, and API integrations) are owned by BookCompass and are protected by copyright and other intellectual property laws.</p>
+                
+                <h2>9. Data Accuracy</h2>
+                <p>We strive to provide accurate keyword research data, but we do not guarantee the accuracy, completeness, or reliability of any data provided. Amazon's search data may change over time.</p>
+                
+                <h2>10. Limitation of Liability</h2>
+                <p>To the maximum extent permitted by law, BookCompass shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our service.</p>
+                
+                <h2>11. Disclaimer of Warranties</h2>
+                <p>Our service is provided "as is" without warranties of any kind, either express or implied. We do not guarantee that your books will succeed or that you will make money using our tool.</p>
+                
+                <h2>12. Changes to Terms</h2>
+                <p>We may modify these Terms at any time. We will notify users of significant changes via email or through the website. Your continued use of BookCompass after changes constitutes acceptance of the revised Terms.</p>
+                
+                <h2>13. Governing Law</h2>
+                <p>These Terms shall be governed by and construed in accordance with the laws of the Federal Republic of Nigeria.</p>
+                
+                <h2>14. Contact Information</h2>
+                <p>For questions about these Terms, please contact us at:</p>
+                <p><strong>Email:</strong> support@bookcompass.com</p>
+                <p><strong>Address:</strong> [Your Business Address]</p>
+                
+                <a href="/" class="back-link">← Back to Home</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+# ============================================
+# PRIVACY POLICY PAGE
+# ============================================
+
+@app.route('/privacy')
+def privacy():
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Privacy Policy - BookCompass</title>
+        <style>
+            body { font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }
+            .header { background: #232f3e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+            .logo { font-size: 24px; font-weight: bold; }
+            .logo span { color: #ff9900; }
+            .nav a { color: white; margin-left: 20px; text-decoration: none; }
+            .container { max-width: 900px; margin: 0 auto; padding: 30px; }
+            .card { background: white; border-radius: 10px; padding: 30px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            h1 { color: #232f3e; }
+            h2 { color: #ff9900; margin-top: 20px; }
+            .last-updated { color: #666; font-style: italic; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+            .back-link { margin-top: 20px; display: inline-block; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/how-it-works">How It Works</a>
+                <a href="/login">Login</a>
+                <a href="/signup">Sign Up</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h1>Privacy Policy</h1>
+                <p class="last-updated">Last Updated: May 24, 2026</p>
+                
+                <p>At BookCompass ("we," "our," or "us"), your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and keyword research tool.</p>
+                
+                <h2>1. Information We Collect</h2>
+                <p><strong>Personal Information:</strong> When you create an account, we collect:</p>
+                <ul>
+                    <li>Username</li>
+                    <li>Email address</li>
+                    <li>Password (encrypted)</li>
+                </ul>
+                
+                <p><strong>Usage Data:</strong> We automatically collect:</p>
+                <ul>
+                    <li>Number of keyword searches performed</li>
+                    <li>Subscription plan (Free, Starter, Pro)</li>
+                    <li>IP address and browser information</li>
+                    <li>Referral source (if you clicked a referral link)</li>
+                </ul>
+                
+                <h2>2. How We Use Your Information</h2>
+                <p>We use your information to:</p>
+                <ul>
+                    <li>Provide, operate, and maintain our service</li>
+                    <li>Process your subscription payments</li>
+                    <li>Send you verification emails and password reset links</li>
+                    <li>Track daily search limits and plan usage</li>
+                    <li>Improve and optimize our keyword research algorithms</li>
+                    <li>Respond to your support requests</li>
+                </ul>
+                
+                <h2>3. Third-Party Services</h2>
+                <p>We use the following third-party services that may collect your information:</p>
+                <ul>
+                    <li><strong>Resend</strong> - For sending verification and password reset emails</li>
+                    <li><strong>Rainforest API</strong> - For fetching Amazon keyword data</li>
+                    <li><strong>Monnify (future)</strong> - For processing subscription payments</li>
+                    <li><strong>Render.com</strong> - For hosting our website</li>
+                </ul>
+                <p>These third parties have their own privacy policies, and we encourage you to review them.</p>
+                
+                <h2>4. Data Retention</h2>
+                <p>We retain your account information as long as your account is active. If you delete your account, we will remove your personal information within 30 days, except where we are required to retain it for legal or tax purposes.</p>
+                
+                <h2>5. Data Security</h2>
+                <p>We implement reasonable security measures to protect your information, including:</p>
+                <ul>
+                    <li>Password encryption</li>
+                    <li>Secure HTTPS connections</li>
+                    <li>Limited access to user data</li>
+                </ul>
+                <p>However, no method of transmission over the Internet is 100% secure.</p>
+                
+                <h2>6. Cookies</h2>
+                <p>We use session cookies to keep you logged in. These cookies are essential for the functioning of our service. We do not use tracking cookies for advertising.</p>
+                
+                <h2>7. Your Rights</h2>
+                <p>Depending on your jurisdiction, you may have the right to:</p>
+                <ul>
+                    <li>Access the personal information we hold about you</li>
+                    <li>Request correction of inaccurate information</li>
+                    <li>Request deletion of your account</li>
+                    <li>Opt out of marketing communications</li>
+                </ul>
+                <p>To exercise these rights, contact us at support@bookcompass.com.</p>
+                
+                <h2>8. Children's Privacy</h2>
+                <p>BookCompass is not intended for children under 18. We do not knowingly collect information from minors.</p>
+                
+                <h2>9. International Users</h2>
+                <p>Your information may be transferred to and stored on servers located in the United States and other countries. By using BookCompass, you consent to this transfer.</p>
+                
+                <h2>10. Changes to This Privacy Policy</h2>
+                <p>We may update this Privacy Policy from time to time. We will notify you of significant changes via email or by posting a notice on our website.</p>
+                
+                <h2>11. Contact Us</h2>
+                <p>If you have questions about this Privacy Policy, please contact us at:</p>
+                <p><strong>Email:</strong> privacy@bookcompass.com</p>
+                <p><strong>Or use our support email:</strong> support@bookcompass.com</p>
+                
+                <a href="/" class="back-link">← Back to Home</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+
 if __name__ == '__main__':
     print("\n" + "="*50)
     print("   🚀 BOOKCOMPASS IS RUNNING")
