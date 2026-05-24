@@ -8,11 +8,9 @@ import resend
 app = Flask(__name__)
 app.secret_key = "bookcompass_secret_key_12345"
 
-# Resend Configuration (This is all you need)
-import resend
+# Resend Configuration
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
-mail = Mail(app)
 # Your Rainforest API Key (keep this secret)
 YOUR_API_KEY = "846F7338358746F88A3667FCC1540938"
 
@@ -152,12 +150,12 @@ def signup():
             for existing_email, existing_user in users.items():
                 if existing_user.get('username') == referred_by_username:
                     referred_by_email = existing_email
-                    break        
+                    break
+        
         from datetime import datetime, timedelta
         promo_data = None
         promo_expires = None
         
-        # Check if this is a referral signup (referral takes priority)
         # Check if this is a referral signup (referral takes priority)
         if referred_by_email and referred_by_email in users:
             promo_data = {"discount": 10, "months": 1}
@@ -191,12 +189,6 @@ def signup():
             'reset_token': None,
             'reset_expires': None
         }
-        
-        # Generate verification code
-        import random
-        import string
-        verification_code = ''.join(random.choices(string.digits, k=6))
-        users[email]['verification_code'] = verification_code
         
         # Generate verification code
         import random
@@ -422,7 +414,7 @@ def dashboard():
                 <h3>👥 Referral Program</h3>
                 <p>Share your unique link and earn 10% off when friends sign up!</p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="referralLink" readonly value="https://bookcompass_1.onrender.com/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
+                    <input type="text" id="referralLink" readonly value="https://bookcompass-1.onrender.com/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
                     <button onclick="copyReferralLink()">📋 Copy</button>
                 </div>
                 <p style="font-size: 12px; color: #666; margin-top: 10px;">
@@ -746,6 +738,7 @@ def select_plan(plan_name):
         </html>
         '''
     return '<script>window.location.href="/upgrade"</script>'
+
 # ============================================
 # HOW IT WORKS PAGE
 # ============================================
@@ -1015,6 +1008,7 @@ def how_it_works():
     </body>
     </html>
     '''
+
 # ============================================
 # EMAIL VERIFICATION PAGE
 # ============================================
@@ -1076,6 +1070,11 @@ def verify_email():
     </body>
     </html>
     '''
+
+# ============================================
+# RESEND CODE
+# ============================================
+
 @app.route('/resend-code')
 def resend_code():
     if 'pending_email' not in session:
@@ -1089,27 +1088,27 @@ def resend_code():
         new_code = ''.join(random.choices(string.digits, k=6))
         users[email]['verification_code'] = new_code
         
-            try:
-                params = {
-                    "from": "BookCompass <onboarding@resend.dev>",
-                    "to": [email],
-                    "subject": "Your New Verification Code - BookCompass",
-                    "html": f"""
-                    <html>
-                    <body>
-                        <h2>BookCompass Email Verification</h2>
-                        <p>Your new verification code is:</p>
-                        <h1 style="font-size: 32px; color: #ff9900;">{new_code}</h1>
-                        <p>Enter this code on the verification page to activate your account.</p>
-                        <p>This code expires in 1 hour.</p>
-                        <hr>
-                        <p>If you did not create an account, please ignore this email.</p>
-                        <p style="font-size: 12px; color: #666;">You received this email because you signed up for BookCompass.</p>
-                    </body>
-                    </html>
-                    """
-                }
-                resend.Emails.send(params)
+        try:
+            params = {
+                "from": "BookCompass <onboarding@resend.dev>",
+                "to": [email],
+                "subject": "Your New Verification Code - BookCompass",
+                "html": f"""
+                <html>
+                <body>
+                    <h2>BookCompass Email Verification</h2>
+                    <p>Your new verification code is:</p>
+                    <h1 style="font-size: 32px; color: #ff9900;">{new_code}</h1>
+                    <p>Enter this code on the verification page to activate your account.</p>
+                    <p>This code expires in 1 hour.</p>
+                    <hr>
+                    <p>If you did not create an account, please ignore this email.</p>
+                    <p style="font-size: 12px; color: #666;">You received this email because you signed up for BookCompass.</p>
+                </body>
+                </html>
+                """
+            }
+            resend.Emails.send(params)
             return '''
             <div style="text-align:center; margin-top:50px;">
                 <h2>New code sent!</h2>
@@ -1117,7 +1116,8 @@ def resend_code():
                 <a href="/verify-email">Back to verification</a>
             </div>
             '''
-        except:
+        except Exception as e:
+            print(f"Resend error: {e}")
             return '''
             <div style="text-align:center; margin-top:50px;">
                 <h2>Could not send email</h2>
@@ -1126,6 +1126,7 @@ def resend_code():
             '''
     
     return '<script>window.location.href="/signup"</script>'
+
 # ============================================
 # FORGOT PASSWORD PAGE
 # ============================================
@@ -1152,27 +1153,26 @@ def forgot_password():
         users[email]['reset_expires'] = (datetime.now() + timedelta(hours=1)).isoformat()
         
         # Send reset email using Resend
-            try:
-                reset_link = f"http://bookcompass-1.onrender.com/reset-password/{reset_token}"  # Update this to your Render URL
-                params = {
-                    "from": "BookCompass <onboarding@resend.dev>",
-                    "to": [email],
-                    "subject": "Reset Your BookCompass Password",
-                    "html": f"""
-                    <html>
-                    <body>
-                        <h2>Password Reset Request</h2>
-                        <p>Click the link below to reset your password:</p>
-                        <p><a href="{reset_link}">{reset_link}</a></p>
-                        <p>This link expires in 1 hour.</p>
-                        <hr>
-                        <p>If you did not request this, please ignore this email.</p>
-                    </body>
-                    </html>
-                    """
-                }
-                resend.Emails.send(params)
-            
+        try:
+            reset_link = f"https://bookcompass-1.onrender.com/reset-password/{reset_token}"
+            params = {
+                "from": "BookCompass <onboarding@resend.dev>",
+                "to": [email],
+                "subject": "Reset Your BookCompass Password",
+                "html": f"""
+                <html>
+                <body>
+                    <h2>Password Reset Request</h2>
+                    <p>Click the link below to reset your password:</p>
+                    <p><a href="{reset_link}">{reset_link}</a></p>
+                    <p>This link expires in 1 hour.</p>
+                    <hr>
+                    <p>If you did not request this, please ignore this email.</p>
+                </body>
+                </html>
+                """
+            }
+            resend.Emails.send(params)
             return '''
             <div style="text-align:center; margin-top:50px;">
                 <h2>Reset Link Sent!</h2>
@@ -1221,6 +1221,7 @@ def forgot_password():
     </body>
     </html>
     '''
+
 # ============================================
 # RESET PASSWORD PAGE
 # ============================================
@@ -1336,8 +1337,12 @@ def reset_password(token):
     </body>
     </html>
     '''
+
+# ============================================
+# RUN THE APP
+# ============================================
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
     print("\n" + "="*50)
     print("   🚀 BOOKCOMPASS IS RUNNING")
     print("="*50)
