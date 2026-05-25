@@ -705,8 +705,36 @@ def select_plan(plan_name):
     if 'user_id' not in session:
         return '<script>window.location.href="/login"</script>'
     
+    email = session['user_id']
+    
+    # ADMIN BYPASS - Your email gets free access to all plans
+    ADMIN_EMAILS = ['bookcompass.app@gmail.com']
+    
+    if email in ADMIN_EMAILS:
+        users[email]['plan'] = plan_name
+        return f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Admin Plan Updated - BookCompass</title>
+            <style>
+                body {{ font-family: Arial; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }}
+                .card {{ background: white; padding: 40px; border-radius: 10px; text-align: center; }}
+                button {{ background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; }}
+            </style>
+        </head>
+        <body>
+        <div class="card">
+            <h2>✅ Admin Plan Updated (Free)</h2>
+            <p>Your plan has been changed to <strong>{plan_name.upper()}</strong>.</p>
+            <p>Price: <strong>$0.00/month (Admin Free Access)</strong></p>
+            <a href="/dashboard"><button>Go to Dashboard</button></a>
+        </div>
+        </body>
+        </html>
+        '''
+    
     if plan_name in PLANS:
-        email = session['user_id']
         user = users[email]
         
         original_price = 12 if plan_name == 'starter' else 25
@@ -732,8 +760,6 @@ def select_plan(plan_name):
         users[email]['plan'] = plan_name
 
         # Record payment (when payments are integrated)
-        # For now, this records plan changes for testing
-        # When you add Monnify, move this to after payment confirmation
         if plan_name != 'free':
             record_payment(email, final_price, plan_name, 'manual')
         
