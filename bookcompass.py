@@ -20,6 +20,8 @@ usage_tracker = {}
 
 # Payment tracking
 payments = []  # List to store all payment records
+# Contact messages storage
+contact_messages = []  # List to store all contact form messages
 
 # Pricing plans
 PLANS = {
@@ -118,7 +120,8 @@ def home():
     <p>&copy; 2026 BookCompass. All rights reserved.</p>
     <p>
         <a href="/terms" style="color: #ff9900; margin: 0 10px;">Terms of Service</a> |
-        <a href="/privacy" style="color: #ff9900; margin: 0 10px;">Privacy Policy</a>
+        <a href="/privacy" style="color: #ff9900; margin: 0 10px;">Privacy Policy</a> |
+        <a href="/contact" style="color: #ff9900; margin: 0 10px;">Contact Us</a>
     </p>
 </div>
 </body>
@@ -1664,6 +1667,38 @@ def admin_panel():
                 <li><strong>Payment Methods:</strong> Monnify: {monnify_count}, Manual: {manual_count}</li>
             </ul>
         </div>
+
+        <!-- Contact Messages -->
+        <div class="card">
+            <h2>📬 Contact Messages ({len([m for m in contact_messages if not m.get('read', False)])} unread)</h2>
+            {f'''
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>From</th>
+                        <th>Subject</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {''.join(f'''
+                    <tr style="{'background: #f0f0f0' if not m.get('read', False) else ''}">
+                        <td>{m.get('date', 'N/A')}</td>
+                        <td>{m.get('name', 'N/A')}</td>
+                        <td>{m.get('subject', 'N/A')[:40]}...</td>
+                        <td>{'🔴 Unread' if not m.get('read', False) else '✅ Read'}</td>
+                        <td>
+                            <a href="/admin/view-message/{m.get('id')}?password=BookCompassAdmin@@2026!" style="color: #ff9900;">View</a> |
+                            <a href="/admin/mark-read/{m.get('id')}?password=BookCompassAdmin@@2026!" style="color: #4CAF50;">Mark Read</a>
+                        </td>
+                    </tr>
+                    ''' for m in contact_messages[-20:][::-1])}
+                </tbody>
+            </table>
+            ''' if contact_messages else '<p>No contact messages yet.</p>'}
+        </div>
         
         <!-- Comparison Note -->
         <div class="card">
@@ -1915,7 +1950,196 @@ def privacy():
     </body>
     </html>
     '''
+# ============================================
+# CONTACT PAGE
+# ============================================
 
+@app.route('/contact', methods=['GET', 'POST'])
+def contact():
+    message_sent = False
+    error = None
+    
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+        
+        # Validate
+        if not name or not email or not subject or not message:
+            error = "Please fill in all fields."
+        elif '@' not in email or '.' not in email:
+            error = "Please enter a valid email address."
+        else:
+            try:
+                # Save message to contact_messages list
+                contact_messages.append({
+                    'id': len(contact_messages) + 1,
+                    'name': name,
+                    'email': email,
+                    'subject': subject,
+                    'message': message,
+                    'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'read': False
+                })
+                
+                # Send email to you (the admin)
+                params = {
+                    "from": "BookCompass Contact <onboarding@resend.dev>",
+                    "to": ["bookcompass.app@gmail.com"],
+                    "reply_to": email,
+                    "subject": f"Contact Form: {subject}",
+                    "html": f"""
+                    <html>
+                    <body>
+                        <h2>New Contact Form Message</h2>
+                        <p><strong>From:</strong> {name} ({email})</p>
+                        <p><strong>Subject:</strong> {subject}</p>
+                        <p><strong>Message:</strong></p>
+                        <p>{message.replace(chr(10), '<br>')}</p>
+                        <hr>
+                        <p style="font-size: 12px; color: #666;">Sent from BookCompass Contact Form</p>
+                    </body>
+                    </html>
+                    """
+                }
+                resend.Emails.send(params)
+                message_sent = True
+            except Exception as e:
+                print(f"Contact email error: {e}")
+                error = "Could not send message. Please try again later."
+    
+    # Get logged in status for navigation
+    logged_in = session.get('user_id') is not None
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Contact Us - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }}
+            .header {{ background: #232f3e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }}
+            .logo {{ font-size: 24px; font-weight: bold; }}
+            .logo span {{ color: #ff9900; }}
+            .nav a {{ color: white; margin-left: 20px; text-decoration: none; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 30px; }}
+            .card {{ background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+            h1 {{ color: #232f3e; }}
+            label {{ font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; }}
+            input, textarea {{ width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: Arial; }}
+            button {{ background: #ff9900; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }}
+            button:hover {{ background: #e68a00; }}
+            .success {{ background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+            .error {{ background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/how-it-works">How It Works</a>
+                {"<a href='/dashboard'>Dashboard</a>" if logged_in else ""}
+                <a href="/login">Login</a>
+                <a href="/signup">Sign Up</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+        
+        <div class="container">
+            <div class="card">
+                <h1>Contact Us</h1>
+                <p>Have questions or need help? Send us a message and we'll get back to you within 24 hours.</p>
+                
+                {f'<div class="success">✅ Message sent successfully! We will respond shortly.</div>' if message_sent else ''}
+                {f'<div class="error">⚠️ {error}</div>' if error else ''}
+                
+                <form method="post">
+                    <label>Your Name *</label>
+                    <input type="text" name="name" placeholder="John Doe" required>
+                    
+                    <label>Your Email *</label>
+                    <input type="email" name="email" placeholder="you@example.com" required>
+                    
+                    <label>Subject *</label>
+                    <input type="text" name="subject" placeholder="Question about keyword research" required>
+                    
+                    <label>Message *</label>
+                    <textarea name="message" rows="5" placeholder="Please describe your question or issue..." required></textarea>
+                    
+                    <button type="submit">📧 Send Message</button>
+                </form>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+# ============================================
+# VIEW CONTACT MESSAGE
+# ============================================
+
+@app.route('/admin/view-message/<int:msg_id>')
+def view_contact_message(msg_id):
+    admin_password = request.args.get('password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return '<script>window.location.href="/admin"</script>'
+    
+    message = None
+    for m in contact_messages:
+        if m.get('id') == msg_id:
+            message = m
+            break
+    
+    if not message:
+        return '<div style="text-align:center; margin-top:50px;"><h2>Message not found</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>View Message - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
+            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+            h1 {{ color: #232f3e; }}
+            .detail {{ background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; }}
+            .back {{ background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📬 Contact Message</h1>
+            <div class="detail">
+                <p><strong>Date:</strong> {message.get('date', 'N/A')}</p>
+                <p><strong>From:</strong> {message.get('name', 'N/A')}</p>
+                <p><strong>Email:</strong> <a href="mailto:{message.get('email', '')}">{message.get('email', 'N/A')}</a></p>
+                <p><strong>Subject:</strong> {message.get('subject', 'N/A')}</p>
+                <p><strong>Message:</strong></p>
+                <p style="background:white;padding:15px;border-radius:5px;border:1px solid #ddd;">{message.get('message', 'N/A').replace(chr(10), '<br>')}</p>
+            </div>
+            <a href="/admin?password=BookCompassAdmin@@2026!" class="back">← Back to Admin</a>
+        </div>
+    </body>
+    </html>
+    '''
+
+# ============================================
+# MARK MESSAGE AS READ
+# ============================================
+
+@app.route('/admin/mark-read/<int:msg_id>')
+def mark_message_read(msg_id):
+    admin_password = request.args.get('password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return '<script>window.location.href="/admin"</script>'
+    
+    for m in contact_messages:
+        if m.get('id') == msg_id:
+            m['read'] = True
+            break
+    
+    return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
 if __name__ == '__main__':
     print("\n" + "="*50)
     print("   🚀 BOOKCOMPASS IS RUNNING")
