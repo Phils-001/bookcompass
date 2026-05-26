@@ -328,7 +328,10 @@ def login():
     </style>
     </head>
     <body>
-        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="header"><div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+        </div>
         <div class="container">
             <h2>Login</h2>
             <form method="post">
@@ -403,7 +406,10 @@ def dashboard():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+            </div>
             <div class="nav">
                 <span>Hi, {user.get('username', email)}</span>
                 <a href="/dashboard">Dashboard</a>
@@ -666,7 +672,10 @@ def upgrade():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+            </div>
             <div class="nav">
                 <span>Hi, {users[email].get('username', email)}</span>
                 <a href="/dashboard">Dashboard</a>
@@ -1109,7 +1118,10 @@ def verify_email():
         </style>
     </head>
     <body>
-        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="header"><div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+        </div>
         <div class="container">
             <h2>Verify Your Email</h2>
             <p>We sent a 6-digit code to <strong>{email}</strong></p>
@@ -1262,7 +1274,10 @@ def forgot_password():
         </style>
     </head>
     <body>
-        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="header"><div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+        </div>
         <div class="container">
             <h2>Forgot Password</h2>
             <p>Enter your email address and we'll send you a reset link.</p>
@@ -1378,7 +1393,10 @@ def reset_password(token):
         </style>
     </head>
     <body>
-        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="header"><div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+        </div>
         <div class="container">
             <h2>Reset Password</h2>
             <p>Enter your new password for: <strong>{user_email}</strong></p>
@@ -1775,7 +1793,10 @@ def terms():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+            </div>
             <div class="nav">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
@@ -1887,7 +1908,10 @@ def privacy():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+            </div>
             <div class="nav">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
@@ -2070,7 +2094,10 @@ def contact():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+            </div>
             <div class="nav">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
