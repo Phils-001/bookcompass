@@ -1126,12 +1126,6 @@ def verify_email():
             <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
             Book<span>Compass</span>
         </div>
-        <div class="nav">
-            <a href="/">Home</a>
-            <a href="/how-it-works">How It Works</a>
-            <a href="/login">Login</a>
-            <a href="/signup">Sign Up</a>
-        </div>
     </div>
     <div class="container" style="text-align: center;">
     <h2>Verify Your Email</h2>
