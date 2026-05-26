@@ -274,8 +274,8 @@ def signup():
     Book<span>Compass</span>
         </div>
         <div class="container">
-            {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
-            <h2>Create Account</h2>
+        {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
+        <h2>Create Account</h2>
             <form method="post">
                 <input type="text" name="username" placeholder="Username (e.g., JohnPublisher)" required>
                 <input type="email" name="email" placeholder="Email" required>
