@@ -254,8 +254,10 @@ def signup():
     return f'''
     <!DOCTYPE html>
     <html>
-    <head><title>Sign Up - BookCompass</title>
-    <style>
+    <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
+        <title>Sign Up - BookCompass</title>
+        <style>
         body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }}
         .container {{ max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; }}
         input {{ width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }}
@@ -264,7 +266,7 @@ def signup():
         .logo {{ font-size: 24px; }}
         .logo span {{ color: #ff9900; }}
         .referral-notice {{ background: #e8f5e9; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }}
-    </style>
+        </style>
     </head>
     <body>
         <div class="header"><div class="logo">
