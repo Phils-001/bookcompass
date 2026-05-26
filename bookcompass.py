@@ -319,7 +319,9 @@ def login():
     return '''
     <!DOCTYPE html>
     <html>
-    <head><title>Login - BookCompass</title>
+    <head>
+       <link rel="icon" type="image/png" href="/static/favicon.png">
+       <title>Login - BookCompass</title>
     <style>
         body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }
         .container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; }
