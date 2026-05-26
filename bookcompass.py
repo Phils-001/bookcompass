@@ -47,6 +47,7 @@ def home():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>BookCompass - KDP Keyword Navigator</title>
         <style>
             body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
@@ -75,8 +76,11 @@ def home():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
-            <div class="nav">
+        <div class="logo">
+            <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+            Book<span>Compass</span>
+        </div>
+        <div class="nav">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
                 <a href="/login">Login</a>
@@ -85,7 +89,7 @@ def home():
         </div>
         <div class="container">
             <div class="card" style="text-align: center;">
-                <h1>📚 Welcome to BookCompass</h1>
+                <h1> Welcome to BookCompass</h1>
                 <p style="font-size: 20px; color: #ff9900;">Your KDP Keyword Navigator</p>
                 <p style="font-size: 16px; margin-top: 20px;">Stop guessing which keywords will sell. BookCompass analyzes real Amazon data to find low-competition, high-opportunity keywords for your KDP books.</p>
                 <a href="/signup"><button>🚀 Get Started Free →</button></a>
