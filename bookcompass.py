@@ -267,7 +267,10 @@ def signup():
     </style>
     </head>
     <body>
-        <div class="header"><div class="logo">📚 Book<span>Compass</span></div></div>
+        <div class="header"><div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+        </div>
         <div class="container">
             {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
             <h2>Create Account</h2>
@@ -1118,22 +1121,30 @@ def verify_email():
         </style>
     </head>
     <body>
-        <div class="header"><div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
-    Book<span>Compass</span>
+    <div class="header">
+        <div class="logo">
+            <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+            Book<span>Compass</span>
         </div>
-        <div class="container">
-            <h2>Verify Your Email</h2>
-            <p>We sent a 6-digit code to <strong>{email}</strong></p>
-            <form method="post">
-                <input type="text" name="verification_code" placeholder="Enter 6-digit code" required maxlength="6">
-                <button type="submit">Verify</button>
-            </form>
-            <p style="text-align:center; margin-top:20px;">
-                <a href="/resend-code">Resend code</a>
-            </p>
+        <div class="nav">
+            <a href="/">Home</a>
+            <a href="/how-it-works">How It Works</a>
+            <a href="/login">Login</a>
+            <a href="/signup">Sign Up</a>
         </div>
-    </body>
+    </div>
+    <div class="container">
+        <h2>Verify Your Email</h2>
+        <p>We sent a 6-digit code to <strong>{email}</strong></p>
+        <form method="post">
+            <input type="text" name="verification_code" placeholder="Enter 6-digit code" required maxlength="6">
+            <button type="submit">Verify</button>
+        </form>
+        <p style="text-align:center; margin-top:20px;">
+            <a href="/resend-code">Resend code</a>
+        </p>
+    </div>
+</body>
     </html>
     '''
 
