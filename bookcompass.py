@@ -802,6 +802,7 @@ def how_it_works():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>How It Works - BookCompass</title>
         <style>
             body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }}
@@ -829,7 +830,10 @@ def how_it_works():
     </head>
     <body>
         <div class="header">
-            <div class="logo">📚 Book<span>Compass</span></div>
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+        </div>
             <div class="nav">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
