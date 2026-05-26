@@ -274,7 +274,7 @@ def signup():
     Book<span>Compass</span>
         </div>
         <div class="container" style="text-align: center;">
-    {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
+    {"<div class='referral-notice' style='background: #fff8f0; color: #232f3e; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #ff9900;'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
     <h2 style="color: #232f3e;">Create Account</h2>
     <form method="post" style="display: inline-block; text-align: left; width: 100%; max-width: 400px;">
         <input type="text" name="username" placeholder="Username (e.g., JohnPublisher)" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
