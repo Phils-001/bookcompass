@@ -77,7 +77,7 @@ def home():
     <body>
         <div class="header">
         <div class="logo">
-            <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+            <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
             Book<span>Compass</span>
         </div>
         <div class="nav">
@@ -270,7 +270,7 @@ def signup():
     </head>
     <body>
         <div class="header"><div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
         <div class="container">
@@ -336,7 +336,7 @@ def login():
     </head>
     <body>
         <div class="header"><div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
         <div class="container">
@@ -415,7 +415,7 @@ def dashboard():
     <body>
         <div class="header">
             <div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
             </div>
             <div class="nav">
@@ -682,7 +682,7 @@ def upgrade():
     <body>
         <div class="header">
             <div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
             </div>
             <div class="nav">
@@ -849,7 +849,7 @@ def how_it_works():
     <body>
         <div class="header">
             <div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
             <div class="nav">
@@ -1130,7 +1130,7 @@ def verify_email():
     <body>
     <div class="header">
         <div class="logo">
-            <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+            <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
             Book<span>Compass</span>
         </div>
     </div>
@@ -1288,7 +1288,7 @@ def forgot_password():
     </head>
     <body>
         <div class="header"><div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
         <div class="container">
@@ -1408,7 +1408,7 @@ def reset_password(token):
     </head>
     <body>
         <div class="header"><div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
         <div class="container">
@@ -1810,7 +1810,7 @@ def terms():
     <body>
         <div class="header">
             <div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
             </div>
             <div class="nav">
@@ -1926,7 +1926,7 @@ def privacy():
     <body>
         <div class="header">
             <div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
             </div>
             <div class="nav">
@@ -2113,7 +2113,7 @@ def contact():
     <body>
         <div class="header">
             <div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 30px; width: auto; vertical-align: middle; margin-right: 10px;">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
             </div>
             <div class="nav">
