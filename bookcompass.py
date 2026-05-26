@@ -341,16 +341,20 @@ def login():
     <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
-        <div class="container">
-            <h2>Login</h2>
-            <form method="post">
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <button type="submit">Login</button>
-            </form>
-            <p style="text-align:center"><a href="/signup">No account? Sign Up</a></p>
-            <p style="text-align:center; margin-top:15px;"><a href="/forgot-password">Forgot Password?</a></p>
-        </div>
+        <div class="container" style="text-align: center;">
+    <h2 style="color: #232f3e;">Login</h2>
+    <form method="post" style="display: inline-block; text-align: left; width: 100%; max-width: 400px;">
+        <input type="email" name="email" placeholder="Email" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <button type="submit" style="background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer;">Login</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="/signup">No account? Sign Up</a>
+    </p>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="/forgot-password">Forgot Password?</a>
+    </p>
+    </div>
     </body>
     </html>
     '''
