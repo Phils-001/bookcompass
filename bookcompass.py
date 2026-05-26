@@ -388,6 +388,7 @@ def dashboard():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Dashboard - BookCompass</title>
         <style>
             body {{ font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }}
@@ -659,6 +660,7 @@ def upgrade():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Upgrade - BookCompass</title>
         <style>
             body {{ font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }}
@@ -1113,6 +1115,7 @@ def verify_email():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Verify Email - BookCompass</title>
         <style>
             body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }}
@@ -1271,6 +1274,7 @@ def forgot_password():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Forgot Password - BookCompass</title>
         <style>
             body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }
@@ -1369,6 +1373,7 @@ def reset_password(token):
         <!DOCTYPE html>
         <html>
         <head>
+            <link rel="icon" type="image/png" href="/static/favicon.png">
             <title>Password Reset - BookCompass</title>
             <style>
                 body { font-family: Arial; text-align: center; margin-top: 100px; }
@@ -1456,6 +1461,7 @@ def admin_panel():
         <!DOCTYPE html>
         <html>
         <head>
+            <link rel="icon" type="image/png" href="/static/favicon.png">
             <title>Admin Access - BookCompass</title>
             <style>
                 body { font-family: Arial; text-align: center; margin-top: 100px; background: #f0f0f0; }
@@ -1785,6 +1791,7 @@ def terms():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Terms of Service - BookCompass</title>
         <style>
             body { font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }
@@ -1900,6 +1907,7 @@ def privacy():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Privacy Policy - BookCompass</title>
         <style>
             body { font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }
@@ -2083,6 +2091,7 @@ def contact():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Contact Us - BookCompass</title>
         <style>
             body {{ font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }}
