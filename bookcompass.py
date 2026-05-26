@@ -273,19 +273,21 @@ def signup():
     <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
-        <div class="container">
-        {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
-        <h2>Create Account</h2>
-            <form method="post">
-                <input type="text" name="username" placeholder="Username (e.g., JohnPublisher)" required>
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="text" name="promo_code" placeholder="Promo code (optional)" style="width: 100%; padding: 10px; margin: 10px 0;">
-                <input type="hidden" name="referred_by" value="{referral_username}">
-                <button type="submit">Sign Up</button>
-            </form>
-            <p style="text-align:center"><a href="/login">Already have an account? Login</a></p>
-        </div>
+        <div class="container" style="text-align: center;">
+    {"<div class='referral-notice'>🎉 You were referred by a friend! You get 10% off your first month!</div>" if referral_username else ""}
+    <h2 style="color: #232f3e;">Create Account</h2>
+    <form method="post" style="display: inline-block; text-align: left; width: 100%; max-width: 400px;">
+        <input type="text" name="username" placeholder="Username (e.g., JohnPublisher)" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="email" name="email" placeholder="Email" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="password" name="password" placeholder="Password" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="text" name="promo_code" placeholder="Promo code (optional)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <input type="hidden" name="referred_by" value="{referral_username}">
+        <button type="submit" style="background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer;">Sign Up</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="/login">Already have an account? Login</a>
+    </p>
+    </div>
     </body>
     </html>
     '''
