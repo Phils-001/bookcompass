@@ -1133,16 +1133,16 @@ def verify_email():
             <a href="/signup">Sign Up</a>
         </div>
     </div>
-    <div class="container">
-        <h2>Verify Your Email</h2>
-        <p>We sent a 6-digit code to <strong>{email}</strong></p>
-        <form method="post">
-            <input type="text" name="verification_code" placeholder="Enter 6-digit code" required maxlength="6">
-            <button type="submit">Verify</button>
-        </form>
-        <p style="text-align:center; margin-top:20px;">
-            <a href="/resend-code">Resend code</a>
-        </p>
+    <div class="container" style="text-align: center;">
+    <h2>Verify Your Email</h2>
+    <p>We sent a 6-digit code to <strong>{email}</strong></p>
+    <form method="post" style="display: inline-block; text-align: left;">
+        <input type="text" name="verification_code" placeholder="Enter 6-digit code" required maxlength="6" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <button type="submit" style="background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">Verify</button>
+    </form>
+    <p style="text-align:center; margin-top:20px;">
+        <a href="/resend-code">Resend code</a>
+    </p>
     </div>
 </body>
     </html>
