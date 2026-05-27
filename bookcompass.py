@@ -452,7 +452,7 @@ def dashboard():
                 <h3>👥 Referral Program</h3>
                 <p>Share your unique link and earn 10% off when friends sign up!</p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <input type="text" id="referralLink" readonly value="https://bookcompass-1.onrender.com/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
+                    <input type="text" id="referralLink" readonly value="https://bookcompass.app/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
                     <button onclick="copyReferralLink()">📋 Copy</button>
                 </div>
                 <p style="font-size: 12px; color: #666; margin-top: 10px;">
@@ -1238,7 +1238,7 @@ def forgot_password():
         
         # Send reset email using Resend
         try:
-            reset_link = f"https://bookcompass-1.onrender.com/reset-password/{reset_token}"
+            reset_link = f"https://bookcompass.app/reset-password/{reset_token}"
             params = {
                 "from": "BookCompass <onboarding@resend.dev>",
                 "to": [email],
