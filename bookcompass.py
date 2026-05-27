@@ -1415,20 +1415,24 @@ def reset_password(token):
         </style>
     </head>
     <body>
-        <div class="header"><div class="logo">
-    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
-    Book<span>Compass</span>
+    <div class="header">
+        <div class="logo">
+            <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
+            Book<span>Compass</span>
         </div>
-        <div class="container">
-            <h2>Reset Password</h2>
-            <p>Enter your new password for: <strong>{user_email}</strong></p>
-            <form method="post">
-                <input type="password" name="password" placeholder="New Password" required minlength="6">
-                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                <button type="submit">Reset Password</button>
-            </form>
-        </div>
-    </body>
+    </div>
+    <div class="container" style="text-align: center;">
+        <h2 style="color: #232f3e;">Reset Password</h2>
+        <p style="color: #000000; margin-bottom: 20px; font-size: 16px;">
+            Enter your new password for: <strong style="color: #ff9900;">{user_email}</strong>
+        </p>
+        <form method="post" style="display: inline-block; text-align: left; width: 100%; max-width: 300px;">
+            <input type="password" name="password" placeholder="New Password" required minlength="6" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <button type="submit" style="background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer;">Reset Password</button>
+        </form>
+    </div>
+</body>
     </html>
     '''
 
