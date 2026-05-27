@@ -503,44 +503,84 @@ def dashboard():
             document.getElementById('results').style.display = 'none';
             
             const results = [];
+            const errors = [];
+            
             for(let i = 0; i < keywords.length; i++) {{
                 const keyword = keywords[i].trim();
                 if(!keyword) continue;
-                document.getElementById('loadingText').innerHTML = `Researching ${{i+1}}/${{keywords.length}}: ${{keyword}}...`;
                 
-                const res = await fetch('/api/research', {{
-                    method: 'POST',
-                    headers: {{'Content-Type': 'application/json'}},
-                    body: JSON.stringify({{keyword: keyword}})
-                }});
-                const data = await res.json();
-                if(data.error) {{ alert(data.error); break; }}
-                results.push(data);
+                // Update progress text
+                document.getElementById('loadingText').innerHTML = `Researching ${{i+1}}/${{keywords.length}}: ${{keyword}}...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>`;
+                
+                try {{
+                    // Create a timeout for each individual keyword (30 seconds)
+                    const keywordTimeout = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error(`Keyword "${{keyword}}" timed out`)), 30000)
+                    );
+                    
+                    const fetchPromise = fetch('/api/research', {{
+                        method: 'POST',
+                        headers: {{'Content-Type': 'application/json'}},
+                        body: JSON.stringify({{keyword: keyword}})
+                    }});
+                    
+                    const response = await Promise.race([fetchPromise, keywordTimeout]);
+                    const data = await response.json();
+                    
+                    if(data.error) {{ 
+                        errors.push({{keyword: keyword, error: data.error}});
+                    }} else {{
+                        results.push(data);
+                    }}
+                }} catch(error) {{
+                    console.error(`Error researching "${{keyword}}":`, error);
+                    errors.push({{keyword: keyword, error: error.message || 'Request failed'}});
+                }}
             }}
             
-            results.sort((a,b) => b.score - a.score);
-            const tbody = document.getElementById('resultsBody');
-            tbody.innerHTML = '';
-            results.forEach(r => {{
-                const row = tbody.insertRow();
-                let cls = 'bad';
-                if(r.score >= 7) cls = 'good';
-                else if(r.score >= 5) cls = 'medium';
-                row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
-                row.insertCell(1).innerHTML = r.keyword;
-                row.insertCell(2).innerHTML = r.volume;
-                row.insertCell(3).innerHTML = r.competition;
-            }});
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('results').style.display = 'block';
-            
-            // Remove any existing completion message before adding a new one
-            const existingMsg = document.querySelector('.completion-message');
-            if (existingMsg) {{
-                existingMsg.remove();
-            }}
-            
+            // Show partial results if any
             if (results.length > 0) {{
+                results.sort((a,b) => b.score - a.score);
+                const tbody = document.getElementById('resultsBody');
+                tbody.innerHTML = '';
+                results.forEach(r => {{
+                    const row = tbody.insertRow();
+                    let cls = 'bad';
+                    if(r.score >= 7) cls = 'good';
+                    else if(r.score >= 5) cls = 'medium';
+                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
+                    row.insertCell(1).innerHTML = r.keyword;
+                    row.insertCell(2).innerHTML = r.volume;
+                    row.insertCell(3).innerHTML = r.competition;
+                }});
+                document.getElementById('results').style.display = 'block';
+            }}
+            
+            // Show error summary if any keywords failed
+            if (errors.length > 0) {{
+                let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
+                errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
+                errors.forEach(e => {{
+                    errorHtml += `<li><strong>${{e.keyword}}</strong>: ${{e.error}}</li>`;
+                }});
+                errorHtml += '</ul></div>';
+                
+                const existingError = document.querySelector('.error-summary');
+                if (existingError) existingError.remove();
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-summary';
+                errorDiv.innerHTML = errorHtml;
+                document.getElementById('results').appendChild(errorDiv);
+            }}
+            
+            document.getElementById('loading').style.display = 'none';
+            
+            // Show completion message
+            const existingMsg = document.querySelector('.completion-message');
+            if (existingMsg) existingMsg.remove();
+            
+            if (results.length > 0 || errors.length > 0) {{
                 const msg = document.createElement('div');
                 msg.className = 'completion-message';
                 msg.style.background = '#e3f2fd';
@@ -548,7 +588,13 @@ def dashboard():
                 msg.style.borderRadius = '5px';
                 msg.style.marginTop = '10px';
                 msg.style.textAlign = 'center';
-                msg.innerHTML = '✅ Research complete! <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.';
+                
+                let messageText = `✅ Research complete! ${{results.length}} keywords processed successfully.`;
+                if (errors.length > 0) {{
+                    messageText += ` ${{errors.length}} keywords failed.`;
+                }}
+                messageText += ` <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.`;
+                msg.innerHTML = messageText;
                 document.getElementById('results').appendChild(msg);
             }}
         }}
@@ -585,12 +631,15 @@ def api_research():
     # Get search volume
     try:
         url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
-        r = requests.get(url, timeout=10)
+        r = requests.get(url, timeout=15)
         count = len(r.json().get('suggestions', []))
         if count >= 8: volume = "HIGH"
         elif count >= 4: volume = "MEDIUM"
         elif count >= 1: volume = "LOW"
         else: volume = "VERY LOW"
+    except requests.exceptions.Timeout:
+        volume = "MEDIUM"
+        print(f"Timeout getting search volume for: {keyword}")
     except:
         volume = "MEDIUM"
     
@@ -608,7 +657,7 @@ def api_research():
             try:
                 url = "https://api.rainforestapi.com/request"
                 params = {"api_key": YOUR_API_KEY, "type": "search", "amazon_domain": "amazon.com", "search_term": keyword}
-                r = requests.get(url, params=params, timeout=30)
+                r = requests.get(url, params=params, timeout=25)
                 data = r.json()
                 strong = 0
                 for item in data.get('search_results', [])[:5]:
@@ -626,6 +675,9 @@ def api_research():
                 if strong >= 3: competition = "HIGH"
                 elif strong >= 1: competition = "MEDIUM"
                 else: competition = "LOW"
+            except requests.exceptions.Timeout:
+                competition = "MEDIUM"
+                print(f"Timeout getting competition for: {keyword}")
             except:
                 competition = "MEDIUM"
     
@@ -647,7 +699,7 @@ def api_research():
     
     score = max(1, min(10, score))
     
-    time.sleep(1)
+    time.sleep(0.5)
     return jsonify({'keyword': keyword, 'volume': volume, 'competition': competition, 'score': score})
 
 # ============================================
