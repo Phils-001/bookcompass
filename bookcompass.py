@@ -27,7 +27,7 @@ contact_messages = []  # List to store all contact form messages
 PLANS = {
     "free": {"daily_limit": 3},
     "starter": {"daily_limit": 20},
-    "pro": {"daily_limit": 100}
+    "pro": {"daily_limit": 60}
 }
 
 # Promo codes
@@ -115,7 +115,7 @@ def home():
                 <div class="pricing-grid">
                     <div class="plan"><h3>Free</h3><div class="price">$0</div><p>3 searches/day</p><ul style="text-align: left;"><li>✓ Basic keyword analysis</li><li>✓ Search volume data</li><li>✓ Competition check</li></ul><a href="/signup"><button>Start Free</button></a></div>
                     <div class="plan featured"><h3>Starter</h3><div class="price">$12<span style="font-size: 14px;">/month</span></div><p>20 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Free</li><li>✓ 10x more searches</li><li>✓ Bulk research (30 keywords)</li><li>✓ Priority support</li></ul><a href="/signup"><button>Choose Starter</button></a></div>
-                    <div class="plan"><h3>Pro</h3><div class="price">$25<span style="font-size: 14px;">/month</span></div><p>100 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Starter</li><li>✓ 4x more searches</li><li>✓ Bulk research (100 keywords)</li><li>✓ Export to CSV</li></ul><a href="/signup"><button>Choose Pro</button></a></div>
+                    <div class="plan"><h3>Pro</h3><div class="price">$25<span style="font-size: 14px;">/month</span></div><p>60 searches/day</p><ul style="text-align: left;"><li>✓ Everything in Starter</li><li>✓ 4x more searches</li><li>✓ Bulk research (60 keywords)</li><li>✓ Export to CSV</li></ul><a href="/signup"><button>Choose Pro</button></a></div>
                 </div>
             </div>
             <div class="card cta"><h2>Ready to Find Your Next Winning Keyword?</h2><p>Join KDP publishers using BookCompass to find profitable niches.</p><a href="/signup"><button style="background: #ff9900; font-size: 18px;">Create Free Account →</button></a></div>
@@ -715,7 +715,7 @@ def upgrade():
                 </div>
                 <div class="plan {'current' if current_plan == 'pro' else ''}">
                     {'<div class="badge">CURRENT PLAN</div>' if current_plan == 'pro' else ''}
-                    <h3>Pro</h3><div class="price">$25<span style="font-size:14px">/month</span></div><p>100 searches/day</p>
+                    <h3>Pro</h3><div class="price">$25<span style="font-size:14px">/month</span></div><p>60 searches/day</p>
                     {'<button disabled style="background: #ccc; cursor: not-allowed;">Current Plan</button>' if current_plan == 'pro' else '<a href="/select_plan/pro"><button>Choose Pro</button></a>'}
                 </div>
             </div>
@@ -1028,7 +1028,7 @@ def how_it_works():
                     <div style="flex: 1; border: 1px solid #ddd; border-radius: 10px; padding: 20px; text-align: center;">
                         <h3>Pro</h3>
                         <div style="font-size: 32px; color: #232f3e;">$25<span style="font-size: 14px;">/month</span></div>
-                        <p>100 searches/day</p>
+                        <p>60 searches/day</p>
                         <a href="/signup"><button style="padding: 8px 20px;">Choose Pro</button></a>
                     </div>
                 </div>
@@ -1859,7 +1859,7 @@ def terms():
                 <ul>
                     <li><strong>Free Plan:</strong> 3 searches per day at no cost</li>
                     <li><strong>Starter Plan:</strong> $12 per month for 20 searches per day</li>
-                    <li><strong>Pro Plan:</strong> $25 per month for 100 searches per day</li>
+                    <li><strong>Pro Plan:</strong> $25 per month for 60 searches per day</li>
                 </ul>
                 <p>Payments are processed through Monnify (or another third-party payment processor). You agree to provide accurate billing information.</p>
                 
