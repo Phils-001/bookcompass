@@ -217,7 +217,7 @@ def signup():
         # Send verification email using Resend
         try:
             params = {
-                "from": "BookCompass <onboarding@resend.dev>",
+                "from": "BookCompass <noreply@bookcompass.app>",
                 "to": [email],
                 "subject": "Verify Your BookCompass Account",
                 "html": f"""
@@ -1174,7 +1174,7 @@ def resend_code():
         
         try:
             params = {
-                "from": "BookCompass <onboarding@resend.dev>",
+                "from": "BookCompass <noreply@bookcompass.app>",
                 "to": [email],
                 "subject": "Your New Verification Code - BookCompass",
                 "html": f"""
@@ -1240,7 +1240,7 @@ def forgot_password():
         try:
             reset_link = f"https://bookcompass.app/reset-password/{reset_token}"
             params = {
-                "from": "BookCompass <onboarding@resend.dev>",
+                "from": "BookCompass <noreply@bookcompass.app>",
                 "to": [email],
                 "subject": "Reset Your BookCompass Password",
                 "html": f"""
@@ -2072,7 +2072,7 @@ def contact():
                 
                 # Send email to you (the admin)
                 params = {
-                    "from": "BookCompass Contact <onboarding@resend.dev>",
+                    "from": "BookCompass Contact <noreply@bookcompass.app>",
                     "to": ["bookcompass.app@gmail.com"],
                     "reply_to": email,
                     "subject": f"Contact Form: {subject}",
