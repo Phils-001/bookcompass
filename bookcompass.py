@@ -1297,15 +1297,17 @@ def forgot_password():
     <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
     Book<span>Compass</span>
         </div>
-        <div class="container">
-            <h2>Forgot Password</h2>
-            <p>Enter your email address and we'll send you a reset link.</p>
-            <form method="post">
-                <input type="email" name="email" placeholder="Email" required>
-                <button type="submit">Send Reset Link</button>
-            </form>
-            <p style="text-align:center; margin-top:15px;"><a href="/login">Back to Login</a></p>
-        </div>
+        <div class="container" style="text-align: center;">
+    <h2 style="color: #232f3e;">Forgot Password</h2>
+    <p style="color: #666; margin-bottom: 20px;">Enter your email address and we'll send you a reset link.</p>
+    <form method="post" style="display: inline-block; text-align: left; width: 100%; max-width: 400px;">
+        <input type="email" name="email" placeholder="Email" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        <button type="submit" style="background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer;">Send Reset Link</button>
+    </form>
+    <p style="text-align: center; margin-top: 15px;">
+        <a href="/login">Back to Login</a>
+    </p>
+    </div>
     </body>
     </html>
     '''
