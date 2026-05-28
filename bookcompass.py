@@ -591,14 +591,11 @@ def dashboard():
                         }});
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
-                    }} else if (r.competition && r.competition.includes('API ERROR')) {{
+                    }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
-                }});
-                document.getElementById('results').style.display = 'block';
-            }}
             
             // Show error summary if any keywords failed
             if (errors.length > 0) {{
