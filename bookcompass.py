@@ -591,8 +591,10 @@ def dashboard():
                         }});
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
+                    }} else if (r.competition && r.competition.includes('API ERROR')) {{
+                        row.insertCell(4).innerHTML = '<span style="color: #f44336;">⚠️ API Error - Contact Support</span>';
                     }} else {{
-                        row.insertCell(4).innerHTML = '<span style="color: #999;">Upgrade to see competitors</span>';
+                        row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
                 }});
                 document.getElementById('results').style.display = 'block';
