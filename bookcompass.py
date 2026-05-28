@@ -503,7 +503,7 @@ def dashboard():
             <div id="results" style="display:none;" class="card">
                 <h3>Results (Best Opportunities First)</h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -579,6 +579,21 @@ def dashboard():
                     row.insertCell(1).innerHTML = r.keyword;
                     row.insertCell(2).innerHTML = r.volume;
                     row.insertCell(3).innerHTML = r.competition;
+                    
+                    // Add competitors column
+                    if (r.competitors && r.competitors.length > 0) {{
+                        let compHtml = '<div style="font-size: 12px;">';
+                        r.competitors.forEach((comp, idx) => {{
+                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
+                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
+                            compHtml += `<span style="color: #666;">BSR: ${{comp.bsr}}</span>`;
+                            compHtml += `</div>`;
+                        }});
+                        compHtml += '</div>';
+                        row.insertCell(4).innerHTML = compHtml;
+                    }} else {{
+                        row.insertCell(4).innerHTML = '<span style="color: #999;">Upgrade to see competitors</span>';
+                    }}
                 }});
                 document.getElementById('results').style.display = 'block';
             }}
@@ -705,13 +720,24 @@ def api_research():
                     # Process the data
                     data = r.json()
                     strong = 0
+                    competitors = []
                     for item in data.get('search_results', [])[:5]:
                         bsr = "N/A"
+                        title = item.get('title', 'N/A')
+                        if len(title) > 70:
+                            title = title[:67] + '...'
+                        
                         if 'bestsellers_rank' in item:
                             for rank in item['bestsellers_rank']:
                                 if 'rank' in rank:
                                     bsr = rank['rank']
                                     break
+                        
+                        competitors.append({
+                            'title': title,
+                            'bsr': bsr
+                        })
+                        
                         try:
                             if bsr != "N/A" and int(bsr) < 100000:
                                 strong += 1
@@ -748,7 +774,21 @@ def api_research():
     
     time.sleep(0.5)
     
-    return jsonify({'keyword': keyword, 'volume': volume, 'competition': competition, 'score': score})
+        if user_plan != "free" and 'competitors' in locals():
+        return jsonify({
+            'keyword': keyword,
+            'volume': volume,
+            'competition': competition,
+            'score': score,
+            'competitors': competitors
+        })
+    else:
+        return jsonify({
+            'keyword': keyword,
+            'volume': volume,
+            'competition': competition,
+            'score': score
+        })
 
 # ============================================
 # UPGRADE PAGE
