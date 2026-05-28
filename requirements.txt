@@ -2,3 +2,4 @@ flask
 requests
 gunicorn
 resend
+psycopg2-binary
