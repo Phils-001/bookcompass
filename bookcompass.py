@@ -617,7 +617,7 @@ def dashboard():
 
 @app.route('/api/research', methods=['POST'])
 def api_research():
-    global rainforest_credits  # Add this line
+    global rainforest_credits
     if 'user_id' not in session:
         return jsonify({'error': 'Not logged in'})
     
@@ -668,18 +668,17 @@ def api_research():
                 params = {"api_key": YOUR_API_KEY, "type": "search", "amazon_domain": "amazon.com", "search_term": keyword}
                 r = requests.get(url, params=params, timeout=25)
                 
-                # FIRST: Check if API request was successful
+                # Check if API request was successful
                 if r.status_code != 200:
                     competition = f"API ERROR (Status {r.status_code})"
                     print(f"Rainforest API error {r.status_code}: {r.text[:200]}")
                 else:
-                    # Update credit information from response headers (only if successful)
+                    # Update credit information from response headers
                     remaining = r.headers.get('x-api-credits')
                     if remaining is not None:
                         rainforest_credits['remaining'] = int(remaining)
                         rainforest_credits['last_checked'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                         
-                        # Print warning to logs
                         if int(remaining) < 100 and not rainforest_credits.get('warning_shown'):
                             print(f"⚠️ Rainforest API: Only {remaining} credits remaining!")
                             rainforest_credits['warning_shown'] = True
@@ -707,9 +706,34 @@ def api_research():
                 competition = "API ERROR (Timeout)"
                 print(f"Timeout getting competition for: {keyword}")
             except Exception as api_error:
-                competition = f"API ERROR - Contact Support"
+                competition = "API ERROR - Contact Support"
                 print(f"Rainforest API error for keyword '{keyword}': {api_error}")
+    
+    # Calculate score
+    score = 5
+    
+    if user_plan == "free":
+        if volume == "HIGH": score += 3
+        elif volume == "MEDIUM": score += 2
+        elif volume == "LOW": score += 1
+        else: score -= 1
+    else:
+        if competition == "LOW": score += 3
+        elif competition == "MEDIUM": score += 1
+        else: score -= 2
+        if volume == "HIGH": score += 2
+        elif volume == "MEDIUM": score += 1
+        elif volume == "VERY LOW": score -= 2
+    
+    score = max(1, min(10, score))
+    
+    time.sleep(0.5)
+    
+    return jsonify({'keyword': keyword, 'volume': volume, 'competition': competition, 'score': score})
 
+# ============================================
+# UPGRADE PAGE
+# ============================================
 # ============================================
 # UPGRADE PAGE
 # ============================================
