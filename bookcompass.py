@@ -4,8 +4,102 @@ import time
 from datetime import date, datetime, timedelta
 import os
 import resend
+import psycopg2
+import psycopg2.extras
 
 app = Flask(__name__)
+# ============================================
+# DATABASE CONNECTION
+# ============================================
+
+# Get database URL from environment variable (Render sets this automatically)
+import os
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+def get_db_connection():
+    """Create and return a database connection"""
+    if not DATABASE_URL:
+        # For local development, use a file-based SQLite database
+        import sqlite3
+        conn = sqlite3.connect('bookcompass_local.db')
+        conn.row_factory = sqlite3.Row
+        return conn
+    else:
+        # For production on Render, use PostgreSQL
+        conn = psycopg2.connect(DATABASE_URL)
+        return conn
+
+def init_db():
+    """Create tables if they don't exist"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Create users table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            email TEXT PRIMARY KEY,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            plan TEXT DEFAULT 'free',
+            api_key TEXT,
+            promo_code TEXT,
+            promo_expires TEXT,
+            referred_by TEXT,
+            referral_count INTEGER DEFAULT 0,
+            referral_credit INTEGER DEFAULT 0,
+            verified BOOLEAN DEFAULT FALSE,
+            verification_code TEXT,
+            reset_token TEXT,
+            reset_expires TEXT,
+            created_at TEXT
+        )
+    ''')
+    
+    # Create usage_tracker table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS usage_tracker (
+            email TEXT,
+            date TEXT,
+            count INTEGER DEFAULT 0,
+            PRIMARY KEY (email, date)
+        )
+    ''')
+    
+    # Create payments table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            email TEXT,
+            username TEXT,
+            amount REAL,
+            plan TEXT,
+            payment_method TEXT,
+            date TEXT,
+            month TEXT,
+            status TEXT
+        )
+    ''')
+    
+    # Create contact_messages table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS contact_messages (
+            id SERIAL PRIMARY KEY,
+            name TEXT,
+            email TEXT,
+            subject TEXT,
+            message TEXT,
+            date TEXT,
+            read BOOLEAN DEFAULT FALSE
+        )
+    ''')
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("✅ Database tables created successfully!")
+
+# Initialize database on startup
+init_db()
 app.secret_key = "bookcompass_secret_key_12345"
 
 # Resend Configuration
@@ -234,6 +328,27 @@ def signup():
             'reset_expires': None,
             'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         }
+        
+        # Create user
+        users[email] = {
+            'username': username,
+            'password': password, 
+            'plan': 'free', 
+            'api_key': '',
+            'promo_code': promo_code if promo_data else None,
+            'promo_expires': promo_expires,
+            'referred_by': referred_by_email if referred_by_email else None,
+            'referral_count': 0,
+            'referral_credit': 0,
+            'verified': False,
+            'verification_code': None,
+            'reset_token': None,
+            'reset_expires': None,
+            'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        
+        # Save to database
+        save_user_to_db(email, users[email])
         
         # Generate verification code
         import random
@@ -672,6 +787,9 @@ def api_research():
         return jsonify({'error': 'Daily limit reached'})
     
     usage_tracker[email][today] += 1
+    
+    # Save to database
+    save_usage_to_db(email, today, usage_tracker[email][today])
     
     # Get search volume
     try:
@@ -1584,7 +1702,237 @@ def reset_password(token):
 # ============================================
 # RUN THE APP
 # ============================================
+# ============================================
+# DATABASE FUNCTIONS
+# ============================================
 
+def get_db_connection():
+    """Create and return a database connection"""
+    DATABASE_URL = os.environ.get('DATABASE_URL', '')
+    
+    if not DATABASE_URL:
+        # For local development, use SQLite
+        import sqlite3
+        conn = sqlite3.connect('bookcompass_local.db')
+        conn.row_factory = sqlite3.Row
+        return conn
+    else:
+        # For production on Render, use PostgreSQL
+        conn = psycopg2.connect(DATABASE_URL)
+        return conn
+
+def init_db():
+    """Create tables if they don't exist"""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    
+    # Create users table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            email TEXT PRIMARY KEY,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL,
+            plan TEXT DEFAULT 'free',
+            api_key TEXT,
+            promo_code TEXT,
+            promo_expires TEXT,
+            referred_by TEXT,
+            referral_count INTEGER DEFAULT 0,
+            referral_credit INTEGER DEFAULT 0,
+            verified BOOLEAN DEFAULT FALSE,
+            verification_code TEXT,
+            reset_token TEXT,
+            reset_expires TEXT,
+            created_at TEXT
+        )
+    ''')
+    
+    # Create usage_tracker table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS usage_tracker (
+            email TEXT,
+            date TEXT,
+            count INTEGER DEFAULT 0,
+            PRIMARY KEY (email, date)
+        )
+    ''')
+    
+    # Create payments table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS payments (
+            id SERIAL PRIMARY KEY,
+            email TEXT,
+            username TEXT,
+            amount REAL,
+            plan TEXT,
+            payment_method TEXT,
+            date TEXT,
+            month TEXT,
+            status TEXT
+        )
+    ''')
+    
+    # Create contact_messages table
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS contact_messages (
+            id SERIAL PRIMARY KEY,
+            name TEXT,
+            email TEXT,
+            subject TEXT,
+            message TEXT,
+            date TEXT,
+            read BOOLEAN DEFAULT FALSE
+        )
+    ''')
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("✅ Database tables created successfully!")
+
+def load_users_from_db():
+    """Load all users from database into memory"""
+    global users
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users")
+        rows = cur.fetchall()
+        
+        for row in rows:
+            email = row[0]
+            users[email] = {
+                'username': row[1],
+                'password': row[2],
+                'plan': row[3],
+                'api_key': row[4],
+                'promo_code': row[5],
+                'promo_expires': row[6],
+                'referred_by': row[7],
+                'referral_count': row[8],
+                'referral_credit': row[9],
+                'verified': row[10],
+                'verification_code': row[11],
+                'reset_token': row[12],
+                'reset_expires': row[13],
+                'created_at': row[14]
+            }
+        cur.close()
+        conn.close()
+        print(f"✅ Loaded {len(users)} users from database")
+    except Exception as e:
+        print(f"Error loading users: {e}")
+
+def save_user_to_db(email, user_data):
+    """Save or update a user in the database"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT OR REPLACE INTO users 
+            (email, username, password, plan, api_key, promo_code, promo_expires, 
+             referred_by, referral_count, referral_credit, verified, verification_code, 
+             reset_token, reset_expires, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            email, user_data['username'], user_data['password'], user_data['plan'],
+            user_data.get('api_key', ''), user_data.get('promo_code'), user_data.get('promo_expires'),
+            user_data.get('referred_by'), user_data.get('referral_count', 0),
+            user_data.get('referral_credit', 0), user_data.get('verified', False),
+            user_data.get('verification_code'), user_data.get('reset_token'),
+            user_data.get('reset_expires'), user_data.get('created_at')
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error saving user {email}: {e}")
+
+def save_usage_to_db(email, date, count):
+    """Save usage tracker data"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT OR REPLACE INTO usage_tracker (email, date, count)
+            VALUES (%s, %s, %s)
+        ''', (email, date, count))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error saving usage: {e}")
+
+def load_usage_from_db():
+    """Load usage tracker from database"""
+    global usage_tracker
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM usage_tracker")
+        rows = cur.fetchall()
+        
+        for row in rows:
+            email = row[0]
+            date_val = row[1]
+            count = row[2]
+            if email not in usage_tracker:
+                usage_tracker[email] = {}
+            usage_tracker[email][date_val] = count
+        
+        cur.close()
+        conn.close()
+        print(f"✅ Loaded usage tracker from database")
+    except Exception as e:
+        print(f"Error loading usage: {e}")
+
+def save_payment_to_db(payment):
+    """Save a payment record"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('''
+            INSERT INTO payments (email, username, amount, plan, payment_method, date, month, status)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (
+            payment['email'], payment['username'], payment['amount'],
+            payment['plan'], payment['payment_method'], payment['date'],
+            payment['month'], payment['status']
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error saving payment: {e}")
+
+def load_payments_from_db():
+    """Load payments from database"""
+    global payments
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM payments ORDER BY id")
+        rows = cur.fetchall()
+        
+        payments = []
+        for row in rows:
+            payments.append({
+                'id': row[0],
+                'email': row[1],
+                'username': row[2],
+                'amount': row[3],
+                'plan': row[4],
+                'payment_method': row[5],
+                'date': row[6],
+                'month': row[7],
+                'status': row[8]
+            })
+        
+        cur.close()
+        conn.close()
+        print(f"✅ Loaded {len(payments)} payments from database")
+    except Exception as e:
+        print(f"Error loading payments: {e}")
 # ============================================
 # RECORD PAYMENT FUNCTION
 # ============================================
@@ -1602,6 +1950,10 @@ def record_payment(email, amount, plan, payment_method='monnify'):
         'status': 'completed'
     }
     payments.append(payment_record)
+    
+    # Save to database
+    save_payment_to_db(payment_record)
+    
     print(f"💰 Payment recorded: {email} - ${amount} - {plan}")
     return payment_record
 
@@ -2475,6 +2827,21 @@ def refresh_credits():
     
     check_rainforest_credits()
     return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
+# ============================================
+# INITIALIZE DATABASE ON STARTUP
+# ============================================
+
+# Initialize database tables
+init_db()
+
+# Load existing data from database into memory
+load_users_from_db()
+load_usage_from_db()
+load_payments_from_db()
+
+# ============================================
+# RUN THE APP
+# ============================================
 if __name__ == '__main__':
     print("\n" + "="*50)
     print("   🚀 BOOKCOMPASS IS RUNNING")
