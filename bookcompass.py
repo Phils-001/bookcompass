@@ -2743,6 +2743,7 @@ def save_payment_to_db(payment_record):
 
 def load_users_from_db():
     """Load all users from database into memory"""
+    global users
     conn, db_type = get_db_connection()
     cur = conn.cursor()
     
@@ -2770,10 +2771,11 @@ def load_users_from_db():
                     'created_at': row['created_at'],
                 }
         else:
-            # PostgreSQL - use RealDictCursor
+            # PostgreSQL - using RealDictCursor
             cur.execute('SELECT * FROM users')
             rows = cur.fetchall()
             
+            # rows are already dictionaries with RealDictCursor
             for row in rows:
                 email = row['email']
                 users[email] = {
@@ -2802,18 +2804,16 @@ def load_users_from_db():
 
 def load_usage_from_db():
     """Load usage data from database into memory"""
+    global usage_tracker
     conn, db_type = get_db_connection()
     cur = conn.cursor()
     
     try:
-        if db_type == 'sqlite':
-            cur.execute('SELECT email, date, count FROM usage_tracker')
-            rows = cur.fetchall()
-        else:
-            cur.execute('SELECT email, date, count FROM usage_tracker')
-            rows = cur.fetchall()
+        cur.execute('SELECT email, date, count FROM usage_tracker')
+        rows = cur.fetchall()
         
         for row in rows:
+            # row is a dictionary when using RealDictCursor
             email = row['email']
             date_str = row['date']
             count = row['count']
@@ -2836,15 +2836,12 @@ def load_payments_from_db():
     cur = conn.cursor()
     
     try:
-        if db_type == 'sqlite':
-            cur.execute('SELECT * FROM payments ORDER BY id')
-            rows = cur.fetchall()
-        else:
-            cur.execute('SELECT * FROM payments ORDER BY id')
-            rows = cur.fetchall()
+        cur.execute('SELECT * FROM payments ORDER BY id')
+        rows = cur.fetchall()
         
         payments = []
         for row in rows:
+            # row is a dictionary when using RealDictCursor
             payments.append({
                 'id': row['id'],
                 'email': row['email'],
