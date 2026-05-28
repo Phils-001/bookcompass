@@ -774,7 +774,7 @@ def api_research():
     
     time.sleep(0.5)
     
-        if user_plan != "free" and 'competitors' in locals():
+    if user_plan != "free" and 'competitors' in locals():
         return jsonify({
             'keyword': keyword,
             'volume': volume,
