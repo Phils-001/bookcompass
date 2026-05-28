@@ -20,6 +20,14 @@ usage_tracker = {}
 
 # Payment tracking
 payments = []  # List to store all payment records
+# Rainforest API credit tracking
+rainforest_credits = {
+    'remaining': None,
+    'plan_limit': None,
+    'plan_name': None,
+    'last_checked': None,
+    'warning_shown': False
+}
 # Contact messages storage
 contact_messages = []  # List to store all contact form messages
 
@@ -609,6 +617,7 @@ def dashboard():
 
 @app.route('/api/research', methods=['POST'])
 def api_research():
+    global rainforest_credits  # Add this line
     if 'user_id' not in session:
         return jsonify({'error': 'Not logged in'})
     
@@ -658,6 +667,16 @@ def api_research():
                 url = "https://api.rainforestapi.com/request"
                 params = {"api_key": YOUR_API_KEY, "type": "search", "amazon_domain": "amazon.com", "search_term": keyword}
                 r = requests.get(url, params=params, timeout=25)
+                # Update credit information from response headers
+                remaining = r.headers.get('x-api-credits')
+                if remaining is not None:
+                    rainforest_credits['remaining'] = int(remaining)
+                    rainforest_credits['last_checked'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    # Print warning to logs
+                    if int(remaining) < 100 and not rainforest_credits.get('warning_shown'):
+                        print(f"⚠️ Rainforest API: Only {remaining} credits remaining!")
+                        rainforest_credits['warning_shown'] = True
                 data = r.json()
                 strong = 0
                 for item in data.get('search_results', [])[:5]:
@@ -1513,6 +1532,39 @@ def record_payment(email, amount, plan, payment_method='monnify'):
     return payment_record
 
 # ============================================
+# CHECK RAINFOREST API CREDITS
+# ============================================
+
+def check_rainforest_credits():
+    """Fetch remaining credits from Rainforest API (free API call)"""
+    global rainforest_credits
+    
+    try:
+        url = "https://api.rainforestapi.com/account"
+        params = {"api_key": YOUR_API_KEY}
+        
+        response = requests.get(url, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            account_info = data.get('account_info', {})
+            
+            rainforest_credits['remaining'] = account_info.get('requests_remaining', 'Unknown')
+            rainforest_credits['plan_limit'] = account_info.get('plan_limit', 'Unknown')
+            rainforest_credits['plan_name'] = account_info.get('plan_name', 'Unknown')
+            rainforest_credits['last_checked'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # Print to logs
+            print(f"🌳 Rainforest API Credits: {rainforest_credits['remaining']} remaining")
+            
+            return True
+        else:
+            print(f"Failed to fetch credits: {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"Error checking credits: {e}")
+        return False
+# ============================================
 # ADMIN PANEL WITH INCOME TRACKING
 # ============================================
 
@@ -1547,7 +1599,9 @@ def admin_panel():
         </body>
         </html>
         '''
-    
+    # Check Rainforest API credits
+    check_rainforest_credits()
+
     # Calculate stats
     total_users = len(users)
     free_users = sum(1 for u in users.values() if u.get('plan') == 'free')
@@ -1787,6 +1841,36 @@ def admin_panel():
         </div>
         
         <!-- System Info -->
+        <!-- Rainforest API Credits -->
+        <div class="card">
+            <h2>🌳 Rainforest API Credits</h2>
+            <div class="stats" style="margin-top: 10px;">
+                <div class="stat" style="background: {'#f44336' if rainforest_credits.get('remaining') and str(rainforest_credits.get('remaining')).isdigit() and int(rainforest_credits.get('remaining')) < 100 else '#4CAF50'}">
+                    <h2>{rainforest_credits.get('remaining', 'Unknown')}</h2>
+                    <p>Credits Remaining</p>
+                </div>
+                <div class="stat" style="background: #2196F3;">
+                    <h2>{rainforest_credits.get('plan_limit', 'Unknown')}</h2>
+                    <p>Monthly Limit</p>
+                </div>
+                <div class="stat" style="background: #ff9800;">
+                    <h2>{rainforest_credits.get('plan_name', 'Unknown')}</h2>
+                    <p>Current Plan</p>
+                </div>
+            </div>
+            <div style="margin-top: 10px;">
+                <p><strong>Last Checked:</strong> {rainforest_credits.get('last_checked', 'Never')}</p>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    🌳 Each keyword search uses 1 credit.<br>
+                    🔄 Free plan: 100 total credits (one-time).<br>
+                    💰 Hobbyist plan: $23/month for 5,000 credits.<br>
+                    📊 <a href="https://www.rainforestapi.com/pricing" target="_blank">View pricing</a>
+                </p>
+                <form method="post" action="/refresh-credits" style="margin-top: 10px;">
+                    <button type="submit" style="background: #ff9900; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🔄 Refresh Credits</button>
+                </form>
+            </div>
+        </div>
         <div class="card">
             <h2>⚙️ System Info</h2>
             <ul>
@@ -2282,6 +2366,19 @@ def mark_message_read(msg_id):
             m['read'] = True
             break
     
+    return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
+
+# ============================================
+# REFRESH RAINFOREST CREDITS
+# ============================================
+
+@app.route('/refresh-credits', methods=['POST'])
+def refresh_credits():
+    admin_password = request.args.get('password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return '<script>window.location.href="/admin"</script>'
+    
+    check_rainforest_credits()
     return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
 if __name__ == '__main__':
     print("\n" + "="*50)
