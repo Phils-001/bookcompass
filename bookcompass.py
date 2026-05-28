@@ -17,81 +17,135 @@ import os
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 def get_db_connection():
-    """Create and return a database connection"""
+    """Create and return a database connection and database type"""
     if not DATABASE_URL:
         # For local development, use a file-based SQLite database
         import sqlite3
         conn = sqlite3.connect('bookcompass_local.db')
         conn.row_factory = sqlite3.Row
-        return conn
+        return conn, 'sqlite'
     else:
         # For production on Render, use PostgreSQL
         conn = psycopg2.connect(DATABASE_URL)
-        return conn
+        return conn, 'postgresql'
 
 def init_db():
     """Create tables if they don't exist"""
-    conn = get_db_connection()
+    conn, db_type = get_db_connection()
     cur = conn.cursor()
     
-    # Create users table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            email TEXT PRIMARY KEY,
-            username TEXT NOT NULL,
-            password TEXT NOT NULL,
-            plan TEXT DEFAULT 'free',
-            api_key TEXT,
-            promo_code TEXT,
-            promo_expires TEXT,
-            referred_by TEXT,
-            referral_count INTEGER DEFAULT 0,
-            referral_credit INTEGER DEFAULT 0,
-            verified BOOLEAN DEFAULT FALSE,
-            verification_code TEXT,
-            reset_token TEXT,
-            reset_expires TEXT,
-            created_at TEXT
-        )
-    ''')
-    
-    # Create usage_tracker table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS usage_tracker (
-            email TEXT,
-            date TEXT,
-            count INTEGER DEFAULT 0,
-            PRIMARY KEY (email, date)
-        )
-    ''')
-    
-    # Create payments table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS payments (
-            id SERIAL PRIMARY KEY,
-            email TEXT,
-            username TEXT,
-            amount REAL,
-            plan TEXT,
-            payment_method TEXT,
-            date TEXT,
-            month TEXT,
-            status TEXT
-        )
-    ''')
-    
-    # Create contact_messages table
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS contact_messages (
-            id SERIAL PRIMARY KEY,
-            name TEXT,
-            email TEXT,
-            subject TEXT,
-            message TEXT,
-            date TEXT,
-            read BOOLEAN DEFAULT FALSE
-        )
-    ''')
+    if db_type == 'sqlite':
+        # SQLite syntax
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                email TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                password TEXT NOT NULL,
+                plan TEXT DEFAULT 'free',
+                api_key TEXT,
+                promo_code TEXT,
+                promo_expires TEXT,
+                referred_by TEXT,
+                referral_count INTEGER DEFAULT 0,
+                referral_credit INTEGER DEFAULT 0,
+                verified BOOLEAN DEFAULT FALSE,
+                verification_code TEXT,
+                reset_token TEXT,
+                reset_expires TEXT,
+                created_at TEXT
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS usage_tracker (
+                email TEXT,
+                date TEXT,
+                count INTEGER DEFAULT 0,
+                PRIMARY KEY (email, date)
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT,
+                username TEXT,
+                amount REAL,
+                plan TEXT,
+                payment_method TEXT,
+                date TEXT,
+                month TEXT,
+                status TEXT
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                email TEXT,
+                subject TEXT,
+                message TEXT,
+                date TEXT,
+                read BOOLEAN DEFAULT FALSE
+            )
+        ''')
+    else:
+        # PostgreSQL syntax
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                email TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                password TEXT NOT NULL,
+                plan TEXT DEFAULT 'free',
+                api_key TEXT,
+                promo_code TEXT,
+                promo_expires TEXT,
+                referred_by TEXT,
+                referral_count INTEGER DEFAULT 0,
+                referral_credit INTEGER DEFAULT 0,
+                verified BOOLEAN DEFAULT FALSE,
+                verification_code TEXT,
+                reset_token TEXT,
+                reset_expires TEXT,
+                created_at TEXT
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS usage_tracker (
+                email TEXT,
+                date TEXT,
+                count INTEGER DEFAULT 0,
+                PRIMARY KEY (email, date)
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS payments (
+                id SERIAL PRIMARY KEY,
+                email TEXT,
+                username TEXT,
+                amount REAL,
+                plan TEXT,
+                payment_method TEXT,
+                date TEXT,
+                month TEXT,
+                status TEXT
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS contact_messages (
+                id SERIAL PRIMARY KEY,
+                name TEXT,
+                email TEXT,
+                subject TEXT,
+                message TEXT,
+                date TEXT,
+                read BOOLEAN DEFAULT FALSE
+            )
+        ''')
     
     conn.commit()
     cur.close()
@@ -1794,29 +1848,50 @@ def load_users_from_db():
     """Load all users from database into memory"""
     global users
     try:
-        conn = get_db_connection()
+        conn, db_type = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM users")
         rows = cur.fetchall()
         
+        users = {}
         for row in rows:
-            email = row[0]
-            users[email] = {
-                'username': row[1],
-                'password': row[2],
-                'plan': row[3],
-                'api_key': row[4],
-                'promo_code': row[5],
-                'promo_expires': row[6],
-                'referred_by': row[7],
-                'referral_count': row[8],
-                'referral_credit': row[9],
-                'verified': row[10],
-                'verification_code': row[11],
-                'reset_token': row[12],
-                'reset_expires': row[13],
-                'created_at': row[14]
-            }
+            if db_type == 'sqlite':
+                email = row[0]
+                users[email] = {
+                    'username': row[1],
+                    'password': row[2],
+                    'plan': row[3],
+                    'api_key': row[4],
+                    'promo_code': row[5],
+                    'promo_expires': row[6],
+                    'referred_by': row[7],
+                    'referral_count': row[8],
+                    'referral_credit': row[9],
+                    'verified': row[10],
+                    'verification_code': row[11],
+                    'reset_token': row[12],
+                    'reset_expires': row[13],
+                    'created_at': row[14]
+                }
+            else:
+                email = row[0]
+                users[email] = {
+                    'username': row[1],
+                    'password': row[2],
+                    'plan': row[3],
+                    'api_key': row[4],
+                    'promo_code': row[5],
+                    'promo_expires': row[6],
+                    'referred_by': row[7],
+                    'referral_count': row[8],
+                    'referral_credit': row[9],
+                    'verified': row[10],
+                    'verification_code': row[11],
+                    'reset_token': row[12],
+                    'reset_expires': row[13],
+                    'created_at': row[14]
+                }
+        
         cur.close()
         conn.close()
         print(f"✅ Loaded {len(users)} users from database")
@@ -1826,22 +1901,57 @@ def load_users_from_db():
 def save_user_to_db(email, user_data):
     """Save or update a user in the database"""
     try:
-        conn = get_db_connection()
+        conn, db_type = get_db_connection()
         cur = conn.cursor()
-        cur.execute('''
-            INSERT OR REPLACE INTO users 
-            (email, username, password, plan, api_key, promo_code, promo_expires, 
-             referred_by, referral_count, referral_credit, verified, verification_code, 
-             reset_token, reset_expires, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            email, user_data['username'], user_data['password'], user_data['plan'],
-            user_data.get('api_key', ''), user_data.get('promo_code'), user_data.get('promo_expires'),
-            user_data.get('referred_by'), user_data.get('referral_count', 0),
-            user_data.get('referral_credit', 0), user_data.get('verified', False),
-            user_data.get('verification_code'), user_data.get('reset_token'),
-            user_data.get('reset_expires'), user_data.get('created_at')
-        ))
+        
+        if db_type == 'sqlite':
+            # SQLite uses ? for placeholders
+            cur.execute('''
+                INSERT OR REPLACE INTO users 
+                (email, username, password, plan, api_key, promo_code, promo_expires, 
+                 referred_by, referral_count, referral_credit, verified, verification_code, 
+                 reset_token, reset_expires, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                email, user_data['username'], user_data['password'], user_data['plan'],
+                user_data.get('api_key', ''), user_data.get('promo_code'), user_data.get('promo_expires'),
+                user_data.get('referred_by'), user_data.get('referral_count', 0),
+                user_data.get('referral_credit', 0), user_data.get('verified', False),
+                user_data.get('verification_code'), user_data.get('reset_token'),
+                user_data.get('reset_expires'), user_data.get('created_at')
+            ))
+        else:
+            # PostgreSQL uses %s for placeholders
+            cur.execute('''
+                INSERT INTO users 
+                (email, username, password, plan, api_key, promo_code, promo_expires, 
+                 referred_by, referral_count, referral_credit, verified, verification_code, 
+                 reset_token, reset_expires, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (email) DO UPDATE SET
+                    username = EXCLUDED.username,
+                    password = EXCLUDED.password,
+                    plan = EXCLUDED.plan,
+                    api_key = EXCLUDED.api_key,
+                    promo_code = EXCLUDED.promo_code,
+                    promo_expires = EXCLUDED.promo_expires,
+                    referred_by = EXCLUDED.referred_by,
+                    referral_count = EXCLUDED.referral_count,
+                    referral_credit = EXCLUDED.referral_credit,
+                    verified = EXCLUDED.verified,
+                    verification_code = EXCLUDED.verification_code,
+                    reset_token = EXCLUDED.reset_token,
+                    reset_expires = EXCLUDED.reset_expires,
+                    created_at = EXCLUDED.created_at
+            ''', (
+                email, user_data['username'], user_data['password'], user_data['plan'],
+                user_data.get('api_key', ''), user_data.get('promo_code'), user_data.get('promo_expires'),
+                user_data.get('referred_by'), user_data.get('referral_count', 0),
+                user_data.get('referral_credit', 0), user_data.get('verified', False),
+                user_data.get('verification_code'), user_data.get('reset_token'),
+                user_data.get('reset_expires'), user_data.get('created_at')
+            ))
+        
         conn.commit()
         cur.close()
         conn.close()
@@ -1863,19 +1973,82 @@ def save_usage_to_db(email, date, count):
     except Exception as e:
         print(f"Error saving usage: {e}")
 
+def save_usage_to_db(email, date_val, count):
+    """Save usage tracker data"""
+    try:
+        conn, db_type = get_db_connection()
+        cur = conn.cursor()
+        
+        if db_type == 'sqlite':
+            cur.execute('''
+                INSERT OR REPLACE INTO usage_tracker (email, date, count)
+                VALUES (?, ?, ?)
+            ''', (email, date_val, count))
+        else:
+            cur.execute('''
+                INSERT INTO usage_tracker (email, date, count)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (email, date) DO UPDATE SET
+                    count = EXCLUDED.count
+            ''', (email, date_val, count))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error saving usage: {e}")
+
+def save_payment_to_db(payment):
+    """Save a payment record"""
+    try:
+        conn, db_type = get_db_connection()
+        cur = conn.cursor()
+        
+        if db_type == 'sqlite':
+            cur.execute('''
+                INSERT INTO payments (email, username, amount, plan, payment_method, date, month, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                payment['email'], payment['username'], payment['amount'],
+                payment['plan'], payment['payment_method'], payment['date'],
+                payment['month'], payment['status']
+            ))
+        else:
+            cur.execute('''
+                INSERT INTO payments (email, username, amount, plan, payment_method, date, month, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                payment['email'], payment['username'], payment['amount'],
+                payment['plan'], payment['payment_method'], payment['date'],
+                payment['month'], payment['status']
+            ))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error saving payment: {e}")
+
 def load_usage_from_db():
     """Load usage tracker from database"""
     global usage_tracker
     try:
-        conn = get_db_connection()
+        conn, db_type = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM usage_tracker")
         rows = cur.fetchall()
         
+        usage_tracker = {}
         for row in rows:
-            email = row[0]
-            date_val = row[1]
-            count = row[2]
+            if db_type == 'sqlite':
+                email = row[0]
+                date_val = row[1]
+                count = row[2]
+            else:
+                email = row[0]
+                date_val = row[1]
+                count = row[2]
+            
             if email not in usage_tracker:
                 usage_tracker[email] = {}
             usage_tracker[email][date_val] = count
@@ -1886,47 +2059,41 @@ def load_usage_from_db():
     except Exception as e:
         print(f"Error loading usage: {e}")
 
-def save_payment_to_db(payment):
-    """Save a payment record"""
-    try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute('''
-            INSERT INTO payments (email, username, amount, plan, payment_method, date, month, status)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (
-            payment['email'], payment['username'], payment['amount'],
-            payment['plan'], payment['payment_method'], payment['date'],
-            payment['month'], payment['status']
-        ))
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error saving payment: {e}")
-
 def load_payments_from_db():
     """Load payments from database"""
     global payments
     try:
-        conn = get_db_connection()
+        conn, db_type = get_db_connection()
         cur = conn.cursor()
         cur.execute("SELECT * FROM payments ORDER BY id")
         rows = cur.fetchall()
         
         payments = []
         for row in rows:
-            payments.append({
-                'id': row[0],
-                'email': row[1],
-                'username': row[2],
-                'amount': row[3],
-                'plan': row[4],
-                'payment_method': row[5],
-                'date': row[6],
-                'month': row[7],
-                'status': row[8]
-            })
+            if db_type == 'sqlite':
+                payments.append({
+                    'id': row[0],
+                    'email': row[1],
+                    'username': row[2],
+                    'amount': row[3],
+                    'plan': row[4],
+                    'payment_method': row[5],
+                    'date': row[6],
+                    'month': row[7],
+                    'status': row[8]
+                })
+            else:
+                payments.append({
+                    'id': row[0],
+                    'email': row[1],
+                    'username': row[2],
+                    'amount': row[3],
+                    'plan': row[4],
+                    'payment_method': row[5],
+                    'date': row[6],
+                    'month': row[7],
+                    'status': row[8]
+                })
         
         cur.close()
         conn.close()
