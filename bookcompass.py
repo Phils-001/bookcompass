@@ -12,22 +12,22 @@ app = Flask(__name__)
 # DATABASE CONNECTION
 # ============================================
 
-# Get database URL from environment variable (Render sets this automatically)
-import os
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
-
 def get_db_connection():
     """Create and return a database connection and database type"""
+    import os
+    DATABASE_URL = os.environ.get('DATABASE_URL', '')
+    
     if not DATABASE_URL:
-        # For local development, use a file-based SQLite database
+        # For local development, use SQLite
         import sqlite3
         conn = sqlite3.connect('bookcompass_local.db')
         conn.row_factory = sqlite3.Row
-        return conn, 'sqlite'
+        return conn, 'sqlite'   # Return TWO values
     else:
         # For production on Render, use PostgreSQL
+        import psycopg2
         conn = psycopg2.connect(DATABASE_URL)
-        return conn, 'postgresql'
+        return conn, 'postgresql'   # Return TWO values
 
 def init_db():
     """Create tables if they don't exist"""
