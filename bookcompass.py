@@ -592,7 +592,7 @@ def dashboard():
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
                     }} else if (r.competition && r.competition.includes('API ERROR')) {{
-                        row.insertCell(4).innerHTML = '<span style="color: #f44336;">⚠️ API Error - Contact Support</span>';
+                        row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
@@ -706,7 +706,7 @@ def api_research():
                 
                 # Check if API request was successful
                 if r.status_code != 200:
-                    competition = f"API ERROR (Status {r.status_code})"
+                    competition = "Currently Unavailable"
                     print(f"Rainforest API error {r.status_code}: {r.text[:200]}")
                 else:
                     # Update credit information from response headers
@@ -750,10 +750,10 @@ def api_research():
                     else: competition = "LOW"
                     
             except requests.exceptions.Timeout:
-                competition = "API ERROR (Timeout)"
+                competition = "Slow Response"
                 print(f"Timeout getting competition for: {keyword}")
             except Exception as api_error:
-                competition = "API ERROR - Contact Support"
+                competition = "Currently Unavailable"
                 print(f"Rainforest API error for keyword '{keyword}': {api_error}")
     
     # Calculate score
