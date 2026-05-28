@@ -12,7 +12,7 @@ app.secret_key = "bookcompass_secret_key_12345"
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
 # Your Rainforest API Key (keep this secret)
-YOUR_API_KEY = "846F7338358746F88A3667FCC1540938"
+YOUR_API_KEY = "38A79CBCEBE5450EAD417347F79504B5"
 
 # Simple storage
 users = {}
