@@ -565,7 +565,7 @@ def dashboard():
                 }}
             }}
             
-            // Show partial results if any
+                        // Show partial results if any
             if (results.length > 0) {{
                 results.sort((a,b) => b.score - a.score);
                 const tbody = document.getElementById('resultsBody');
@@ -596,6 +596,9 @@ def dashboard():
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
+                }});
+                document.getElementById('results').style.display = 'block';
+            }}
             
             // Show error summary if any keywords failed
             if (errors.length > 0) {{
