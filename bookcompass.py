@@ -1539,30 +1539,51 @@ def check_rainforest_credits():
     """Fetch remaining credits from Rainforest API (free API call)"""
     global rainforest_credits
     
+    print("="*50)
+    print("🔍 Checking Rainforest API credits...")
+    print("="*50)
+    
     try:
         url = "https://api.rainforestapi.com/account"
         params = {"api_key": YOUR_API_KEY}
         
+        print(f"📡 URL: {url}")
+        print(f"🔑 API Key (first 10 chars): {YOUR_API_KEY[:10]}...")
+        print(f"📤 Sending request...")
+        
         response = requests.get(url, params=params, timeout=10)
+        
+        print(f"📥 Response status code: {response.status_code}")
         
         if response.status_code == 200:
             data = response.json()
+            print(f"✅ Response received successfully!")
+            print(f"📦 Full response data: {data}")
+            
             account_info = data.get('account_info', {})
+            print(f"📊 Account info: {account_info}")
             
             rainforest_credits['remaining'] = account_info.get('requests_remaining', 'Unknown')
             rainforest_credits['plan_limit'] = account_info.get('plan_limit', 'Unknown')
             rainforest_credits['plan_name'] = account_info.get('plan_name', 'Unknown')
             rainforest_credits['last_checked'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             
-            # Print to logs
-            print(f"🌳 Rainforest API Credits: {rainforest_credits['remaining']} remaining")
+            print(f"💾 Saved to rainforest_credits:")
+            print(f"   - remaining: {rainforest_credits['remaining']}")
+            print(f"   - plan_limit: {rainforest_credits['plan_limit']}")
+            print(f"   - plan_name: {rainforest_credits['plan_name']}")
+            print(f"   - last_checked: {rainforest_credits['last_checked']}")
             
             return True
         else:
-            print(f"Failed to fetch credits: {response.status_code}")
+            print(f"❌ Failed to fetch credits!")
+            print(f"   Status code: {response.status_code}")
+            print(f"   Response text: {response.text[:500]}")
             return False
     except Exception as e:
-        print(f"Error checking credits: {e}")
+        print(f"❌ Error checking credits!")
+        print(f"   Exception type: {type(e).__name__}")
+        print(f"   Error message: {str(e)}")
         return False
 # ============================================
 # ADMIN PANEL WITH INCOME TRACKING
