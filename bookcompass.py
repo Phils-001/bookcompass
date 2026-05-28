@@ -25,7 +25,7 @@ def get_db_connection():
     else:
         # For production on Render, use PostgreSQL
         import psycopg2
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
         return conn, 'postgresql'
 
 def init_db():
@@ -2628,21 +2628,7 @@ def refresh_credits():
     
     check_rainforest_credits()
     return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
-# ============================================
-# INITIALIZE DATABASE ON STARTUP
-# ============================================
 
-# Initialize database tables
-init_db()
-
-# Load existing data from database into memory
-load_users_from_db()
-load_usage_from_db()
-load_payments_from_db()
-
-# ============================================
-# RUN THE APP
-# ============================================
 # ============================================
 # DATABASE HELPER FUNCTIONS
 # ============================================
@@ -2761,50 +2747,55 @@ def load_users_from_db():
     cur = conn.cursor()
     
     try:
-        cur.execute('SELECT * FROM users')
-        rows = cur.fetchall()
-        
-        for row in rows:
-            if db_type == 'sqlite':
-                email = row[0]
+        if db_type == 'sqlite':
+            cur.execute('SELECT * FROM users')
+            rows = cur.fetchall()
+            
+            for row in rows:
+                email = row['email']
                 users[email] = {
-                    'username': row[1],
-                    'password': row[2],
-                    'plan': row[3],
-                    'api_key': row[4],
-                    'promo_code': row[5],
-                    'promo_expires': row[6],
-                    'referred_by': row[7],
-                    'referral_count': row[8] or 0,
-                    'referral_credit': row[9] or 0,
-                    'verified': row[10] or False,
-                    'verification_code': row[11],
-                    'reset_token': row[12],
-                    'reset_expires': row[13],
-                    'created_at': row[14],
+                    'username': row['username'],
+                    'password': row['password'],
+                    'plan': row['plan'],
+                    'api_key': row['api_key'],
+                    'promo_code': row['promo_code'],
+                    'promo_expires': row['promo_expires'],
+                    'referred_by': row['referred_by'],
+                    'referral_count': row['referral_count'] or 0,
+                    'referral_credit': row['referral_credit'] or 0,
+                    'verified': row['verified'] or False,
+                    'verification_code': row['verification_code'],
+                    'reset_token': row['reset_token'],
+                    'reset_expires': row['reset_expires'],
+                    'created_at': row['created_at'],
                 }
-            else:
-                email = row[0]
+        else:
+            # PostgreSQL - use RealDictCursor
+            cur.execute('SELECT * FROM users')
+            rows = cur.fetchall()
+            
+            for row in rows:
+                email = row['email']
                 users[email] = {
-                    'username': row[1],
-                    'password': row[2],
-                    'plan': row[3],
-                    'api_key': row[4],
-                    'promo_code': row[5],
-                    'promo_expires': row[6],
-                    'referred_by': row[7],
-                    'referral_count': row[8] or 0,
-                    'referral_credit': row[9] or 0,
-                    'verified': row[10] or False,
-                    'verification_code': row[11],
-                    'reset_token': row[12],
-                    'reset_expires': row[13],
-                    'created_at': row[14],
+                    'username': row['username'],
+                    'password': row['password'],
+                    'plan': row['plan'],
+                    'api_key': row['api_key'],
+                    'promo_code': row['promo_code'],
+                    'promo_expires': row['promo_expires'],
+                    'referred_by': row['referred_by'],
+                    'referral_count': row['referral_count'] or 0,
+                    'referral_credit': row['referral_credit'] or 0,
+                    'verified': row['verified'] or False,
+                    'verification_code': row['verification_code'],
+                    'reset_token': row['reset_token'],
+                    'reset_expires': row['reset_expires'],
+                    'created_at': row['created_at'],
                 }
         
         print(f"✅ Loaded {len(users)} users from database")
     except Exception as e:
-        print(f"⚠️ Could not load users from database: {e}")
+        print(f"Error loading users: {e}")
     finally:
         cur.close()
         conn.close()
@@ -2815,13 +2806,17 @@ def load_usage_from_db():
     cur = conn.cursor()
     
     try:
-        cur.execute('SELECT email, date, count FROM usage_tracker')
-        rows = cur.fetchall()
+        if db_type == 'sqlite':
+            cur.execute('SELECT email, date, count FROM usage_tracker')
+            rows = cur.fetchall()
+        else:
+            cur.execute('SELECT email, date, count FROM usage_tracker')
+            rows = cur.fetchall()
         
         for row in rows:
-            email = row[0]
-            date_str = row[1]
-            count = row[2]
+            email = row['email']
+            date_str = row['date']
+            count = row['count']
             
             if email not in usage_tracker:
                 usage_tracker[email] = {}
@@ -2829,7 +2824,7 @@ def load_usage_from_db():
         
         print(f"✅ Loaded usage data from database")
     except Exception as e:
-        print(f"⚠️ Could not load usage from database: {e}")
+        print(f"Error loading usage: {e}")
     finally:
         cur.close()
         conn.close()
@@ -2841,42 +2836,49 @@ def load_payments_from_db():
     cur = conn.cursor()
     
     try:
-        cur.execute('SELECT * FROM payments ORDER BY id')
-        rows = cur.fetchall()
+        if db_type == 'sqlite':
+            cur.execute('SELECT * FROM payments ORDER BY id')
+            rows = cur.fetchall()
+        else:
+            cur.execute('SELECT * FROM payments ORDER BY id')
+            rows = cur.fetchall()
         
         payments = []
         for row in rows:
-            if db_type == 'sqlite':
-                payments.append({
-                    'id': row[0],
-                    'email': row[1],
-                    'username': row[2],
-                    'amount': row[3],
-                    'plan': row[4],
-                    'payment_method': row[5],
-                    'date': row[6],
-                    'month': row[7],
-                    'status': row[8],
-                })
-            else:
-                payments.append({
-                    'id': row[0],
-                    'email': row[1],
-                    'username': row[2],
-                    'amount': row[3],
-                    'plan': row[4],
-                    'payment_method': row[5],
-                    'date': row[6],
-                    'month': row[7],
-                    'status': row[8],
-                })
+            payments.append({
+                'id': row['id'],
+                'email': row['email'],
+                'username': row['username'],
+                'amount': row['amount'],
+                'plan': row['plan'],
+                'payment_method': row['payment_method'],
+                'date': row['date'],
+                'month': row['month'],
+                'status': row['status'],
+            })
         
         print(f"✅ Loaded {len(payments)} payments from database")
     except Exception as e:
-        print(f"⚠️ Could not load payments from database: {e}")
+        print(f"Error loading payments: {e}")
     finally:
         cur.close()
         conn.close()
+
+# ============================================
+# INITIALIZE DATABASE ON STARTUP
+# ============================================
+
+# Initialize database tables
+init_db()
+
+# Load existing data from database into memory
+load_users_from_db()
+load_usage_from_db()
+load_payments_from_db()
+
+# ============================================
+# RUN THE APP
+# ============================================
 
 if __name__ == '__main__':
     print("\n" + "="*50)
