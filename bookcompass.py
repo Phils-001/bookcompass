@@ -12,7 +12,26 @@ app.secret_key = "bookcompass_secret_key_12345"
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
 # Your Rainforest API Key (keep this secret)
-YOUR_API_KEY = "38A79CBCEBE5450EAD417347F79504B5"
+YOUR_API_KEY = "43E3255EDF484BABA5C6E50060AD004E"
+# Test API key on startup
+print("="*50)
+print("🔑 TESTING RAINFOREST API KEY")
+print("="*50)
+try:
+    test_url = "https://api.rainforestapi.com/account"
+    test_params = {"api_key": YOUR_API_KEY}
+    test_response = requests.get(test_url, params=test_params, timeout=10)
+    print(f"Response Status: {test_response.status_code}")
+    if test_response.status_code == 200:
+        print("✅ API KEY IS WORKING!")
+        test_data = test_response.json()
+        print(f"Account Info: {test_data.get('account_info', {})}")
+    else:
+        print(f"❌ API KEY ERROR: {test_response.status_code}")
+        print(f"Response: {test_response.text[:300]}")
+except Exception as e:
+    print(f"❌ Error testing API key: {e}")
+print("="*50)
 
 # Simple storage
 users = {}
