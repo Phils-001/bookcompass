@@ -480,6 +480,7 @@ def login():
         password = request.form['password']
         if email in users and users[email]['password'] == password:
             if not users[email].get('verified', False):
+                session['pending_email'] = email  # ← ADD THIS LINE
                 return '''
                 <div style="text-align:center; margin-top:50px;">
                     <h2>Email not verified</h2>
@@ -1402,6 +1403,10 @@ def verify_email():
         if email in users and users[email].get('verification_code') == code:
             users[email]['verified'] = True
             users[email]['verification_code'] = None
+            
+            # IMPORTANT: Save verification status to database
+            save_user_to_db(email, users[email])
+            
             session['user_id'] = email
             session['email'] = email
             session.pop('pending_email', None)
@@ -1415,6 +1420,7 @@ def verify_email():
             </div>
             '''
     
+    # GET request - show verification form
     return f'''
     <!DOCTYPE html>
     <html>
@@ -1459,55 +1465,154 @@ def verify_email():
 
 @app.route('/resend-code')
 def resend_code():
-    if 'pending_email' not in session:
-        return '<script>window.location.href="/signup"</script>'
+    # Check if user is coming from login (pending_email might not be set)
+    email = session.get('pending_email')
     
-    email = session['pending_email']
+    # If no pending_email in session, try to get from query parameter
+    if not email:
+        email = request.args.get('email', '')
     
-    if email in users:
-        import random
-        import string
-        new_code = ''.join(random.choices(string.digits, k=6))
-        users[email]['verification_code'] = new_code
-        
-        try:
-            params = {
-                "from": "BookCompass <noreply@bookcompass.app>",
-                "to": [email],
-                "subject": "Your New Verification Code - BookCompass",
-                "html": f"""
-                <html>
-                <body>
-                    <h2>BookCompass Email Verification</h2>
-                    <p>Your new verification code is:</p>
-                    <h1 style="font-size: 32px; color: #ff9900;">{new_code}</h1>
+    # If still no email, show a form to enter email
+    if not email:
+        return '''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <link rel="icon" type="image/png" href="/static/favicon.png">
+            <title>Resend Verification - BookCompass</title>
+            <style>
+                body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }
+                .container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; }
+                input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
+                button { background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer; }
+                .header { background: #232f3e; color: white; padding: 15px 30px; }
+                .logo { font-size: 24px; }
+                .logo span { color: #ff9900; }
+            </style>
+        </head>
+        <body>
+            <div class="header"><div class="logo">
+                <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
+                Book<span>Compass</span>
+            </div></div>
+            <div class="container" style="text-align: center;">
+                <h2 style="color: #232f3e;">Resend Verification Code</h2>
+                <p>Enter your email to receive a new verification code.</p>
+                <form method="get" action="/resend-code" style="display: inline-block; text-align: left; width: 100%;">
+                    <input type="email" name="email" placeholder="Your email address" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+                    <button type="submit" style="background: #ff9900; color: white; padding: 12px; border: none; border-radius: 5px; width: 100%; cursor: pointer;">Send Code</button>
+                </form>
+                <p style="margin-top: 20px;"><a href="/login" style="color: #ff9900;">Back to Login</a></p>
+            </div>
+        </body>
+        </html>
+        '''
+    
+    # Now check if user exists
+    if email not in users:
+        return '''
+        <div style="text-align:center; margin-top:50px; font-family: Arial;">
+            <div style="background: white; max-width: 400px; margin: 0 auto; padding: 40px; border-radius: 10px;">
+                <h2 style="color: #f44336;">❌ Email not found</h2>
+                <p>No account exists with that email address.</p>
+                <a href="/signup" style="color: #ff9900;">Create an account</a> | 
+                <a href="/resend-code" style="color: #ff9900;">Try again</a>
+            </div>
+        </div>
+        '''
+    
+    # Check if already verified
+    if users[email].get('verified', False):
+        return '''
+        <div style="text-align:center; margin-top:50px; font-family: Arial;">
+            <div style="background: white; max-width: 400px; margin: 0 auto; padding: 40px; border-radius: 10px;">
+                <h2 style="color: #4CAF50;">✅ Already Verified</h2>
+                <p>Your email is already verified. You can login now.</p>
+                <a href="/login" style="background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Go to Login</a>
+            </div>
+        </div>
+        '''
+    
+    # Generate new verification code
+    import random
+    import string
+    new_code = ''.join(random.choices(string.digits, k=6))
+    users[email]['verification_code'] = new_code
+    
+    # Save to database
+    save_user_to_db(email, users[email])
+    
+    # Store email in session for verification page
+    session['pending_email'] = email
+    
+    # Send email
+    try:
+        params = {
+            "from": "BookCompass <noreply@bookcompass.app>",
+            "to": [email],
+            "subject": "Your Verification Code - BookCompass",
+            "html": f"""
+            <html>
+            <body style="font-family: Arial, sans-serif;">
+                <div style="max-width: 500px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #232f3e;">BookCompass Email Verification</h2>
+                    <p>Your verification code is:</p>
+                    <div style="font-size: 32px; font-weight: bold; color: #ff9900; padding: 20px; background: #f5f5f5; text-align: center; border-radius: 10px;">
+                        {new_code}
+                    </div>
                     <p>Enter this code on the verification page to activate your account.</p>
-                    <p>This code expires in 1 hour.</p>
+                    <p style="color: #666; font-size: 12px;">This code expires in 1 hour.</p>
                     <hr>
-                    <p>If you did not create an account, please ignore this email.</p>
-                    <p style="font-size: 12px; color: #666;">You received this email because you signed up for BookCompass.</p>
-                </body>
-                </html>
-                """
-            }
-            resend.Emails.send(params)
-            return '''
-            <div style="text-align:center; margin-top:50px;">
-                <h2>New code sent!</h2>
-                <p>Please check your email.</p>
-                <a href="/verify-email">Back to verification</a>
+                    <p style="color: #999; font-size: 12px;">If you did not request this, please ignore this email.</p>
+                </div>
+            </body>
+            </html>
+            """
+        }
+        resend.Emails.send(params)
+        
+        return f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Code Sent - BookCompass</title>
+            <style>
+                body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 0; }}
+                .container {{ max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; text-align: center; }}
+                button {{ background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; }}
+                .header {{ background: #232f3e; color: white; padding: 15px 30px; }}
+                .logo {{ font-size: 24px; }}
+                .logo span {{ color: #ff9900; }}
+            </style>
+        </head>
+        <body>
+            <div class="header"><div class="logo">
+                <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
+                Book<span>Compass</span>
+            </div></div>
+            <div class="container">
+                <h2 style="color: #4CAF50;">✅ Verification Code Sent!</h2>
+                <p>A new verification code has been sent to:</p>
+                <p><strong>{email}</strong></p>
+                <p style="color: #666;">Please check your email (and spam folder).</p>
+                <a href="/verify-email"><button>Enter Verification Code</button></a>
+                <p style="margin-top: 20px;"><a href="/login" style="color: #ff9900;">Back to Login</a></p>
             </div>
-            '''
-        except Exception as e:
-            print(f"Resend error: {e}")
-            return '''
-            <div style="text-align:center; margin-top:50px;">
-                <h2>Could not send email</h2>
-                <a href="/verify-email">Try again</a>
+        </body>
+        </html>
+        '''
+    except Exception as e:
+        print(f"Resend error: {e}")
+        return f'''
+        <div style="text-align:center; margin-top:50px; font-family: Arial;">
+            <div style="background: white; max-width: 400px; margin: 0 auto; padding: 40px; border-radius: 10px;">
+                <h2 style="color: #f44336;">❌ Could not send email</h2>
+                <p>Error: {str(e)}</p>
+                <p>Please try again later.</p>
+                <a href="/resend-code?email={email}" style="color: #ff9900;">Try Again</a>
             </div>
-            '''
-    
-    return '<script>window.location.href="/signup"</script>'
+        </div>
+        '''
 
 # ============================================
 # FORGOT PASSWORD PAGE
@@ -2748,54 +2853,36 @@ def load_users_from_db():
     cur = conn.cursor()
     
     try:
-        if db_type == 'sqlite':
-            cur.execute('SELECT * FROM users')
-            rows = cur.fetchall()
-            
-            for row in rows:
-                email = row['email']
-                users[email] = {
-                    'username': row['username'],
-                    'password': row['password'],
-                    'plan': row['plan'],
-                    'api_key': row['api_key'],
-                    'promo_code': row['promo_code'],
-                    'promo_expires': row['promo_expires'],
-                    'referred_by': row['referred_by'],
-                    'referral_count': row['referral_count'] or 0,
-                    'referral_credit': row['referral_credit'] or 0,
-                    'verified': row['verified'] or False,
-                    'verification_code': row['verification_code'],
-                    'reset_token': row['reset_token'],
-                    'reset_expires': row['reset_expires'],
-                    'created_at': row['created_at'],
-                }
-        else:
-            # PostgreSQL - using RealDictCursor
-            cur.execute('SELECT * FROM users')
-            rows = cur.fetchall()
-            
-            # rows are already dictionaries with RealDictCursor
-            for row in rows:
-                email = row['email']
-                users[email] = {
-                    'username': row['username'],
-                    'password': row['password'],
-                    'plan': row['plan'],
-                    'api_key': row['api_key'],
-                    'promo_code': row['promo_code'],
-                    'promo_expires': row['promo_expires'],
-                    'referred_by': row['referred_by'],
-                    'referral_count': row['referral_count'] or 0,
-                    'referral_credit': row['referral_credit'] or 0,
-                    'verified': row['verified'] or False,
-                    'verification_code': row['verification_code'],
-                    'reset_token': row['reset_token'],
-                    'reset_expires': row['reset_expires'],
-                    'created_at': row['created_at'],
-                }
+        cur.execute('SELECT * FROM users')
+        rows = cur.fetchall()
+        
+        # Clear existing users
+        users = {}
+        
+        for row in rows:
+            # row is a dictionary when using RealDictCursor
+            email = row['email']
+            users[email] = {
+                'username': row['username'],
+                'password': row['password'],
+                'plan': row['plan'],
+                'api_key': row['api_key'],
+                'promo_code': row['promo_code'],
+                'promo_expires': row['promo_expires'],
+                'referred_by': row['referred_by'],
+                'referral_count': row['referral_count'] or 0,
+                'referral_credit': row['referral_credit'] or 0,
+                'verified': row['verified'] or False,  # IMPORTANT: Load verification status
+                'verification_code': row['verification_code'],
+                'reset_token': row['reset_token'],
+                'reset_expires': row['reset_expires'],
+                'created_at': row['created_at'],
+            }
         
         print(f"✅ Loaded {len(users)} users from database")
+        # Print how many are verified for debugging
+        verified_count = sum(1 for u in users.values() if u.get('verified', False))
+        print(f"   📧 {verified_count} users verified")
     except Exception as e:
         print(f"Error loading users: {e}")
     finally:
