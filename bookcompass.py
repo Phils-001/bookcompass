@@ -299,7 +299,8 @@ def home():
     <p>
         <a href="/terms" style="color: #ff9900; margin: 0 10px;">Terms of Service</a> |
         <a href="/privacy" style="color: #ff9900; margin: 0 10px;">Privacy Policy</a> |
-        <a href="/contact" style="color: #ff9900; margin: 0 10px;">Contact Us</a>
+        <a href="/contact" style="color: #ff9900; margin: 0 10px;">Contact Us</a>|
+        <a href="https://www.facebook.com/share/18jcXcCAej/" target="_blank" style="color: #ff9900; margin: 0 10px;">Facebook</a>
     </p>
 </div>
 </body>
@@ -2390,7 +2391,6 @@ def terms():
                 <h2>14. Contact Information</h2>
                 <p>For questions about these Terms, please contact us at:</p>
                 <p><strong>Email:</strong> support@bookcompass.com</p>
-                <p><strong>Address:</strong> [Your Business Address]</p>
                 
                 <a href="/" class="back-link">← Back to Home</a>
             </div>
@@ -2517,7 +2517,6 @@ def privacy():
                 
                 <h2>11. Contact Us</h2>
                 <p>If you have questions about this Privacy Policy, please contact us at:</p>
-                <p><strong>Email:</strong> privacy@bookcompass.com</p>
                 <p><strong>Or use our support email:</strong> support@bookcompass.com</p>
                 
                 <a href="/" class="back-link">← Back to Home</a>
