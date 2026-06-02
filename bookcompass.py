@@ -817,7 +817,7 @@ function showTitleOptions(keyword) {
             
             // Show the type selector
             const choice = prompt(
-                `Generate titles for: "${keyword}"\n\nChoose type:\n1 - Nonfiction\n2 - Fiction\n3 - Journals/Workbooks/Planners\n\nEnter 1, 2, or 3:`,
+                'Generate titles for: "' + keyword + '"\n\nChoose type:\n1 - Nonfiction\n2 - Fiction\n3 - Journals/Workbooks/Planners\n\nEnter 1, 2, or 3:',
                 '1'
             );
             
@@ -839,7 +839,7 @@ async function generateAITitles(keyword, type) {
         'lowcontent': 'Low Content (Journals/Workbooks/Planners)'
     };
     
-    alert(`Generating ${typeNames[type]} titles for "${keyword}"...\n\nThis may take 5-10 seconds.`);
+    alert('Generating ' + typeNames[type] + ' titles for "' + keyword + '"...\n\nThis may take 5-10 seconds.');
     
     try {
         const response = await fetch('/api/generate-titles', {
@@ -859,11 +859,11 @@ async function generateAITitles(keyword, type) {
         }
         
         // Display titles
-        let message = `✨ ${typeNames[type]} Titles for "${data.keyword}":\n\n`;
+        let message = '✨ ' + typeNames[data.type] + ' Titles for "' + data.keyword + '":\n\n';
         data.titles.forEach((title, i) => {
-            message += `${i+1}. ${title}\n`;
+            message += (i+1) + '. ' + title + '\n';
         });
-        message += `\nCopy any title to use for your book!`;
+        message += '\nCopy any title to use for your book!';
         alert(message);
         
     } catch(error) {
