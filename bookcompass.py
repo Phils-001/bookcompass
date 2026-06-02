@@ -158,6 +158,12 @@ app.secret_key = "bookcompass_secret_key_12345"
 # Resend Configuration
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
+# ============================================
+# GOOGLE GEMINI AI CONFIGURATION
+# ============================================
+
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+
 # Your Rainforest API Key (keep this secret)
 YOUR_API_KEY = "43E3255EDF484BABA5C6E50060AD004E"
 # Test API key on startup
@@ -655,7 +661,7 @@ def dashboard():
             <div id="results" style="display:none;" class="card">
                 <h3>Results (Best Opportunities First)</h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Titles</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -743,6 +749,9 @@ def dashboard():
                         }});
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
+                        // Add Titles column with ✨ button
+const titleCell = row.insertCell(5);
+titleCell.innerHTML = `<button onclick="showTitleOptions('${r.keyword.replace(/'/g, "\\'")}')" style="background:#4CAF50; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; font-size:12px;">✨ Titles</button>`;
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
@@ -794,6 +803,73 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
+        // Show popup for user to choose title type
+function showTitleOptions(keyword) {
+    // Check if user is on paid plan first
+    fetch('/api/check-plan')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.is_paid) {
+                alert('✨ This feature is for Starter and Pro plans only.\n\nUpgrade to generate AI book titles from your keywords!');
+                window.location.href = '/upgrade';
+                return;
+            }
+            
+            // Show the type selector
+            const choice = prompt(
+                `Generate titles for: "${keyword}"\n\nChoose type:\n1 - Nonfiction\n2 - Fiction\n3 - Journals/Workbooks/Planners\n\nEnter 1, 2, or 3:`,
+                '1'
+            );
+            
+            let type = '';
+            if (choice === '1') type = 'nonfiction';
+            else if (choice === '2') type = 'fiction';
+            else if (choice === '3') type = 'lowcontent';
+            else return;
+            
+            generateAITitles(keyword, type);
+        });
+}
+
+// Generate titles using AI
+async function generateAITitles(keyword, type) {
+    const typeNames = {
+        'nonfiction': 'Nonfiction',
+        'fiction': 'Fiction',
+        'lowcontent': 'Low Content (Journals/Workbooks/Planners)'
+    };
+    
+    alert(`Generating ${typeNames[type]} titles for "${keyword}"...\n\nThis may take 5-10 seconds.`);
+    
+    try {
+        const response = await fetch('/api/generate-titles', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                keyword: keyword,
+                type: type
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        
+        // Display titles
+        let message = `✨ ${typeNames[type]} Titles for "${data.keyword}":\n\n`;
+        data.titles.forEach((title, i) => {
+            message += `${i+1}. ${title}\n`;
+        });
+        message += `\nCopy any title to use for your book!`;
+        alert(message);
+        
+    } catch(error) {
+        alert('Failed to generate titles. Please try again.');
+    }
+}
         </script>
     </body>
     </html>
@@ -2962,6 +3038,287 @@ load_payments_from_db()
 # ============================================
 # RUN THE APP
 # ============================================
+
+# ============================================
+# AI TITLE GENERATOR (Google Gemini)
+# ============================================
+
+import google.generativeai as genai
+from datetime import datetime
+
+# Configure Gemini if API key exists
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+# ============================================
+# PROMPT 1: NONFICTION (10 titles)
+# ============================================
+
+NONFICTION_PROMPT = """
+Current date is {current_date}.
+You are an expert Amazon KDP title strategist specializing in short nonfiction books and practical how-to guides that solve specific problems quickly and clearly.
+
+PRIMARY KEYWORD PHRASE (must be incorporated exactly or as a very close natural variation into the MAIN TITLE): "{keyword}"
+
+TASK
+Generate 10 highly profitable, evergreen title variations optimized for Amazon KDP.
+
+CORE REQUIREMENTS
+Each title must:
+• Place the primary keyword phrase (or a very close natural variation) prominently in the MAIN TITLE.
+• Instantly communicate a clear benefit, outcome, skill, transformation, or practical value.
+• Be optimized for Amazon KDP SEO while remaining natural and readable.
+• Be suitable for short nonfiction books (typically under 150 pages).
+• Stay under approximately 200 characters total.
+• Sound trustworthy, professional, and premium.
+• Avoid hype, clickbait, exaggerated claims, and guaranteed results.
+• Be optimized using EMV-4U principles while remaining natural and buyer-focused.
+
+SUBTITLE REQUIREMENTS
+Use the subtitle (after :) to:
+• Expand benefits.
+• Add supporting keywords.
+• Increase clarity and perceived value.
+• Reinforce practical outcomes.
+• Improve click-through potential.
+
+Where appropriate, include:
+• Simple
+• Practical
+• Actionable
+• Real-World
+• Step-by-Step
+• Beginner-Friendly
+• Proven
+• Research-Based
+• Expert-Backed
+Only when they fit naturally.
+
+DIFFERENTIATION REQUIREMENT
+The 10 title variations MUST represent 10 distinctly different market angles.
+Do NOT generate titles that are merely minor rewrites of one another.
+Avoid producing multiple titles that differ only through adjective substitutions such as:
+• Made Simple
+• Practical Guide
+• Complete Guide
+• Beginner's Guide
+• Step-by-Step Guide
+• Ultimate Guide
+
+Each title should feel like it was designed for a different buying motivation.
+
+FRAMEWORK DIVERSIFICATION
+Use a different positioning framework for each title wherever possible.
+Potential frameworks include:
+1. Beginner's Guide
+2. How-To
+3. Project-Based Learning
+4. Skills Mastery
+5. Career Development
+6. Problem-Solution
+7. Real-World Applications
+8. Systems & Frameworks
+9. Fast Learning / Quick Start
+10. Professional Implementation
+11. Productivity & Efficiency
+12. Case Study / Example Driven
+13. Results-Focused
+14. Decision-Making Framework
+15. Strategic Thinking
+
+No single framework should dominate the list.
+
+UNIQUENESS AUDIT
+Before outputting the final titles, internally evaluate each title and reject any that:
+• Sound interchangeable with another generated title.
+• Repeat the same positioning angle.
+• Repeat the same title framework.
+• Differ only by replacing a few adjectives.
+• Resemble generic AI-generated KDP titles.
+• Could easily be confused with another title in the list.
+
+Ensure each title has a distinct promise, perspective, and market angle.
+
+COMPETITIVE DIFFERENTIATION
+Favor unique positioning through:
+• Real-world projects
+• Practical implementation
+• Actionable systems
+• Frameworks
+• Workflows
+• Playbooks
+• Field-tested methods
+• Professional use cases
+• Common mistakes to avoid
+• Decision-making processes
+• Skill-building approaches
+
+OUTPUT FORMAT
+• Numbered list (1–10)
+• Each line must contain the full title only
+• Format: Main Title: Subtitle
+• No explanations
+• No commentary
+• No headings
+• No extra text
+"""
+
+# ============================================
+# PROMPT 2: FICTION (5 titles)
+# ============================================
+
+FICTION_PROMPT = """
+Current date is {current_date}.
+You are an expert Amazon KDP fiction title strategist specializing in bestselling fiction across multiple genres (romance, thriller, mystery, fantasy, contemporary, young adult, etc.).
+
+Primary keyword phrase (must be incorporated naturally into the MAIN TITLE or subtitle if appropriate): "{keyword}"
+
+Generate 5 highly compelling, marketable fiction title variations.
+
+Each title must:
+• Place the primary keyword phrase (or a natural variation) prominently in the MAIN TITLE if possible
+• Instantly capture attention and curiosity, hinting at conflict, emotion, suspense, romance, or adventure depending on the genre
+• Follow one of these proven fiction title frameworks where appropriate:
+  - [Emotion/Conflict] + [Character/Setting]
+  - [Mysterious or Suspenseful Phrase] + [Promise of Story or Twist]
+  - [Relationship or Adventure Hook] → [Outcome or Consequence]
+  - Single-word or short evocative titles with strong genre signals
+• Include a subtitle if helpful to clarify genre, mood, or story hook (after :)
+  - Subtitle should add intrigue, specify genre, or hint at the stakes/plot
+• Target high-intent fiction readers browsing Amazon categories or bestseller lists
+• Be genre-appropriate, emotionally engaging, and instantly readable
+• Sound premium, memorable, and differentiated from competitors
+• Optimize for Amazon KDP search discoverability while remaining natural and readable
+• Stay under ~200 characters total
+• Avoid generic, vague, or cliché phrasing
+• Be suitable for novels or novellas (fiction length ~150–400 pages)
+
+OUTPUT FORMAT
+• Numbered list (1–5)
+• Each line: Full title only (Main Title: Subtitle)
+• No explanations, no introductions, no extra text
+"""
+
+# ============================================
+# PROMPT 3: LOW CONTENT (5 titles)
+# ============================================
+
+LOW_CONTENT_PROMPT = """
+Current date is {current_date}.
+You are an expert Amazon KDP title creator specializing in low-content and guided journals/planners.
+
+Core micro-niche keyword phrase (must be incorporated exactly or as a very close natural variation into the MAIN TITLE): "{keyword}"
+
+Generate 5 highly profitable, evergreen title variations. Each must comply with amazon policies.
+
+Each title must:
+- Place the core micro-niche phrase (or very close natural version) prominently in the MAIN TITLE — this is what buyers see first in search results and on the book cover
+- Where possible, follow this structure in the main title: [Problem/Need] + [Who] + [Format]
+- Use a subtitle (after :) to add benefits, hooks, differentiators, and extra keywords
+- Be emotionally appealing, clear, and reader-focused
+- Target high-intent buyers who are actively searching to solve a specific problem or achieve a result
+- Include a curiosity hook, urgency cue, unique angle, or clear benefit in the subtitle to boost click-through rate
+- Differentiate from competitors (e.g., "with prompts", "guided", "large print", "365 days", "scripture-based", "premium layout")
+- Strictly follow Amazon KDP title guidelines: natural and readable, not spammy or keyword-stuffed, under ~200 characters total
+- Feel premium, gift-worthy, and trustworthy
+
+OUTPUT FORMAT
+Numbered list 1–5.
+Each line: Full title only (Main Title: Subtitle)
+No extra text, explanations, or introductions.
+"""
+
+# ============================================
+# API ENDPOINT: GENERATE TITLES
+# ============================================
+
+@app.route('/api/generate-titles', methods=['POST'])
+def generate_titles():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'})
+    
+    email = session['user_id']
+    user_plan = users[email]['plan']
+    
+    # Check if user is on paid plan
+    if user_plan not in ['starter', 'pro']:
+        return jsonify({'error': 'This feature is only available for Starter and Pro plans. Please upgrade.'})
+    
+    data = request.json
+    keyword = data.get('keyword', '')
+    title_type = data.get('type', 'nonfiction')
+    
+    if not keyword:
+        return jsonify({'error': 'No keyword provided'})
+    
+    if not GEMINI_API_KEY:
+        return jsonify({'error': 'AI service not configured. Please contact support.'})
+    
+    # Get current date dynamically
+    current_date = datetime.now().strftime('%B %Y')
+    
+    # Select the correct prompt
+    if title_type == 'nonfiction':
+        prompt = NONFICTION_PROMPT.format(current_date=current_date, keyword=keyword)
+    elif title_type == 'fiction':
+        prompt = FICTION_PROMPT.format(current_date=current_date, keyword=keyword)
+    elif title_type == 'lowcontent':
+        prompt = LOW_CONTENT_PROMPT.format(current_date=current_date, keyword=keyword)
+    else:
+        return jsonify({'error': 'Invalid title type'})
+    
+    try:
+        # Call Google Gemini API
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+        
+        # Parse the response
+        titles_text = response.text.strip()
+        titles = []
+        
+        for line in titles_text.split('\n'):
+            line = line.strip()
+            # Remove numbering like "1. " or "1-"
+            import re
+            clean = re.sub(r'^\d+[\.\)\-]\s*', '', line)
+            if clean and len(clean) > 5:
+                titles.append(clean)
+        
+        # Limit to expected count
+        if title_type == 'nonfiction':
+            titles = titles[:10]
+        else:
+            titles = titles[:5]
+        
+        if not titles:
+            return jsonify({'error': 'No titles generated. Please try again.'})
+        
+        return jsonify({
+            'keyword': keyword,
+            'type': title_type,
+            'titles': titles
+        })
+        
+    except Exception as e:
+        print(f"Title generation error: {e}")
+        return jsonify({'error': f'AI service error: {str(e)}'})
+
+# ============================================
+# API ENDPOINT: CHECK USER PLAN
+# ============================================
+
+@app.route('/api/check-plan')
+def check_plan():
+    if 'user_id' not in session:
+        return jsonify({'is_paid': False})
+    
+    email = session['user_id']
+    plan = users[email]['plan']
+    
+    return jsonify({
+        'is_paid': plan in ['starter', 'pro'],
+        'plan': plan
+    })
 
 if __name__ == '__main__':
     print("\n" + "="*50)

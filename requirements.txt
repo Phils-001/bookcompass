@@ -3,3 +3,4 @@ requests
 gunicorn
 resend
 psycopg2-binary
+google-generativeai==0.8.3
