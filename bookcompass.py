@@ -723,7 +723,7 @@ def dashboard():
                 }}
             }}
             
-                        // Show partial results if any
+            // Show partial results if any
             if (results.length > 0) {{
                 results.sort((a,b) => b.score - a.score);
                 const tbody = document.getElementById('resultsBody');
@@ -750,12 +750,16 @@ def dashboard():
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
                         // Add Titles column with ✨ button
-const titleCell = row.insertCell(5);
-titleCell.innerHTML = '<button onclick="showTitleOptions(\'' + r.keyword.replace(/'/g, "\\'") + '\')" style="background:#4CAF50; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; font-size:12px;">✨ Titles</button>';
+                        const titleCell = row.insertCell(5);
+                        titleCell.innerHTML = '<button onclick="showTitleOptions(\'' + r.keyword.replace(/'/g, "\\'") + '\')" style="background:#4CAF50; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; font-size:12px;">✨ Titles</button>';
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
+                        // Still add empty title cell
+                        row.insertCell(5).innerHTML = '';
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
+                        // Still add empty title cell
+                        row.insertCell(5).innerHTML = '';
                     }}
                 }});
                 document.getElementById('results').style.display = 'block';
@@ -803,77 +807,78 @@ titleCell.innerHTML = '<button onclick="showTitleOptions(\'' + r.keyword.replace
                 document.getElementById('results').appendChild(msg);
             }}
         }}
+        
         // Show popup for user to choose title type
-function showTitleOptions(keyword) {
-    // Check if user is on paid plan first
-    fetch('/api/check-plan')
-        .then(res => res.json())
-        .then(data => {
-            if (!data.is_paid) {
-                alert('✨ This feature is for Starter and Pro plans only.\n\nUpgrade to generate AI book titles from your keywords!');
-                window.location.href = '/upgrade';
-                return;
-            }
-            
-            // Show the type selector
-            const choice = prompt(
-                'Generate titles for: "' + keyword + '"\n\nChoose type:\n1 - Nonfiction\n2 - Fiction\n3 - Journals/Workbooks/Planners\n\nEnter 1, 2, or 3:',
-                '1'
-            );
-            
-            let type = '';
-            if (choice === '1') type = 'nonfiction';
-            else if (choice === '2') type = 'fiction';
-            else if (choice === '3') type = 'lowcontent';
-            else return;
-            
-            generateAITitles(keyword, type);
-        });
-}
-
-// Generate titles using AI
-async function generateAITitles(keyword, type) {
-    const typeNames = {
-        'nonfiction': 'Nonfiction',
-        'fiction': 'Fiction',
-        'lowcontent': 'Low Content (Journals/Workbooks/Planners)'
-    };
-    
-    alert('Generating ' + typeNames[type] + ' titles for "' + keyword + '"...\n\nThis may take 5-10 seconds.');
-    
-    try {
-        const response = await fetch('/api/generate-titles', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                keyword: keyword,
-                type: type
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.error) {
-            alert('Error: ' + data.error);
-            return;
+        function showTitleOptions(keyword) {
+            // Check if user is on paid plan first
+            fetch('/api/check-plan')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.is_paid) {
+                        alert('✨ This feature is for Starter and Pro plans only.\n\nUpgrade to generate AI book titles from your keywords!');
+                        window.location.href = '/upgrade';
+                        return;
+                    }
+                    
+                    // Show the type selector
+                    const choice = prompt(
+                        'Generate titles for: "' + keyword + '"\n\nChoose type:\n1 - Nonfiction\n2 - Fiction\n3 - Journals/Workbooks/Planners\n\nEnter 1, 2, or 3:',
+                        '1'
+                    );
+                    
+                    let type = '';
+                    if (choice === '1') type = 'nonfiction';
+                    else if (choice === '2') type = 'fiction';
+                    else if (choice === '3') type = 'lowcontent';
+                    else return;
+                    
+                    generateAITitles(keyword, type);
+                });
         }
-        
-        // Display titles
-        let message = '✨ ' + typeNames[data.type] + ' Titles for "' + data.keyword + '":\n\n';
-        data.titles.forEach((title, i) => {
-            message += (i+1) + '. ' + title + '\n';
-        });
-        message += '\nCopy any title to use for your book!';
-        alert(message);
-        
-    } catch(error) {
-        alert('Failed to generate titles. Please try again.');
-    }
-}
-        </script>
-    </body>
-    </html>
-    '''
+
+        // Generate titles using AI
+        async function generateAITitles(keyword, type) {
+            const typeNames = {
+                'nonfiction': 'Nonfiction',
+                'fiction': 'Fiction',
+                'lowcontent': 'Low Content (Journals/Workbooks/Planners)'
+            };
+            
+            alert('Generating ' + typeNames[type] + ' titles for "' + keyword + '"...\n\nThis may take 5-10 seconds.');
+            
+            try {
+                const response = await fetch('/api/generate-titles', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        keyword: keyword,
+                        type: type
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Display titles
+                let message = '✨ ' + typeNames[data.type] + ' Titles for "' + data.keyword + '":\n\n';
+                data.titles.forEach((title, i) => {
+                    message += (i+1) + '. ' + title + '\n';
+                });
+                message += '\nCopy any title to use for your book!';
+                alert(message);
+                
+            } catch(error) {
+                alert('Failed to generate titles. Please try again.');
+            }
+        }
+</script>
+</body>
+</html>
+'''
 
 # ============================================
 # API RESEARCH ENDPOINT
