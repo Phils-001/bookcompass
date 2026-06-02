@@ -751,7 +751,7 @@ def dashboard():
                         row.insertCell(4).innerHTML = compHtml;
                         // Add Titles column with ✨ button
 const titleCell = row.insertCell(5);
-titleCell.innerHTML = `<button onclick="showTitleOptions('${r.keyword.replace(/'/g, "\\'")}')" style="background:#4CAF50; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; font-size:12px;">✨ Titles</button>`;
+titleCell.innerHTML = '<button onclick="showTitleOptions(\'' + r.keyword.replace(/'/g, "\\'") + '\')" style="background:#4CAF50; color:white; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; font-size:12px;">✨ Titles</button>';
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
