@@ -808,7 +808,7 @@ def dashboard():
             }}
         }}
         
-        // Show popup for user to choose title type
+        <!--// Show popup for user to choose title type
         function showTitleOptions(keyword) {
             // Check if user is on paid plan first
             fetch('/api/check-plan')
@@ -873,7 +873,7 @@ def dashboard():
                 
             } catch(error) {
                 alert('Failed to generate titles. Please try again.');
-            }
+            }-->
         }
 </script>
 </body>
