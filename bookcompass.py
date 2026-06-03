@@ -1921,7 +1921,7 @@ def check_rainforest_credits():
         print(f"   Error message: {str(e)}")
         return False
 # ============================================
-# ADMIN PANEL WITH INCOME TRACKING
+# ADMIN PANEL WITH USER MANAGEMENT 
 # ============================================
 
 @app.route('/admin')
@@ -1974,9 +1974,6 @@ def admin_panel():
     verified_users = sum(1 for u in users.values() if u.get('verified', False))
     unverified_users = total_users - verified_users
     
-    # Recent users (last 10)
-    recent_users = list(users.keys())[-10:]
-    
     # Total referral credits given
     total_referrals = sum(u.get('referral_count', 0) for u in users.values())
     
@@ -2015,6 +2012,23 @@ def admin_panel():
     monnify_count = sum(1 for p in payments if p.get('payment_method') == 'monnify')
     manual_count = sum(1 for p in payments if p.get('payment_method') == 'manual')
     
+    # Prepare all users list for JavaScript (all users, not just last 10)
+    all_users_list = []
+    for email, user_data in users.items():
+        all_users_list.append({
+            'email': email,
+            'username': user_data.get('username', 'N/A'),
+            'plan': user_data.get('plan', 'free'),
+            'verified': user_data.get('verified', False),
+            'referral_count': user_data.get('referral_count', 0),
+            'created_at': user_data.get('created_at', 'N/A'),
+        })
+    # Sort by created_at, newest first
+    all_users_list.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    import json
+    users_json = json.dumps(all_users_list)
+    
     return f'''
     <!DOCTYPE html>
     <html>
@@ -2046,6 +2060,13 @@ def admin_panel():
             .nav a:hover {{ background: #e68a00; }}
             .income-positive {{ color: #2e7d32; font-weight: bold; }}
             .income-negative {{ color: #f44336; font-weight: bold; }}
+            .search-box {{ margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }}
+            .search-box input {{ padding: 10px; border: 1px solid #ddd; border-radius: 5px; flex: 1; min-width: 200px; }}
+            .search-box select {{ padding: 10px; border: 1px solid #ddd; border-radius: 5px; }}
+            .pagination {{ margin-top: 20px; display: flex; justify-content: center; gap: 10px; }}
+            .pagination button {{ padding: 8px 15px; background: #ff9900; color: white; border: none; border-radius: 5px; cursor: pointer; }}
+            .pagination button:disabled {{ background: #ccc; cursor: not-allowed; }}
+            .page-info {{ margin: 0 15px; }}
         </style>
     </head>
     <body>
@@ -2167,33 +2188,43 @@ def admin_panel():
             ''' if recent_payments else '<p>No payments recorded yet.</p>'}
         </div>
         
-        <!-- Recent Signups -->
+        <!-- User Management Section with Search and Pagination -->
         <div class="card">
-            <h2>📝 Recent Signups (Last 10)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Plan</th>
-                        <th>Verified</th>
-                        <th>Referrals</th>
-                        <th>Joined</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {''.join(f'''
-                    <tr>
-                        <td>{users[email].get('username', 'N/A')}</td>
-                        <td>{email}</td>
-                        <td><span class="plan-badge plan-{users[email].get('plan', 'free')}">{users[email].get('plan', 'free').upper()}</span></td>
-                        <td class="{'verified' if users[email].get('verified') else 'unverified'}">{'✅' if users[email].get('verified') else '❌'}</td>
-                        <td>{users[email].get('referral_count', 0)}</td>
-                        <td>{users[email].get('created_at', 'N/A')}</td>
-                    </tr>
-                    ''' for email in recent_users[::-1])}
-                </tbody>
-            </table>
+            <h2>📝 User Management</h2>
+            <p>Total Users: <strong>{total_users}</strong></p>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search by email or username..." onkeyup="filterUsers()">
+                <select id="perPageSelect" onchange="changePerPage()">
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="all">Show All</option>
+                </select>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Plan</th>
+                            <th>Verified</th>
+                            <th>Referrals</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- JavaScript will populate this -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="paginationControls" class="pagination">
+                <!-- JavaScript will populate this -->
+            </div>
         </div>
         
         <!-- System Info -->
@@ -2227,6 +2258,7 @@ def admin_panel():
                 </form>
             </div>
         </div>
+        
         <div class="card">
             <h2>⚙️ System Info</h2>
             <ul>
@@ -2282,6 +2314,179 @@ def admin_panel():
             </ul>
             <p><strong>Recommended:</strong> Reconcile this dashboard with Monnify payouts weekly to ensure accuracy.</p>
         </div>
+        
+        <script>
+            // User data from server (ALL users, not just last 10)
+            const allUsers = {users_json};
+            
+            let currentPage = 1;
+            let perPage = 10;
+            let filteredUsers = [...allUsers];
+            
+            function filterUsers() {{
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                filteredUsers = allUsers.filter(user => 
+                    user.email.toLowerCase().includes(searchTerm) || 
+                    user.username.toLowerCase().includes(searchTerm)
+                );
+                currentPage = 1;
+                renderTable();
+            }}
+            
+            function changePerPage() {{
+                const select = document.getElementById('perPageSelect');
+                perPage = select.value === 'all' ? 'all' : parseInt(select.value);
+                currentPage = 1;
+                renderTable();
+            }}
+            
+            function renderTable() {{
+                const tbody = document.getElementById('usersTableBody');
+                const paginationDiv = document.getElementById('paginationControls');
+                
+                // Calculate pagination
+                let usersToShow = filteredUsers;
+                let totalPages = 1;
+                
+                if (perPage !== 'all') {{
+                    totalPages = Math.ceil(filteredUsers.length / perPage);
+                    const start = (currentPage - 1) * perPage;
+                    const end = start + perPage;
+                    usersToShow = filteredUsers.slice(start, end);
+                }}
+                
+                // Render table rows
+                if (usersToShow.length === 0) {{
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No users found</td></tr>';
+                }} else {{
+                    tbody.innerHTML = usersToShow.map(user => `
+                        <tr data-email="${{user.email}}">
+                            <td>${{user.username}}</td>
+                            <td>${{user.email}}</td>
+                            <td class="plan-cell">
+                                <span class="plan-badge plan-${{user.plan.toLowerCase()}}">${{user.plan.toUpperCase()}}</span>
+                            </td>
+                            <td class="${{user.verified ? 'verified' : 'unverified'}}">${{user.verified ? '✅' : '❌'}}</td>
+                            <td>${{user.referral_count}}</td>
+                            <td>${{user.created_at}}</td>
+                            <td>
+                                <button onclick="editUserPlan('${{user.email}}')" style="background:#ff9900; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin-right:5px;">✏️ Edit</button>
+                                <button onclick="deleteUser('${{user.email}}')" style="background:#f44336; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">🗑️ Delete</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }}
+                
+                // Render pagination controls
+                if (perPage !== 'all' && totalPages > 1) {{
+                    paginationDiv.innerHTML = `
+                        <button onclick="changePage(${{currentPage - 1}})" ${{currentPage === 1 ? 'disabled' : ''}}>◀ Previous</button>
+                        <span class="page-info">Page ${{currentPage}} of ${{totalPages}}</span>
+                        <button onclick="changePage(${{currentPage + 1}})" ${{currentPage === totalPages ? 'disabled' : ''}}>Next ▶</button>
+                    `;
+                }} else {{
+                    paginationDiv.innerHTML = '';
+                }}
+            }}
+            
+            function changePage(newPage) {{
+                currentPage = newPage;
+                renderTable();
+            }}
+            
+            // Edit user plan function
+            function editUserPlan(email) {{
+                const user = allUsers.find(u => u.email === email);
+                const currentPlan = user.plan;
+                
+                const popup = document.createElement('div');
+                popup.style.cssText = `
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+                    align-items: center; z-index: 9999;
+                `;
+                
+                popup.innerHTML = `
+                    <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">
+                        <h2 style="margin-top: 0;">✏️ Edit User Plan</h2>
+                        <p><strong>User:</strong> ${{email}}</p>
+                        <p><strong>Current Plan:</strong> <span class="plan-badge plan-${{currentPlan.toLowerCase()}}">${{currentPlan.toUpperCase()}}</span></p>
+                        <div style="margin: 20px 0;">
+                            <label><strong>Change to:</strong></label>
+                            <select id="newPlanSelect" style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                                <option value="free">🔴 Free Plan (3 searches/day)</option>
+                                <option value="starter">🟡 Starter Plan ($12/month)</option>
+                                <option value="pro">🟢 Pro Plan ($25/month)</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="this.closest('div').parentElement.remove()" style="padding: 8px 20px; background: #999; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                            <button onclick="confirmUpdatePlan('${{email}}', document.getElementById('newPlanSelect').value)" style="padding: 8px 20px; background: #ff9900; color: white; border: none; border-radius: 5px; cursor: pointer;">Update</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(popup);
+            }}
+            
+            function confirmUpdatePlan(email, newPlan) {{
+                const planNames = {{'free': 'Free', 'starter': 'Starter', 'pro': 'Pro'}};
+                
+                fetch('/admin/update-user-plan', {{
+                    method: 'POST',
+                    headers: {{
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': 'BookCompassAdmin@@2026!'
+                    }},
+                    body: JSON.stringify({{email: email, plan: newPlan}})
+                }})
+                .then(response => response.json())
+                .then(data => {{
+                    document.querySelectorAll('div[style*="position: fixed"]').forEach(el => el.remove());
+                    
+                    if (data.success) {{
+                        alert(`✅ User ${{email}} updated to ${{planNames[newPlan]}} plan!`);
+                        location.reload();
+                    }} else {{
+                        alert(`❌ Error: ${{data.error}}`);
+                    }}
+                }})
+                .catch(error => {{
+                    alert('❌ Error updating user');
+                    document.querySelectorAll('div[style*="position: fixed"]').forEach(el => el.remove());
+                }});
+            }}
+            
+            function deleteUser(email) {{
+                const confirmDelete = confirm(`⚠️ Are you sure you want to delete user "${{email}}"?\\n\\nThis action CANNOT be undone!`);
+                
+                if (!confirmDelete) return;
+                
+                fetch('/admin/delete-user', {{
+                    method: 'POST',
+                    headers: {{
+                        'Content-Type': 'application/json',
+                        'X-Admin-Password': 'BookCompassAdmin@@2026!'
+                    }},
+                    body: JSON.stringify({{email: email}})
+                }})
+                .then(response => response.json())
+                .then(data => {{
+                    if (data.success) {{
+                        alert(`✅ User ${{email}} deleted successfully!`);
+                        location.reload();
+                    }} else {{
+                        alert(`❌ Error: ${{data.error}}`);
+                    }}
+                }})
+                .catch(error => {{
+                    alert('❌ Error deleting user');
+                }});
+            }}
+            
+            // Initialize the table
+            renderTable();
+        </script>
     </body>
     </html>
     '''
@@ -2948,6 +3153,67 @@ def load_payments_from_db():
     finally:
         cur.close()
         conn.close()
+
+# ============================================
+# ADMIN USER MANAGEMENT API
+# ============================================
+
+@app.route('/admin/update-user-plan', methods=['POST'])
+def admin_update_user_plan():
+    # Check admin password
+    admin_password = request.headers.get('X-Admin-Password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return jsonify({'success': False, 'error': 'Unauthorized'})
+    
+    data = request.json
+    email = data.get('email')
+    new_plan = data.get('plan')
+    
+    if not email or not new_plan:
+        return jsonify({'success': False, 'error': 'Missing email or plan'})
+    
+    if new_plan not in ['free', 'starter', 'pro']:
+        return jsonify({'success': False, 'error': 'Invalid plan'})
+    
+    # Update user in memory
+    if email in users:
+        users[email]['plan'] = new_plan
+        
+        # Save to database
+        save_user_to_db(email, users[email])
+        
+        return jsonify({'success': True, 'message': f'User {email} updated to {new_plan}'})
+    else:
+        return jsonify({'success': False, 'error': 'User not found'})
+
+@app.route('/admin/delete-user', methods=['POST'])
+def admin_delete_user():
+    # Check admin password
+    admin_password = request.headers.get('X-Admin-Password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return jsonify({'success': False, 'error': 'Unauthorized'})
+    
+    data = request.json
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'success': False, 'error': 'Missing email'})
+    
+    # Delete from memory
+    if email in users:
+        del users[email]
+        
+        # Delete from database
+        conn, db_type = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('DELETE FROM users WHERE email = %s', (email,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': f'User {email} deleted'})
+    else:
+        return jsonify({'success': False, 'error': 'User not found'})
 
 # ============================================
 # INITIALIZE DATABASE ON STARTUP
