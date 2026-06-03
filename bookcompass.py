@@ -159,7 +159,7 @@ app.secret_key = "bookcompass_secret_key_12345"
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
 # Your Rainforest API Key (keep this secret)
-YOUR_API_KEY = "43E3255EDF484BABA5C6E50060AD004E"
+YOUR_API_KEY = "38A79CBCEBE5450EAD417347F79504B5"
 # Test API key on startup
 print("="*50)
 print("🔑 TESTING RAINFOREST API KEY")
