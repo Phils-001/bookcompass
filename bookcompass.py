@@ -1040,6 +1040,7 @@ def select_plan(plan_name):
     
     if email in ADMIN_EMAILS:
         users[email]['plan'] = plan_name
+        save_user_to_db(email, users[email])
         return f'''
         <!DOCTYPE html>
         <html>
@@ -1086,6 +1087,7 @@ def select_plan(plan_name):
                     promo_message = f" (Promo {user['promo_code']}: {discount}% off applied)"
         
         users[email]['plan'] = plan_name
+        save_user_to_db(email, users[email])
 
         # Record payment (when payments are integrated)
         if plan_name != 'free':
