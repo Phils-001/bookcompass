@@ -873,39 +873,67 @@ def api_research():
         r = requests.get(url, headers=headers, params=params, timeout=25)
         
         print(f"📡 API Status: {r.status_code}")
-        print(f"📡 API Response (first 500 chars): {r.text[:500]}")
         
         if r.status_code != 200:
             return jsonify({'error': f'API error: Status {r.status_code}'})
         
         result = r.json()
         
-        # Check if we have search_results
-        if 'search_results' not in result:
-            print(f"⚠️ No 'search_results' in response. Keys: {list(result.keys())}")
-            return jsonify({'error': 'API returned unexpected format'})
+        # ASINSpotlight puts search results inside 'data' -> 'products'
+        # Let's check both possible structures
+        search_results = []
         
-        search_results = result.get('search_results', [])[:5]
+        if 'search_results' in result:
+            search_results = result.get('search_results', [])
+        elif 'data' in result:
+            # Check if 'products' is inside data
+            if 'products' in result['data']:
+                search_results = result['data'].get('products', [])
+            elif 'items' in result['data']:
+                search_results = result['data'].get('items', [])
+            else:
+                # If we can't find products, print the keys to debug
+                print(f"📊 Data keys: {list(result['data'].keys())}")
+                # Return a helpful error
+                return jsonify({'error': 'API response format unexpected. Please contact support.'})
+        
+        print(f"📊 Found {len(search_results)} search results")
         
         if not search_results:
-            return jsonify({'error': 'No results found'})
+            return jsonify({'error': 'No results found for this keyword'})
         
         competitors = []
         strong = 0
         monthly_demand_values = []
         
-        for item in search_results:
+        for item in search_results[:5]:
             title = item.get('title', 'N/A')
             if len(title) > 70:
                 title = title[:67] + '...'
             
+            # Try different field names for BSR
             bsr = item.get('bsr', 'N/A')
+            if bsr == 'N/A' and 'bestsellers_rank' in item:
+                for rank in item['bestsellers_rank']:
+                    if 'rank' in rank:
+                        bsr = rank['rank']
+                        break
             
+            # Try different field names for monthly demand
             monthly_demand = item.get('monthly_demand', 0)
+            if monthly_demand == 0 and 'demand' in item:
+                monthly_demand = item.get('demand', 0)
+            if monthly_demand == 0 and 'search_volume' in item:
+                monthly_demand = item.get('search_volume', 0)
+            
             if monthly_demand and monthly_demand > 0:
                 monthly_demand_values.append(monthly_demand)
+                print(f"📊 Monthly demand: {monthly_demand}")
             
-            competitors.append({'title': title, 'bsr': bsr})
+            competitors.append({
+                'title': title,
+                'bsr': bsr
+            })
             
             try:
                 if bsr != "N/A" and int(bsr) < 100000:
@@ -931,6 +959,9 @@ def api_research():
                 volume_category = "LOW"
             else:
                 volume_category = "VERY LOW"
+            print(f"📊 Avg monthly demand: {avg_monthly_demand}")
+        else:
+            print(f"⚠️ No monthly_demand found in any product")
         
         volume = f"{volume_number:,} ({volume_category})"
         
