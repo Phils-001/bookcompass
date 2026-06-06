@@ -600,8 +600,8 @@ def dashboard():
                 <div class="usage-bar"><div class="usage-fill"></div></div>
                 <p>Remaining searches: <strong id="remainingCount">{remaining}</strong></p>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button onclick="location.reload()" style="background: #666; padding: 5px 15px; font-size: 12px;">🔄 Refresh Status</button>
-                    <a href="/upgrade"><button style="background: #ff9900; padding: 5px 15px; font-size: 12px;">⬆️ Upgrade Plan</button></a>
+    <button onclick="location.reload()" style="background: #666; padding: 5px 15px; font-size: 12px;">🔄 Refresh Status</button>
+    {f'<a href="/upgrade"><button style="background: #ff9900; padding: 5px 15px; font-size: 12px;">⬆️ Upgrade Plan</button></a>' if session["email"] == "bookcompass.app@gmail.com" else '<button style="background: #666; padding: 5px 15px; font-size: 12px; cursor: not-allowed;" disabled>🔒 Beta Access Only</button>'}
                 </div>
                 {f'''
 <div id="upgradeWarning" style="background: #ffebee; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center;">
