@@ -178,14 +178,7 @@ usage_tracker = {}
 
 # Payment tracking
 payments = []  # List to store all payment records
-# Rainforest API credit tracking
-rainforest_credits = {
-    'remaining': None,
-    'plan_limit': None,
-    'plan_name': None,
-    'last_checked': None,
-    'warning_shown': False
-}
+
 # Contact messages storage
 contact_messages = []  # List to store all contact form messages
 
@@ -1893,60 +1886,7 @@ def record_payment(email, amount, plan, payment_method='monnify'):
     print(f"💰 Payment recorded: {email} - ${amount} - {plan}")
     return payment_record
 
-# ============================================
-# CHECK RAINFOREST API CREDITS
-# ============================================
 
-def check_rainforest_credits():
-    """Fetch remaining credits from Rainforest API (free API call)"""
-    global rainforest_credits
-    
-    print("="*50)
-    print("🔍 Checking Rainforest API credits...")
-    print("="*50)
-    
-    try:
-        url = "https://api.rainforestapi.com/account"
-        params = {"api_key": YOUR_API_KEY}
-        
-        print(f"📡 URL: {url}")
-        print(f"🔑 API Key (first 10 chars): {YOUR_API_KEY[:10]}...")
-        print(f"📤 Sending request...")
-        
-        response = requests.get(url, params=params, timeout=10)
-        
-        print(f"📥 Response status code: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            print(f"✅ Response received successfully!")
-            print(f"📦 Full response data: {data}")
-            
-            account_info = data.get('account_info', {})
-            print(f"📊 Account info: {account_info}")
-            
-            rainforest_credits['remaining'] = account_info.get('requests_remaining', 'Unknown')
-            rainforest_credits['plan_limit'] = account_info.get('plan_limit', 'Unknown')
-            rainforest_credits['plan_name'] = account_info.get('plan_name', 'Unknown')
-            rainforest_credits['last_checked'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
-            print(f"💾 Saved to rainforest_credits:")
-            print(f"   - remaining: {rainforest_credits['remaining']}")
-            print(f"   - plan_limit: {rainforest_credits['plan_limit']}")
-            print(f"   - plan_name: {rainforest_credits['plan_name']}")
-            print(f"   - last_checked: {rainforest_credits['last_checked']}")
-            
-            return True
-        else:
-            print(f"❌ Failed to fetch credits!")
-            print(f"   Status code: {response.status_code}")
-            print(f"   Response text: {response.text[:500]}")
-            return False
-    except Exception as e:
-        print(f"❌ Error checking credits!")
-        print(f"   Exception type: {type(e).__name__}")
-        print(f"   Error message: {str(e)}")
-        return False
 # ============================================
 # ADMIN PANEL WITH USER MANAGEMENT 
 # ============================================
@@ -1982,8 +1922,6 @@ def admin_panel():
         </body>
         </html>
         '''
-    # Check Rainforest API credits
-    check_rainforest_credits()
 
     # Calculate stats
     total_users = len(users)
@@ -2255,36 +2193,25 @@ def admin_panel():
         </div>
         
         <!-- System Info -->
-        <!-- Rainforest API Credits -->
-        <div class="card">
-            <h2>🌳 Rainforest API Credits</h2>
-            <div class="stats" style="margin-top: 10px;">
-                <div class="stat" style="background: {'#f44336' if rainforest_credits.get('remaining') and str(rainforest_credits.get('remaining')).isdigit() and int(rainforest_credits.get('remaining')) < 100 else '#4CAF50'}">
-                    <h2>{rainforest_credits.get('remaining', 'Unknown')}</h2>
-                    <p>Credits Remaining</p>
-                </div>
-                <div class="stat" style="background: #2196F3;">
-                    <h2>{rainforest_credits.get('plan_limit', 'Unknown')}</h2>
-                    <p>Monthly Limit</p>
-                </div>
-                <div class="stat" style="background: #ff9800;">
-                    <h2>{rainforest_credits.get('plan_name', 'Unknown')}</h2>
-                    <p>Current Plan</p>
-                </div>
-            </div>
-            <div style="margin-top: 10px;">
-                <p><strong>Last Checked:</strong> {rainforest_credits.get('last_checked', 'Never')}</p>
-                <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                    🌳 Each keyword search uses 1 credit.<br>
-                    🔄 Free plan: 100 total credits (one-time).<br>
-                    💰 Hobbyist plan: $23/month for 5,000 credits.<br>
-                    📊 <a href="https://www.rainforestapi.com/pricing" target="_blank">View pricing</a>
-                </p>
-                <form method="post" action="/refresh-credits" style="margin-top: 10px;">
-                    <button type="submit" style="background: #ff9900; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🔄 Refresh Credits</button>
-                </form>
-            </div>
+<!-- ASINSpotlight API Credits -->
+<div class="card">
+    <h2>🌟 ASINSpotlight API Credits</h2>
+    <div class="stats" style="margin-top: 10px;">
+        <div class="stat" style="background: #2196F3;">
+            <h2 id="asinspotlightCredits">Loading...</h2>
+            <p>Credits Remaining</p>
         </div>
+    </div>
+    <div style="margin-top: 10px;">
+        <p><strong>Last Checked:</strong> <span id="lastChecked">Never</span></p>
+        <p style="font-size: 12px; color: #666; margin-top: 10px;">
+            🌟 Each keyword search uses 1 credit.<br>
+            💰 Credits expire based on your package (30-120 days).<br>
+            📊 <a href="https://www.asinspotlight.com/pricing" target="_blank">View pricing</a>
+        </p>
+        <button onclick="checkASINSpotlightCredits()" style="background: #ff9900; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🔄 Refresh Credits</button>
+    </div>
+</div>
         
         <div class="card">
             <h2>⚙️ System Info</h2>
@@ -2292,7 +2219,7 @@ def admin_panel():
                 <li><strong>Server Time:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
                 <li><strong>Users in Memory:</strong> {total_users}</li>
                 <li><strong>Payments Recorded:</strong> {total_payments}</li>
-                <li><strong>API Key Status:</strong> {'✅ Active' if YOUR_API_KEY else '❌ Not Set'}</li>
+                <li><strong>API Key Status:</strong> {'✅ Active' if ASINSPOTLIGHT_API_KEY else '❌ Not Set'}</li>
                 <li><strong>Resend API Status:</strong> {'✅ Configured' if os.environ.get('RESEND_API_KEY') else '❌ Not Set'}</li>
                 <li><strong>Payment Methods:</strong> Monnify: {monnify_count}, Manual: {manual_count}</li>
             </ul>
@@ -2514,6 +2441,33 @@ def admin_panel():
             // Initialize the table
             renderTable();
         </script>
+    // ASINSpotlight Credit Check
+function checkASINSpotlightCredits() {
+    const creditsElement = document.getElementById('asinspotlightCredits');
+    const lastCheckedElement = document.getElementById('lastChecked');
+    
+    creditsElement.innerHTML = 'Checking...';
+    
+    fetch('/admin/check-asinspotlight-credits?password=BookCompassAdmin@@2026!')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.requests_remaining !== null) {
+                creditsElement.innerHTML = data.requests_remaining.toLocaleString();
+                lastCheckedElement.innerHTML = new Date().toLocaleString();
+            } else {
+                creditsElement.innerHTML = 'Error';
+                lastCheckedElement.innerHTML = data.error || 'Failed to fetch';
+            }
+        })
+        .catch(error => {
+            creditsElement.innerHTML = 'Error';
+            lastCheckedElement.innerHTML = 'Connection failed';
+            console.error('Error checking credits:', error);
+        });
+}
+
+// Load credits when page loads
+checkASINSpotlightCredits();
     </body>
     </html>
     '''
@@ -3254,6 +3208,35 @@ load_users_from_db()
 load_usage_from_db()
 load_payments_from_db()
 
+@app.route('/admin/check-asinspotlight-credits')
+def check_asinspottlight_credits():
+    admin_password = request.args.get('password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return jsonify({'error': 'Unauthorized'})
+    
+    if not ASINSPOTLIGHT_API_KEY:
+        return jsonify({'success': False, 'error': 'API key not configured'})
+    
+    try:
+        # Make a minimal search to get credit info
+        url = "https://api.asinspotlight.com/v1/search"
+        headers = {"x-api-key": ASINSPOTLIGHT_API_KEY}
+        params = {"keyword": "test", "marketplace": "us"}
+        
+        r = requests.get(url, headers=headers, params=params, timeout=10)
+        result = r.json()
+        
+        # Extract remaining credits from meta.usage
+        remaining = None
+        if 'meta' in result and 'usage' in result['meta']:
+            remaining = result['meta']['usage'].get('requests_remaining')
+        
+        return jsonify({
+            'success': True,
+            'requests_remaining': remaining
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 # ============================================
 # RUN THE APP
 # ============================================
