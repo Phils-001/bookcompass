@@ -804,10 +804,8 @@ def api_research():
     data = request.json
     keyword = data.get('keyword', '')
     
-    # DEBUG: Check user's plan
     user_plan = users[email]['plan']
     print(f"🔍 USER PLAN CHECK - Email: {email}, Plan: '{user_plan}'")
-    print(f"🔍 Is paid? {user_plan in ['starter', 'pro']}")
     
     today = str(date.today())
     if email not in usage_tracker:
@@ -843,9 +841,7 @@ def api_research():
         volume_category = "MEDIUM"
         volume_number = 500
     
-    # Check if user is on paid plan
     if user_plan == "free":
-        # Free plan - no competition data
         competition = "UPGRADE TO SEE"
         volume = f"{volume_number} ({volume_category})"
         score = 5
@@ -866,72 +862,50 @@ def api_research():
             'score': score
         })
     
-    # PAID PLAN - Get data from ASINSpotlight
-    print(f"💰 PAID USER - Calling ASINSpotlight API for keyword: {keyword}")
-    
     if not ASINSPOTLIGHT_API_KEY:
-        return jsonify({'error': 'API key not configured. Please contact support.'})
+        return jsonify({'error': 'API key not configured.'})
     
     try:
         url = "https://api.asinspotlight.com/v1/search"
-        headers = {
-            "x-api-key": ASINSPOTLIGHT_API_KEY
-        }
-        params = {
-            "keyword": keyword,
-            "marketplace": "us"
-        }
+        headers = {"x-api-key": ASINSPOTLIGHT_API_KEY}
+        params = {"keyword": keyword, "marketplace": "us"}
         
         r = requests.get(url, headers=headers, params=params, timeout=25)
         
-        print(f"📡 API Response Status: {r.status_code}")
+        print(f"📡 API Status: {r.status_code}")
+        print(f"📡 API Response (first 500 chars): {r.text[:500]}")
         
         if r.status_code != 200:
-            print(f"❌ API Error Body: {r.text[:500]}")
             return jsonify({'error': f'API error: Status {r.status_code}'})
         
         result = r.json()
-        print(f"✅ API Response received")
         
-        # DEBUG: Print the first result keys to see what data we have
-        if result.get('search_results') and len(result['search_results']) > 0:
-            first_result = result['search_results'][0]
-            print(f"📊 First result keys: {list(first_result.keys())}")
+        # Check if we have search_results
+        if 'search_results' not in result:
+            print(f"⚠️ No 'search_results' in response. Keys: {list(result.keys())}")
+            return jsonify({'error': 'API returned unexpected format'})
         
         search_results = result.get('search_results', [])[:5]
         
         if not search_results:
-            return jsonify({'error': 'No results found for this keyword'})
+            return jsonify({'error': 'No results found'})
         
         competitors = []
         strong = 0
         monthly_demand_values = []
         
         for item in search_results:
-            bsr = "N/A"
             title = item.get('title', 'N/A')
             if len(title) > 70:
                 title = title[:67] + '...'
             
-            # Try different ways to get BSR
-            if 'bsr' in item:
-                bsr = item['bsr']
-            elif 'bestsellers_rank' in item:
-                for rank in item['bestsellers_rank']:
-                    if 'rank' in rank:
-                        bsr = rank['rank']
-                        break
+            bsr = item.get('bsr', 'N/A')
             
-            # Get monthly demand
             monthly_demand = item.get('monthly_demand', 0)
             if monthly_demand and monthly_demand > 0:
                 monthly_demand_values.append(monthly_demand)
-                print(f"📊 Monthly demand found: {monthly_demand}")
             
-            competitors.append({
-                'title': title,
-                'bsr': bsr
-            })
+            competitors.append({'title': title, 'bsr': bsr})
             
             try:
                 if bsr != "N/A" and int(bsr) < 100000:
@@ -939,7 +913,6 @@ def api_research():
             except:
                 pass
         
-        # Calculate competition level
         if strong >= 3:
             competition = "HIGH"
         elif strong >= 1:
@@ -947,7 +920,6 @@ def api_research():
         else:
             competition = "LOW"
         
-        # Calculate actual search volume from monthly demand
         if monthly_demand_values:
             avg_monthly_demand = sum(monthly_demand_values) // len(monthly_demand_values)
             volume_number = avg_monthly_demand
@@ -959,15 +931,10 @@ def api_research():
                 volume_category = "LOW"
             else:
                 volume_category = "VERY LOW"
-            print(f"📊 Avg monthly demand: {avg_monthly_demand}")
-        else:
-            print(f"⚠️ No monthly_demand values found in API response")
         
         volume = f"{volume_number:,} ({volume_category})"
         
-        # Calculate Niche Score
         score = 5
-        
         if competition == "LOW":
             score += 3
         elif competition == "MEDIUM":
@@ -984,8 +951,7 @@ def api_research():
         
         score = max(1, min(10, score))
         
-        print(f"📊 Final - Competition: {competition}, Volume: {volume_number}, Score: {score}")
-        print(f"📊 Competitors count: {len(competitors)}")
+        print(f"📊 Returning {len(competitors)} competitors")
         
         return jsonify({
             'keyword': keyword,
@@ -995,12 +961,9 @@ def api_research():
             'competitors': competitors
         })
         
-    except requests.exceptions.Timeout:
-        print(f"❌ Timeout for keyword: {keyword}")
-        return jsonify({'error': 'Request timeout. Please try again.'})
-    except Exception as api_error:
-        print(f"❌ Exception: {type(api_error).__name__}: {str(api_error)}")
-        return jsonify({'error': f'API error: {str(api_error)}'})
+    except Exception as e:
+        print(f"❌ Exception: {e}")
+        return jsonify({'error': str(e)})
 
 # ============================================
 # UPGRADE PAGE
