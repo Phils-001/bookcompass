@@ -730,7 +730,7 @@ def dashboard():
                         r.competitors.forEach((comp, idx) => {{
                             compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
                             compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
-                            compHtml += `<span style="color: #666;">BSR: ${{comp.bsr}}</span>`;
+                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
                             compHtml += `</div>`;
                         }});
                         compHtml += '</div>';
