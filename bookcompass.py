@@ -820,7 +820,7 @@ def api_research():
     usage_tracker[email][today] += 1
     save_usage_to_db(email, today, usage_tracker[email][today])
     
-    # Get search volume from Amazon suggestions
+    # Get search volume from Amazon suggestions (fallback)
     try:
         url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
         r = requests.get(url, timeout=15)
@@ -872,82 +872,61 @@ def api_research():
         
         r = requests.get(url, headers=headers, params=params, timeout=25)
         
-        print(f"📡 API Status: {r.status_code}")
-        
         if r.status_code != 200:
             return jsonify({'error': f'API error: Status {r.status_code}'})
         
         result = r.json()
         
-        # ASINSpotlight puts search results inside 'data' -> 'products'
-        # Let's check both possible structures
-        search_results = []
+        # Get products from data.shallow_parts
+        products = []
+        if result.get('data') and result['data'].get('shallow_parts'):
+            products = result['data']['shallow_parts']
         
-        if 'search_results' in result:
-            search_results = result.get('search_results', [])
-        elif 'data' in result:
-            # Check if 'products' is inside data
-            if 'products' in result['data']:
-                search_results = result['data'].get('products', [])
-            elif 'items' in result['data']:
-                search_results = result['data'].get('items', [])
-            else:
-                # If we can't find products, print the keys to debug
-                print(f"📊 Data keys: {list(result['data'].keys())}")
-                # Return a helpful error
-                return jsonify({'error': 'API response format unexpected. Please contact support.'})
+        print(f"📊 Found {len(products)} products")
         
-        print(f"📊 Found {len(search_results)} search results")
-        
-        if not search_results:
+        if not products:
             return jsonify({'error': 'No results found for this keyword'})
         
         competitors = []
         strong = 0
         monthly_demand_values = []
         
-        for item in search_results[:5]:
+        for item in products[:5]:
             title = item.get('title', 'N/A')
             if len(title) > 70:
                 title = title[:67] + '...'
             
-            # Try different field names for BSR
-            bsr = item.get('bsr', 'N/A')
-            if bsr == 'N/A' and 'bestsellers_rank' in item:
-                for rank in item['bestsellers_rank']:
-                    if 'rank' in rank:
-                        bsr = rank['rank']
-                        break
-            
-            # Try different field names for monthly demand
-            monthly_demand = item.get('monthly_demand', 0)
-            if monthly_demand == 0 and 'demand' in item:
-                monthly_demand = item.get('demand', 0)
-            if monthly_demand == 0 and 'search_volume' in item:
-                monthly_demand = item.get('search_volume', 0)
-            
+            # Use bought_past_month as search volume proxy
+            monthly_demand = item.get('bought_past_month', 0)
             if monthly_demand and monthly_demand > 0:
                 monthly_demand_values.append(monthly_demand)
-                print(f"📊 Monthly demand: {monthly_demand}")
+                print(f"📊 Monthly demand (bought_past_month): {monthly_demand}")
+            
+            # BSR is not directly available, but we can use ranking as proxy
+            # Lower ranking index = better seller
+            bsr = item.get('index_on_page', 'N/A')
             
             competitors.append({
                 'title': title,
                 'bsr': bsr
             })
             
+            # Strong competitor if low index (high ranking)
             try:
-                if bsr != "N/A" and int(bsr) < 100000:
+                if bsr != "N/A" and int(bsr) <= 5:
                     strong += 1
             except:
                 pass
         
+        # Calculate competition level
         if strong >= 3:
-            competition = "HIGH"
+            competition = "LOW"
         elif strong >= 1:
             competition = "MEDIUM"
         else:
-            competition = "LOW"
+            competition = "HIGH"
         
+        # Calculate actual search volume from bought_past_month
         if monthly_demand_values:
             avg_monthly_demand = sum(monthly_demand_values) // len(monthly_demand_values)
             volume_number = avg_monthly_demand
@@ -961,11 +940,13 @@ def api_research():
                 volume_category = "VERY LOW"
             print(f"📊 Avg monthly demand: {avg_monthly_demand}")
         else:
-            print(f"⚠️ No monthly_demand found in any product")
+            print(f"⚠️ No bought_past_month values found")
         
         volume = f"{volume_number:,} ({volume_category})"
         
+        # Calculate Niche Score
         score = 5
+        
         if competition == "LOW":
             score += 3
         elif competition == "MEDIUM":
@@ -982,7 +963,7 @@ def api_research():
         
         score = max(1, min(10, score))
         
-        print(f"📊 Returning {len(competitors)} competitors")
+        print(f"📊 Competition: {competition}, Score: {score}")
         
         return jsonify({
             'keyword': keyword,
