@@ -873,13 +873,15 @@ def api_research():
             try:
                 # Call ASINSpotlight API
                 url = "https://api.asinspotlight.com/v1/search"
+                headers = {
+                 "x-api-key": ASINSPOTLIGHT_API_KEY
+                }
                 params = {
-                    "api_key": ASINSPOTLIGHT_API_KEY,
                     "keyword": keyword,
                     "country": "com",
                     "marketplace": "US"
                 }
-                r = requests.get(url, params=params, timeout=25)
+                r = requests.get(url, headers=headers, params=params, timeout=25)
                 
                 if r.status_code != 200:
                     competition = "Currently Unavailable"
