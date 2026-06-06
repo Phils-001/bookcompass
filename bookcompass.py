@@ -2440,34 +2440,55 @@ def admin_panel():
             
             // Initialize the table
             renderTable();
-        </script>
-    // ASINSpotlight Credit Check
-function checkASINSpotlightCredits() {
-    const creditsElement = document.getElementById('asinspotlightCredits');
-    const lastCheckedElement = document.getElementById('lastChecked');
-    
-    creditsElement.innerHTML = 'Checking...';
-    
-    fetch('/admin/check-asinspotlight-credits?password=BookCompassAdmin@@2026!')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.requests_remaining !== null) {
-                creditsElement.innerHTML = data.requests_remaining.toLocaleString();
-                lastCheckedElement.innerHTML = new Date().toLocaleString();
-            } else {
-                creditsElement.innerHTML = 'Error';
-                lastCheckedElement.innerHTML = data.error || 'Failed to fetch';
+                <script>
+            // User data from server (ALL users, not just last 10)
+            const allUsers = {users_json};
+            
+            let currentPage = 1;
+            let perPage = 10;
+            let filteredUsers = [...allUsers];
+            
+            function filterUsers() { ... }
+            function changePerPage() { ... }
+            function renderTable() { ... }
+            function changePage(newPage) { ... }
+            function editUserPlan(email) { ... }
+            function confirmUpdatePlan(email, newPlan) { ... }
+            function deleteUser(email) { ... }
+            
+            // Initialize the table
+            renderTable();
+            
+            // ========== ASINSpotlight Credit Check ==========
+            function checkASINSpotlightCredits() {
+                const creditsElement = document.getElementById('asinspotlightCredits');
+                const lastCheckedElement = document.getElementById('lastChecked');
+                
+                if (!creditsElement) return;
+                
+                creditsElement.innerHTML = 'Checking...';
+                
+                fetch('/admin/check-asinspotlight-credits?password=BookCompassAdmin@@2026!')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.requests_remaining !== null) {
+                            creditsElement.innerHTML = data.requests_remaining.toLocaleString();
+                            lastCheckedElement.innerHTML = new Date().toLocaleString();
+                        } else {
+                            creditsElement.innerHTML = 'Error';
+                            lastCheckedElement.innerHTML = data.error || 'Failed to fetch';
+                        }
+                    })
+                    .catch(error => {
+                        creditsElement.innerHTML = 'Error';
+                        lastCheckedElement.innerHTML = 'Connection failed';
+                        console.error('Error checking credits:', error);
+                    });
             }
-        })
-        .catch(error => {
-            creditsElement.innerHTML = 'Error';
-            lastCheckedElement.innerHTML = 'Connection failed';
-            console.error('Error checking credits:', error);
-        });
-}
-
-// Load credits when page loads
-checkASINSpotlightCredits();
+            
+            // Load credits when page loads
+            checkASINSpotlightCredits();
+        </script>
     </body>
     </html>
     '''
