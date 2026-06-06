@@ -158,26 +158,18 @@ app.secret_key = "bookcompass_secret_key_12345"
 # Resend Configuration
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
+# Your ASINSpotlight API Key (keep this secret)
+ASINSPOTLIGHT_API_KEY = os.environ.get('ASINSPOTLIGHT_API_KEY', '')
+
 # Your ASINSpotlight API Key
-YOUR_API_KEY = "sk_live_tAyP31fUspDw2t9iAaPSCQcE5ftOr6w-"
+ASINSPOTLIGHT_API_KEY = "sk_live_tAyP31fUspDw2t9iAaPSCQcE5ftOr6w-"
 # Test API key on startup
+# API Configuration
 print("="*50)
-print("🔑 TESTING RAINFOREST API KEY")
+print("🔑 BOOKCOMPASS STARTUP")
 print("="*50)
-try:
-    test_url = "https://api.rainforestapi.com/account"
-    test_params = {"api_key": YOUR_API_KEY}
-    test_response = requests.get(test_url, params=test_params, timeout=10)
-    print(f"Response Status: {test_response.status_code}")
-    if test_response.status_code == 200:
-        print("✅ API KEY IS WORKING!")
-        test_data = test_response.json()
-        print(f"Account Info: {test_data.get('account_info', {})}")
-    else:
-        print(f"❌ API KEY ERROR: {test_response.status_code}")
-        print(f"Response: {test_response.text[:300]}")
-except Exception as e:
-    print(f"❌ Error testing API key: {e}")
+print(f"✅ ASINSpotlight API Key configured: {'Yes' if ASINSPOTLIGHT_API_KEY else 'No'}")
+print(f"✅ Resend API Key configured: {'Yes' if resend.api_key else 'No'}")
 print("="*50)
 
 # Simple storage
