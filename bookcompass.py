@@ -158,8 +158,8 @@ app.secret_key = "bookcompass_secret_key_12345"
 # Resend Configuration
 resend.api_key = os.environ.get('RESEND_API_KEY', '')
 
-# Your Rainforest API Key (keep this secret)
-YOUR_API_KEY = "38A79CBCEBE5450EAD417347F79504B5"
+# Your ASINSpotlight API Key
+YOUR_API_KEY = "sk_live_tAyP31fUspDw2t9iAaPSCQcE5ftOr6w-"
 # Test API key on startup
 print("="*50)
 print("🔑 TESTING RAINFOREST API KEY")
@@ -805,7 +805,6 @@ def dashboard():
 
 @app.route('/api/research', methods=['POST'])
 def api_research():
-    global rainforest_credits
     if 'user_id' not in session:
         return jsonify({'error': 'Not logged in'})
     
@@ -828,128 +827,183 @@ def api_research():
     # Save to database
     save_usage_to_db(email, today, usage_tracker[email][today])
     
-    # Get search volume
+    # Get search volume from Amazon suggestions (kept the same)
     try:
         url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
         r = requests.get(url, timeout=15)
         count = len(r.json().get('suggestions', []))
-        if count >= 8: volume = "HIGH"
-        elif count >= 4: volume = "MEDIUM"
-        elif count >= 1: volume = "LOW"
-        else: volume = "VERY LOW"
-    except requests.exceptions.Timeout:
-        volume = "MEDIUM"
-        print(f"Timeout getting search volume for: {keyword}")
+        if count >= 8:
+            volume_category = "HIGH"
+            volume_number = 2500  # approximate
+        elif count >= 4:
+            volume_category = "MEDIUM"
+            volume_number = 750
+        elif count >= 1:
+            volume_category = "LOW"
+            volume_number = 300
+        else:
+            volume_category = "VERY LOW"
+            volume_number = 50
     except:
-        volume = "MEDIUM"
+        volume_category = "MEDIUM"
+        volume_number = 500
     
     # Check if user is on free plan
     user_plan = users[email]['plan']
     
     if user_plan == "free":
-        # Free plan: No API call for competition (faster results)
+        # Free plan: No API call for competition
         competition = "UPGRADE TO SEE"
+        volume = volume_category
+        score = 5
+        if volume_category == "HIGH":
+            score += 3
+        elif volume_category == "MEDIUM":
+            score += 2
+        elif volume_category == "LOW":
+            score += 1
+        else:
+            score -= 1
+        score = max(1, min(10, score))
+        
+        return jsonify({
+            'keyword': keyword,
+            'volume': f"{volume_number} ({volume_category})",
+            'competition': competition,
+            'score': score
+        })
     else:
-        # Paid plans: Get competition data using YOUR API key
-        if not YOUR_API_KEY:
+        # Paid plans: Get competition data from ASINSpotlight API
+        if not ASINSPOTLIGHT_API_KEY:
             competition = "UNKNOWN (API key not configured)"
+            volume = volume_category
         else:
             try:
-                url = "https://api.rainforestapi.com/request"
-                params = {"api_key": YOUR_API_KEY, "type": "search", "amazon_domain": "amazon.com", "search_term": keyword}
+                # Call ASINSpotlight API
+                url = "https://api.asinspotlight.com/v1/search"
+                params = {
+                    "api_key": ASINSPOTLIGHT_API_KEY,
+                    "keyword": keyword,
+                    "country": "com",
+                    "marketplace": "US"
+                }
                 r = requests.get(url, params=params, timeout=25)
                 
-                # Check if API request was successful
                 if r.status_code != 200:
                     competition = "Currently Unavailable"
-                    print(f"Rainforest API error {r.status_code}: {r.text[:200]}")
+                    volume = volume_category
+                    print(f"ASINSpotlight API error {r.status_code}: {r.text[:200]}")
                 else:
-                    # Update credit information from response headers
-                    remaining = r.headers.get('x-api-credits')
-                    if remaining is not None:
-                        rainforest_credits['remaining'] = int(remaining)
-                        rainforest_credits['last_checked'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                        
-                        if int(remaining) < 100 and not rainforest_credits.get('warning_shown'):
-                            print(f"⚠️ Rainforest API: Only {remaining} credits remaining!")
-                            rainforest_credits['warning_shown'] = True
+                    result = r.json()
                     
-                    # Process the data
-                    data = r.json()
-                    strong = 0
+                    # Get search results
+                    search_results = result.get('search_results', [])[:5]
+                    
                     competitors = []
-                    for item in data.get('search_results', [])[:5]:
+                    strong = 0
+                    monthly_demand_values = []
+                    
+                    for item in search_results:
                         bsr = "N/A"
                         title = item.get('title', 'N/A')
                         if len(title) > 70:
                             title = title[:67] + '...'
                         
-                        if 'bestsellers_rank' in item:
+                        # Get BSR if available
+                        if 'bsr' in item:
+                            bsr = item['bsr']
+                        elif 'bestsellers_rank' in item:
                             for rank in item['bestsellers_rank']:
                                 if 'rank' in rank:
                                     bsr = rank['rank']
                                     break
+                        
+                        # Get monthly demand for volume calculation
+                        monthly_demand = item.get('monthly_demand', 0)
+                        if monthly_demand and monthly_demand > 0:
+                            monthly_demand_values.append(monthly_demand)
                         
                         competitors.append({
                             'title': title,
                             'bsr': bsr
                         })
                         
+                        # Count strong competitors (BSR under 100,000)
                         try:
                             if bsr != "N/A" and int(bsr) < 100000:
                                 strong += 1
                         except:
                             pass
-                    if strong >= 3: competition = "HIGH"
-                    elif strong >= 1: competition = "MEDIUM"
-                    else: competition = "LOW"
+                    
+                    # Calculate competition level
+                    if strong >= 3:
+                        competition = "HIGH"
+                    elif strong >= 1:
+                        competition = "MEDIUM"
+                    else:
+                        competition = "LOW"
+                    
+                    # Calculate actual search volume from monthly demand
+                    if monthly_demand_values:
+                        avg_monthly_demand = sum(monthly_demand_values) // len(monthly_demand_values)
+                        volume_number = avg_monthly_demand
+                        if avg_monthly_demand >= 1000:
+                            volume_category = "HIGH"
+                        elif avg_monthly_demand >= 500:
+                            volume_category = "MEDIUM"
+                        elif avg_monthly_demand >= 100:
+                            volume_category = "LOW"
+                        else:
+                            volume_category = "VERY LOW"
+                    
+                    volume = f"{volume_number:,} ({volume_category})"
                     
             except requests.exceptions.Timeout:
                 competition = "Slow Response"
+                volume = volume_category
                 print(f"Timeout getting competition for: {keyword}")
             except Exception as api_error:
                 competition = "Currently Unavailable"
-                print(f"Rainforest API error for keyword '{keyword}': {api_error}")
-    
-    # Calculate score
-    score = 5
-    
-    if user_plan == "free":
-        if volume == "HIGH": score += 3
-        elif volume == "MEDIUM": score += 2
-        elif volume == "LOW": score += 1
-        else: score -= 1
-    else:
-        if competition == "LOW": score += 3
-        elif competition == "MEDIUM": score += 1
-        else: score -= 2
-        if volume == "HIGH": score += 2
-        elif volume == "MEDIUM": score += 1
-        elif volume == "VERY LOW": score -= 2
-    
-    score = max(1, min(10, score))
-    
-    time.sleep(0.5)
-    
-    if user_plan != "free" and 'competitors' in locals():
-        return jsonify({
-            'keyword': keyword,
-            'volume': volume,
-            'competition': competition,
-            'score': score,
-            'competitors': competitors
-        })
-    else:
-        return jsonify({
-            'keyword': keyword,
-            'volume': volume,
-            'competition': competition,
-            'score': score
-        })
+                volume = volume_category
+                print(f"ASINSpotlight API error for keyword '{keyword}': {api_error}")
+        
+        # Calculate Niche Score
+        score = 5
+        
+        if competition == "LOW":
+            score += 3
+        elif competition == "MEDIUM":
+            score += 1
+        else:
+            score -= 2
+        
+        if volume_category == "HIGH":
+            score += 2
+        elif volume_category == "MEDIUM":
+            score += 1
+        elif volume_category == "VERY LOW":
+            score -= 2
+        
+        score = max(1, min(10, score))
+        
+        time.sleep(0.5)
+        
+        if 'competitors' in locals() and competitors:
+            return jsonify({
+                'keyword': keyword,
+                'volume': volume,
+                'competition': competition,
+                'score': score,
+                'competitors': competitors
+            })
+        else:
+            return jsonify({
+                'keyword': keyword,
+                'volume': volume,
+                'competition': competition,
+                'score': score
+            })
 
-# ============================================
-# UPGRADE PAGE
-# ============================================
 # ============================================
 # UPGRADE PAGE
 # ============================================
