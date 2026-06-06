@@ -804,29 +804,32 @@ def api_research():
     data = request.json
     keyword = data.get('keyword', '')
     
+    # DEBUG: Check user's plan
+    user_plan = users[email]['plan']
+    print(f"🔍 USER PLAN CHECK - Email: {email}, Plan: '{user_plan}'")
+    print(f"🔍 Is paid? {user_plan in ['starter', 'pro']}")
+    
     today = str(date.today())
     if email not in usage_tracker:
         usage_tracker[email] = {}
     if today not in usage_tracker[email]:
         usage_tracker[email][today] = 0
     
-    limit = PLANS[users[email]['plan']]['daily_limit']
+    limit = PLANS[user_plan]['daily_limit']
     if usage_tracker[email][today] >= limit:
         return jsonify({'error': 'Daily limit reached'})
     
     usage_tracker[email][today] += 1
-    
-    # Save to database
     save_usage_to_db(email, today, usage_tracker[email][today])
     
-    # Get search volume from Amazon suggestions (kept the same)
+    # Get search volume from Amazon suggestions
     try:
         url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
         r = requests.get(url, timeout=15)
         count = len(r.json().get('suggestions', []))
         if count >= 8:
             volume_category = "HIGH"
-            volume_number = 2500  # approximate
+            volume_number = 2500
         elif count >= 4:
             volume_category = "MEDIUM"
             volume_number = 750
@@ -840,13 +843,11 @@ def api_research():
         volume_category = "MEDIUM"
         volume_number = 500
     
-    # Check if user is on free plan
-    user_plan = users[email]['plan']
-    
+    # Check if user is on paid plan
     if user_plan == "free":
-        # Free plan: No API call for competition
+        # Free plan - no competition data
         competition = "UPGRADE TO SEE"
-        volume = volume_category
+        volume = f"{volume_number} ({volume_category})"
         score = 5
         if volume_category == "HIGH":
             score += 3
@@ -860,105 +861,109 @@ def api_research():
         
         return jsonify({
             'keyword': keyword,
-            'volume': f"{volume_number} ({volume_category})",
+            'volume': volume,
             'competition': competition,
             'score': score
         })
-    else:
-        # Paid plans: Get competition data from ASINSpotlight API
-        if not ASINSPOTLIGHT_API_KEY:
-            competition = "UNKNOWN (API key not configured)"
-            volume = volume_category
-        else:
+    
+    # PAID PLAN - Get data from ASINSpotlight
+    print(f"💰 PAID USER - Calling ASINSpotlight API for keyword: {keyword}")
+    
+    if not ASINSPOTLIGHT_API_KEY:
+        return jsonify({'error': 'API key not configured. Please contact support.'})
+    
+    try:
+        url = "https://api.asinspotlight.com/v1/search"
+        headers = {
+            "x-api-key": ASINSPOTLIGHT_API_KEY
+        }
+        params = {
+            "keyword": keyword,
+            "marketplace": "us"
+        }
+        
+        r = requests.get(url, headers=headers, params=params, timeout=25)
+        
+        print(f"📡 API Response Status: {r.status_code}")
+        
+        if r.status_code != 200:
+            print(f"❌ API Error Body: {r.text[:500]}")
+            return jsonify({'error': f'API error: Status {r.status_code}'})
+        
+        result = r.json()
+        print(f"✅ API Response received")
+        
+        # DEBUG: Print the first result keys to see what data we have
+        if result.get('search_results') and len(result['search_results']) > 0:
+            first_result = result['search_results'][0]
+            print(f"📊 First result keys: {list(first_result.keys())}")
+        
+        search_results = result.get('search_results', [])[:5]
+        
+        if not search_results:
+            return jsonify({'error': 'No results found for this keyword'})
+        
+        competitors = []
+        strong = 0
+        monthly_demand_values = []
+        
+        for item in search_results:
+            bsr = "N/A"
+            title = item.get('title', 'N/A')
+            if len(title) > 70:
+                title = title[:67] + '...'
+            
+            # Try different ways to get BSR
+            if 'bsr' in item:
+                bsr = item['bsr']
+            elif 'bestsellers_rank' in item:
+                for rank in item['bestsellers_rank']:
+                    if 'rank' in rank:
+                        bsr = rank['rank']
+                        break
+            
+            # Get monthly demand
+            monthly_demand = item.get('monthly_demand', 0)
+            if monthly_demand and monthly_demand > 0:
+                monthly_demand_values.append(monthly_demand)
+                print(f"📊 Monthly demand found: {monthly_demand}")
+            
+            competitors.append({
+                'title': title,
+                'bsr': bsr
+            })
+            
             try:
-                # Call ASINSpotlight API
-                url = "https://api.asinspotlight.com/v1/search"
-                headers = {
-                 "x-api-key": ASINSPOTLIGHT_API_KEY
-                }
-                params = {
-                    "keyword": keyword,
-                    "marketplace": "us"
-                }
-                r = requests.get(url, headers=headers, params=params, timeout=25)
-                
-                if r.status_code != 200:
-                    competition = "Currently Unavailable"
-                    volume = volume_category
-                    print(f"ASINSpotlight API error {r.status_code}: {r.text[:200]}")
-                else:
-                    result = r.json()
-                    
-                    # Get search results
-                    search_results = result.get('search_results', [])[:5]
-                    
-                    competitors = []
-                    strong = 0
-                    monthly_demand_values = []
-                    
-                    for item in search_results:
-                        bsr = "N/A"
-                        title = item.get('title', 'N/A')
-                        if len(title) > 70:
-                            title = title[:67] + '...'
-                        
-                        # Get BSR if available
-                        if 'bsr' in item:
-                            bsr = item['bsr']
-                        elif 'bestsellers_rank' in item:
-                            for rank in item['bestsellers_rank']:
-                                if 'rank' in rank:
-                                    bsr = rank['rank']
-                                    break
-                        
-                        # Get monthly demand for volume calculation
-                        monthly_demand = item.get('monthly_demand', 0)
-                        if monthly_demand and monthly_demand > 0:
-                            monthly_demand_values.append(monthly_demand)
-                        
-                        competitors.append({
-                            'title': title,
-                            'bsr': bsr
-                        })
-                        
-                        # Count strong competitors (BSR under 100,000)
-                        try:
-                            if bsr != "N/A" and int(bsr) < 100000:
-                                strong += 1
-                        except:
-                            pass
-                    
-                    # Calculate competition level
-                    if strong >= 3:
-                        competition = "HIGH"
-                    elif strong >= 1:
-                        competition = "MEDIUM"
-                    else:
-                        competition = "LOW"
-                    
-                    # Calculate actual search volume from monthly demand
-                    if monthly_demand_values:
-                        avg_monthly_demand = sum(monthly_demand_values) // len(monthly_demand_values)
-                        volume_number = avg_monthly_demand
-                        if avg_monthly_demand >= 1000:
-                            volume_category = "HIGH"
-                        elif avg_monthly_demand >= 500:
-                            volume_category = "MEDIUM"
-                        elif avg_monthly_demand >= 100:
-                            volume_category = "LOW"
-                        else:
-                            volume_category = "VERY LOW"
-                    
-                    volume = f"{volume_number:,} ({volume_category})"
-                    
-            except requests.exceptions.Timeout:
-                competition = "Slow Response"
-                volume = volume_category
-                print(f"Timeout getting competition for: {keyword}")
-            except Exception as api_error:
-                competition = "Currently Unavailable"
-                volume = volume_category
-                print(f"ASINSpotlight API error for keyword '{keyword}': {api_error}")
+                if bsr != "N/A" and int(bsr) < 100000:
+                    strong += 1
+            except:
+                pass
+        
+        # Calculate competition level
+        if strong >= 3:
+            competition = "HIGH"
+        elif strong >= 1:
+            competition = "MEDIUM"
+        else:
+            competition = "LOW"
+        
+        # Calculate actual search volume from monthly demand
+        if monthly_demand_values:
+            avg_monthly_demand = sum(monthly_demand_values) // len(monthly_demand_values)
+            volume_number = avg_monthly_demand
+            if avg_monthly_demand >= 1000:
+                volume_category = "HIGH"
+            elif avg_monthly_demand >= 500:
+                volume_category = "MEDIUM"
+            elif avg_monthly_demand >= 100:
+                volume_category = "LOW"
+            else:
+                volume_category = "VERY LOW"
+            print(f"📊 Avg monthly demand: {avg_monthly_demand}")
+        else:
+            print(f"⚠️ No monthly_demand values found in API response")
+        
+        volume = f"{volume_number:,} ({volume_category})"
         
         # Calculate Niche Score
         score = 5
@@ -979,23 +984,23 @@ def api_research():
         
         score = max(1, min(10, score))
         
-        time.sleep(0.5)
+        print(f"📊 Final - Competition: {competition}, Volume: {volume_number}, Score: {score}")
+        print(f"📊 Competitors count: {len(competitors)}")
         
-        if 'competitors' in locals() and competitors:
-            return jsonify({
-                'keyword': keyword,
-                'volume': volume,
-                'competition': competition,
-                'score': score,
-                'competitors': competitors
-            })
-        else:
-            return jsonify({
-                'keyword': keyword,
-                'volume': volume,
-                'competition': competition,
-                'score': score
-            })
+        return jsonify({
+            'keyword': keyword,
+            'volume': volume,
+            'competition': competition,
+            'score': score,
+            'competitors': competitors
+        })
+        
+    except requests.exceptions.Timeout:
+        print(f"❌ Timeout for keyword: {keyword}")
+        return jsonify({'error': 'Request timeout. Please try again.'})
+    except Exception as api_error:
+        print(f"❌ Exception: {type(api_error).__name__}: {str(api_error)}")
+        return jsonify({'error': f'API error: {str(api_error)}'})
 
 # ============================================
 # UPGRADE PAGE
