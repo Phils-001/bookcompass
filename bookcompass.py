@@ -161,8 +161,6 @@ resend.api_key = os.environ.get('RESEND_API_KEY', '')
 # Your ASINSpotlight API Key (keep this secret)
 ASINSPOTLIGHT_API_KEY = os.environ.get('ASINSPOTLIGHT_API_KEY', '')
 
-# Your ASINSpotlight API Key
-ASINSPOTLIGHT_API_KEY = "sk_live_tAyP31fUspDw2t9iAaPSCQcE5ftOr6w-"
 # Test API key on startup
 # API Configuration
 print("="*50)
@@ -2193,7 +2191,7 @@ def admin_panel():
         </div>
         
         <!-- System Info -->
-        <!-- ASINSpotlight API Credits -->
+                <!-- ASINSpotlight API Credits -->
         <div class="card">
             <h2>🌟 ASINSpotlight API Credits</h2>
             <div class="stats" style="margin-top: 10px;">
@@ -2277,7 +2275,7 @@ def admin_panel():
             let perPage = 10;
             let filteredUsers = [...allUsers];
             
-            function filterUsers() {
+            function filterUsers() {{
                 const searchTerm = document.getElementById('searchInput').value.toLowerCase();
                 filteredUsers = allUsers.filter(user => 
                     user.email.toLowerCase().includes(searchTerm) || 
@@ -2285,67 +2283,67 @@ def admin_panel():
                 );
                 currentPage = 1;
                 renderTable();
-            }
+            }}
             
-            function changePerPage() {
+            function changePerPage() {{
                 const select = document.getElementById('perPageSelect');
                 perPage = select.value === 'all' ? 'all' : parseInt(select.value);
                 currentPage = 1;
                 renderTable();
-            }
+            }}
             
-            function renderTable() {
+            function renderTable() {{
                 const tbody = document.getElementById('usersTableBody');
                 const paginationDiv = document.getElementById('paginationControls');
                 
                 let usersToShow = filteredUsers;
                 let totalPages = 1;
                 
-                if (perPage !== 'all') {
+                if (perPage !== 'all') {{
                     totalPages = Math.ceil(filteredUsers.length / perPage);
                     const start = (currentPage - 1) * perPage;
                     const end = start + perPage;
                     usersToShow = filteredUsers.slice(start, end);
-                }
+                }}
                 
-                if (usersToShow.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No users found</td></tr>';
-                } else {
+                if (usersToShow.length === 0) {{
+                    tbody.innerHTML = '<table><td colspan="7" style="text-align: center;">No users found</td></tr>';
+                }} else {{
                     tbody.innerHTML = usersToShow.map(user => `
-                        <tr data-email="${user.email}">
-                            <td>${user.username}</td>
-                            <td>${user.email}</td>
+                        <tr data-email="${{user.email}}">
+                            <td>${{user.username}}</td>
+                            <td>${{user.email}}</td>
                             <td class="plan-cell">
-                                <span class="plan-badge plan-${user.plan.toLowerCase()}">${user.plan.toUpperCase()}</span>
+                                <span class="plan-badge plan-${{user.plan.toLowerCase()}}">${{user.plan.toUpperCase()}}</span>
                             </td>
-                            <td class="${user.verified ? 'verified' : 'unverified'}">${user.verified ? '✅' : '❌'}</td>
-                            <td>${user.referral_count}</td>
-                            <td>${user.created_at}</td>
+                            <td class="${{user.verified ? 'verified' : 'unverified'}}">${{user.verified ? '✅' : '❌'}}</td>
+                            <td>${{user.referral_count}}</td>
+                            <td>${{user.created_at}}</td>
                             <td>
-                                <button onclick="editUserPlan('${user.email}')" style="background:#ff9900; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin-right:5px;">✏️ Edit</button>
-                                <button onclick="deleteUser('${user.email}')" style="background:#f44336; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">🗑️ Delete</button>
+                                <button onclick="editUserPlan('${{user.email}}')" style="background:#ff9900; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer; margin-right:5px;">✏️ Edit</button>
+                                <button onclick="deleteUser('${{user.email}}')" style="background:#f44336; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">🗑️ Delete</button>
                             </td>
                         </tr>
                     `).join('');
-                }
+                }}
                 
-                if (perPage !== 'all' && totalPages > 1) {
+                if (perPage !== 'all' && totalPages > 1) {{
                     paginationDiv.innerHTML = `
-                        <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>◀ Previous</button>
-                        <span class="page-info">Page ${currentPage} of ${totalPages}</span>
-                        <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next ▶</button>
+                        <button onclick="changePage(${{currentPage - 1}})" ${{currentPage === 1 ? 'disabled' : ''}}>◀ Previous</button>
+                        <span class="page-info">Page ${{currentPage}} of ${{totalPages}}</span>
+                        <button onclick="changePage(${{currentPage + 1}})" ${{currentPage === totalPages ? 'disabled' : ''}}>Next ▶</button>
                     `;
-                } else {
+                }} else {{
                     paginationDiv.innerHTML = '';
-                }
-            }
+                }}
+            }}
             
-            function changePage(newPage) {
+            function changePage(newPage) {{
                 currentPage = newPage;
                 renderTable();
-            }
+            }}
             
-            function editUserPlan(email) {
+            function editUserPlan(email) {{
                 const user = allUsers.find(u => u.email === email);
                 const currentPlan = user.plan;
                 
@@ -2355,8 +2353,8 @@ def admin_panel():
                 popup.innerHTML = `
                     <div style="background: white; padding: 30px; border-radius: 10px; max-width: 400px; width: 90%;">
                         <h2 style="margin-top: 0;">✏️ Edit User Plan</h2>
-                        <p><strong>User:</strong> ${email}</p>
-                        <p><strong>Current Plan:</strong> <span class="plan-badge plan-${currentPlan.toLowerCase()}">${currentPlan.toUpperCase()}</span></p>
+                        <p><strong>User:</strong> ${{email}}</p>
+                        <p><strong>Current Plan:</strong> <span class="plan-badge plan-${{currentPlan.toLowerCase()}}">${{currentPlan.toUpperCase()}}</span></p>
                         <div style="margin: 20px 0;">
                             <label><strong>Change to:</strong></label>
                             <select id="newPlanSelect" style="width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px;">
@@ -2367,74 +2365,74 @@ def admin_panel():
                         </div>
                         <div style="display: flex; gap: 10px; justify-content: flex-end;">
                             <button onclick="this.closest('div').parentElement.remove()" style="padding: 8px 20px; background: #999; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
-                            <button onclick="confirmUpdatePlan('${email}', document.getElementById('newPlanSelect').value)" style="padding: 8px 20px; background: #ff9900; color: white; border: none; border-radius: 5px; cursor: pointer;">Update</button>
+                            <button onclick="confirmUpdatePlan('${{email}}', document.getElementById('newPlanSelect').value)" style="padding: 8px 20px; background: #ff9900; color: white; border: none; border-radius: 5px; cursor: pointer;">Update</button>
                         </div>
                     </div>
                 `;
                 
                 document.body.appendChild(popup);
-            }
+            }}
             
-            function confirmUpdatePlan(email, newPlan) {
-                const planNames = {'free': 'Free', 'starter': 'Starter', 'pro': 'Pro'};
+            function confirmUpdatePlan(email, newPlan) {{
+                const planNames = {{'free': 'Free', 'starter': 'Starter', 'pro': 'Pro'}};
                 
-                fetch('/admin/update-user-plan', {
+                fetch('/admin/update-user-plan', {{
                     method: 'POST',
-                    headers: {
+                    headers: {{
                         'Content-Type': 'application/json',
                         'X-Admin-Password': 'BookCompassAdmin@@2026!'
-                    },
-                    body: JSON.stringify({email: email, plan: newPlan})
-                })
+                    }},
+                    body: JSON.stringify({{email: email, plan: newPlan}})
+                }})
                 .then(response => response.json())
-                .then(data => {
+                .then(data => {{
                     document.querySelectorAll('div[style*="position: fixed"]').forEach(el => el.remove());
                     
-                    if (data.success) {
-                        alert(`✅ User ${email} updated to ${planNames[newPlan]} plan!`);
+                    if (data.success) {{
+                        alert(`✅ User ${{email}} updated to ${{planNames[newPlan]}} plan!`);
                         location.reload();
-                    } else {
-                        alert(`❌ Error: ${data.error}`);
-                    }
-                })
-                .catch(error => {
+                    }} else {{
+                        alert(`❌ Error: ${{data.error}}`);
+                    }}
+                }})
+                .catch(error => {{
                     alert('❌ Error updating user');
                     document.querySelectorAll('div[style*="position: fixed"]').forEach(el => el.remove());
-                });
-            }
+                }});
+            }}
             
-            function deleteUser(email) {
-                const confirmDelete = confirm(`⚠️ Are you sure you want to delete user "${email}"?\\n\\nThis action CANNOT be undone!`);
+            function deleteUser(email) {{
+                const confirmDelete = confirm(`⚠️ Are you sure you want to delete user "${{email}}"?\\n\\nThis action CANNOT be undone!`);
                 
                 if (!confirmDelete) return;
                 
-                fetch('/admin/delete-user', {
+                fetch('/admin/delete-user', {{
                     method: 'POST',
-                    headers: {
+                    headers: {{
                         'Content-Type': 'application/json',
                         'X-Admin-Password': 'BookCompassAdmin@@2026!'
-                    },
-                    body: JSON.stringify({email: email})
-                })
+                    }},
+                    body: JSON.stringify({{email: email}})
+                }})
                 .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`✅ User ${email} deleted successfully!`);
+                .then(data => {{
+                    if (data.success) {{
+                        alert(`✅ User ${{email}} deleted successfully!`);
                         location.reload();
-                    } else {
-                        alert(`❌ Error: ${data.error}`);
-                    }
-                })
-                .catch(error => {
+                    }} else {{
+                        alert(`❌ Error: ${{data.error}}`);
+                    }}
+                }})
+                .catch(error => {{
                     alert('❌ Error deleting user');
-                });
-            }
+                }});
+            }}
             
             // Initialize the table
             renderTable();
             
-            // ========== ASINSpotlight Credit Check ==========
-            function checkASINSpotlightCredits() {
+            // ASINSpotlight Credit Check
+            function checkASINSpotlightCredits() {{
                 const creditsElement = document.getElementById('asinspotlightCredits');
                 const lastCheckedElement = document.getElementById('lastChecked');
                 
@@ -2444,28 +2442,28 @@ def admin_panel():
                 
                 fetch('/admin/check-asinspotlight-credits?password=BookCompassAdmin@@2026!')
                     .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.requests_remaining !== null) {
+                    .then(data => {{
+                        if (data.success && data.requests_remaining !== null) {{
                             creditsElement.innerHTML = data.requests_remaining.toLocaleString();
                             lastCheckedElement.innerHTML = new Date().toLocaleString();
-                        } else {
+                        }} else {{
                             creditsElement.innerHTML = 'Error';
                             lastCheckedElement.innerHTML = data.error || 'Failed to fetch';
-                        }
-                    })
-                    .catch(error => {
+                        }}
+                    }})
+                    .catch(error => {{
                         creditsElement.innerHTML = 'Error';
                         lastCheckedElement.innerHTML = 'Connection failed';
                         console.error('Error checking credits:', error);
-                    });
-            }
+                    }});
+            }}
             
             // Load credits when page loads
             checkASINSpotlightCredits();
         </script>
     </body>
     </html>
-    '''  
+    '''  # <-- THIS CLOSES THE HTML STRING  
 # ============================================
 # TERMS OF SERVICE PAGE
 # ============================================
@@ -2658,7 +2656,7 @@ def privacy():
                 <p>We use the following third-party services that may collect your information:</p>
                 <ul>
                     <li><strong>Resend</strong> - For sending verification and password reset emails</li>
-                    <li><strong>Rainforest API</strong> - For fetching Amazon keyword data</li>
+                    <li><strong>ASINSpotlight API</strong> - For fetching Amazon keyword data</li>
                     <li><strong>Monnify (future)</strong> - For processing subscription payments</li>
                     <li><strong>Render.com</strong> - For hosting our website</li>
                 </ul>
