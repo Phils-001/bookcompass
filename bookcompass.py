@@ -2440,7 +2440,7 @@ def admin_panel():
             
             // Initialize the table
             renderTable();
-                <script>
+        <script>
             // User data from server (ALL users, not just last 10)
             const allUsers = {users_json};
             
@@ -2929,18 +2929,6 @@ def mark_message_read(msg_id):
     
     return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
 
-# ============================================
-# REFRESH RAINFOREST CREDITS
-# ============================================
-
-@app.route('/refresh-credits', methods=['POST'])
-def refresh_credits():
-    admin_password = request.args.get('password', '')
-    if admin_password != 'BookCompassAdmin@@2026!':
-        return '<script>window.location.href="/admin"</script>'
-    
-    check_rainforest_credits()
-    return '<script>window.location.href="/admin?password=BookCompassAdmin@@2026!"</script>'
 
 # ============================================
 # DATABASE HELPER FUNCTIONS
