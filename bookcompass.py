@@ -878,8 +878,7 @@ def api_research():
                 }
                 params = {
                     "keyword": keyword,
-                    "country": "com",
-                    "marketplace": "US"
+                    "marketplace": "us"
                 }
                 r = requests.get(url, headers=headers, params=params, timeout=25)
                 
