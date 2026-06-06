@@ -2193,25 +2193,25 @@ def admin_panel():
         </div>
         
         <!-- System Info -->
-<!-- ASINSpotlight API Credits -->
-<div class="card">
-    <h2>🌟 ASINSpotlight API Credits</h2>
-    <div class="stats" style="margin-top: 10px;">
-        <div class="stat" style="background: #2196F3;">
-            <h2 id="asinspotlightCredits">Loading...</h2>
-            <p>Credits Remaining</p>
+        <!-- ASINSpotlight API Credits -->
+        <div class="card">
+            <h2>🌟 ASINSpotlight API Credits</h2>
+            <div class="stats" style="margin-top: 10px;">
+                <div class="stat" style="background: #2196F3;">
+                    <h2 id="asinspotlightCredits">Loading...</h2>
+                    <p>Credits Remaining</p>
+                </div>
+            </div>
+            <div style="margin-top: 10px;">
+                <p><strong>Last Checked:</strong> <span id="lastChecked">Never</span></p>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    🌟 Each keyword search uses 1 credit.<br>
+                    💰 Credits expire based on your package (30-120 days).<br>
+                    📊 <a href="https://www.asinspotlight.com/pricing" target="_blank">View pricing</a>
+                </p>
+                <button onclick="checkASINSpotlightCredits()" style="background: #ff9900; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🔄 Refresh Credits</button>
+            </div>
         </div>
-    </div>
-    <div style="margin-top: 10px;">
-        <p><strong>Last Checked:</strong> <span id="lastChecked">Never</span></p>
-        <p style="font-size: 12px; color: #666; margin-top: 10px;">
-            🌟 Each keyword search uses 1 credit.<br>
-            💰 Credits expire based on your package (30-120 days).<br>
-            📊 <a href="https://www.asinspotlight.com/pricing" target="_blank">View pricing</a>
-        </p>
-        <button onclick="checkASINSpotlightCredits()" style="background: #ff9900; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🔄 Refresh Credits</button>
-    </div>
-</div>
         
         <div class="card">
             <h2>⚙️ System Info</h2>
@@ -2404,7 +2404,7 @@ def admin_panel():
             }
             
             function deleteUser(email) {
-                const confirmDelete = confirm(`⚠️ Are you sure you want to delete user "${email}"?\n\nThis action CANNOT be undone!`);
+                const confirmDelete = confirm(`⚠️ Are you sure you want to delete user "${email}"?\\n\\nThis action CANNOT be undone!`);
                 
                 if (!confirmDelete) return;
                 
@@ -2465,7 +2465,7 @@ def admin_panel():
         </script>
     </body>
     </html>
-    '''
+    '''  
 # ============================================
 # TERMS OF SERVICE PAGE
 # ============================================
