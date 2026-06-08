@@ -636,15 +636,73 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-                <h3>Results (Best Opportunities First)</h3>
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    Results (Best Opportunities First)
+    <button onclick="showResultsGuide()" style="background: #2196F3; color: white; border: none; border-radius: 20px; padding: 5px 15px; cursor: pointer; font-size: 12px;">❓ How to Read Results</button>
+                </h3>
                 <table id="resultsTable">
                     <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
+            
+            <!-- Results Guide Popup -->
+            <div id="resultsGuidePopup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+                <div style="background: white; max-width: 500px; width: 90%; margin: 0 auto; border-radius: 10px; padding: 0; max-height: 80%; overflow-y: auto;">
+                    <div style="background: #ff9900; padding: 15px; border-radius: 10px 10px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: white;">📊 How to Read Your Results</h3>
+                        <button onclick="closeResultsGuide()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #232f3e; margin-bottom: 10px;">🎯 Niche Score (1-10)</h4>
+                            <p><span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 20px;">🟢 7-10</span> = <strong>Excellent</strong> - Target these keywords immediately</p>
+                            <p><span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 20px;">🟡 5-6</span> = <strong>Decent</strong> - Consider if search volume is high</p>
+                            <p><span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 20px;">🔴 1-4</span> = <strong>Avoid</strong> - Too competitive, not worth your time</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
+                            <h4 style="color: #232f3e; margin-bottom: 10px;">📊 Search Volume</h4>
+                            <p><strong>5,000+</strong> = HIGH demand (big audience, good opportunity)</p>
+                            <p><strong>1,000-5,000</strong> = GOOD demand (sweet spot for new authors)</p>
+                            <p><strong>500-1,000</strong> = MEDIUM demand (decent opportunity)</p>
+                            <p><strong>Under 500</strong> = LOW demand (small audience, probably skip)</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
+                            <h4 style="color: #232f3e; margin-bottom: 10px;">⚔️ Competition Level</h4>
+                            <p><span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 20px;">LOW</span> = Easy to rank (0-1 strong competitors)</p>
+                            <p><span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 20px;">MEDIUM</span> = Possible (2-3 strong competitors)</p>
+                            <p><span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 20px;">HIGH</span> = Very difficult (4+ strong competitors)</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; border-top: 1px solid #ddd; padding-top: 15px;">
+                            <h4 style="color: #232f3e; margin-bottom: 10px;">🏆 Top Competitors (Rank)</h4>
+                            <p><strong>Rank: 1</strong> = First result on page 1 (strong competition)</p>
+                            <p><strong>Rank: 2-5</strong> = Also on page 1 (good, but established)</p>
+                            <p><strong>Rank: 6+</strong> = Page 2 or beyond (weaker competition)</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; border-top: 1px solid #ddd; padding-top: 15px; background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                            <h4 style="color: #232f3e; margin-bottom: 10px;">✅ The Winning Formula</h4>
+                            <p>Target keywords with:</p>
+                            <ul style="margin: 5px 0 0 20px;">
+                                <li>✅ Niche Score <strong>7-10</strong> (Green)</li>
+                                <li>✅ Competition <strong>LOW</strong></li>
+                                <li>✅ Search Volume <strong>1,000+</strong> (HIGH or GOOD)</li>
+                            </ul>
+                            <p style="margin-top: 10px;"><strong>Example:</strong> Niche Score 9/10 + LOW Competition + 2,500 searches = <span style="color: #4CAF50;">WINNER!</span> 🎯</p>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 15px;">
+                            <button onclick="closeResultsGuide()" style="background: #ff9900; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Got it!</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <script>
+    </div>
+    
+    <script>
         function copyReferralLink() {{
             const link = document.getElementById('referralLink');
             link.select();
@@ -776,7 +834,25 @@ def dashboard():
                 msg.innerHTML = messageText;
                 document.getElementById('results').appendChild(msg);
             }}
-        }}
+        }
+        
+        // Show the results guide popup
+        function showResultsGuide() {
+            document.getElementById('resultsGuidePopup').style.display = 'flex';
+        }
+
+        // Close the results guide popup
+        function closeResultsGuide() {
+            document.getElementById('resultsGuidePopup').style.display = 'none';
+        }
+
+        // Close popup when clicking outside (optional)
+        window.onclick = function(event) {
+            const popup = document.getElementById('resultsGuidePopup');
+            if (event.target === popup) {
+                popup.style.display = 'none';
+            }
+        }
         </script>
     </body>
     </html>
@@ -2656,7 +2732,7 @@ def privacy():
                 <p>We use the following third-party services that may collect your information:</p>
                 <ul>
                     <li><strong>Resend</strong> - For sending verification and password reset emails</li>
-                    <li><strong>ASINSpotlight API</strong> - For fetching Amazon keyword data</li>
+                    <li><strong>API</strong> - For fetching Amazon keyword data</li>
                     <li><strong>Monnify (future)</strong> - For processing subscription payments</li>
                     <li><strong>Render.com</strong> - For hosting our website</li>
                 </ul>
