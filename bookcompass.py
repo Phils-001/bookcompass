@@ -837,22 +837,22 @@ def dashboard():
         }
         
         // Show the results guide popup
-        function showResultsGuide() {
+        function showResultsGuide() {{
             document.getElementById('resultsGuidePopup').style.display = 'flex';
-        }
+        }}
 
         // Close the results guide popup
-        function closeResultsGuide() {
+        function closeResultsGuide() {{
             document.getElementById('resultsGuidePopup').style.display = 'none';
-        }
+        }}
 
         // Close popup when clicking outside (optional)
-        window.onclick = function(event) {
+        window.onclick = function(event) {{
             const popup = document.getElementById('resultsGuidePopup');
-            if (event.target === popup) {
+            if (event.target === popup) {{
                 popup.style.display = 'none';
-            }
-        }
+            }}
+        }}
         </script>
     </body>
     </html>
