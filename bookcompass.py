@@ -869,7 +869,7 @@ except:
             'keyword': keyword,
             'volume': volume,
             'competition': competition,
-            'score': score
+            'score': score,
             'related_keywords': related_keywords
         })
     
@@ -981,7 +981,7 @@ except:
             'volume': volume,
             'competition': competition,
             'score': score,
-            'competitors': competitors
+            'competitors': competitors,
             'related_keywords': related_keywords
         })
         
