@@ -829,15 +829,15 @@ def api_research():
     save_usage_to_db(email, today, usage_tracker[email][today])
     
     # Get search volume AND related keywords from Amazon suggestions
-related_keywords = []
-try:
-    url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
-    r = requests.get(url, timeout=15)
-    suggestions_data = r.json()
-    suggestions = suggestions_data.get('suggestions', [])
-    related_keywords = suggestions[:5]  # Get top 5 related keywords
-    
-    count = len(suggestions)
+    related_keywords = []
+    try:
+        url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
+        r = requests.get(url, timeout=15)
+        suggestions_data = r.json()
+        suggestions = suggestions_data.get('suggestions', [])
+        related_keywords = suggestions[:5]  # Get top 5 related keywords
+        
+        count = len(suggestions)
         if count >= 8:
             volume_category = "HIGH"
             volume_number = 2500
@@ -985,7 +985,7 @@ try:
             'volume': volume,
             'competition': competition,
             'score': score,
-            'competitors': competitors
+            'competitors': competitors,
             'related_keywords': related_keywords
         })
         
