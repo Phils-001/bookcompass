@@ -638,7 +638,7 @@ def dashboard():
             <div id="results" style="display:none;" class="card">
                 <h3>Results (Best Opportunities First)</h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -710,7 +710,7 @@ def dashboard():
                     let cls = 'bad';
                     if(r.score >= 7) cls = 'good';
                     else if(r.score >= 5) cls = 'medium';
-                    row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
+                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
                     row.insertCell(1).innerHTML = r.keyword;
                     row.insertCell(2).innerHTML = r.volume;
                     row.insertCell(3).innerHTML = r.competition;
@@ -718,13 +718,12 @@ def dashboard():
                     // Add competitors column
                     if (r.competitors && r.competitors.length > 0) {{
                         let compHtml = '<div style="font-size: 12px;">';
-                        for (let idx = 0; idx < r.competitors.length; idx++) {{
-                            let comp = r.competitors[idx];
-                            compHtml += '<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">';
-                            compHtml += '<strong>' + (idx+1) + '.</strong> ' + comp.title + '<br>';
-                            compHtml += '<span style="color: #666;">Rank: ' + comp.bsr + '</span>';
-                            compHtml += '</div>';
-                        }}
+                        r.competitors.forEach((comp, idx) => {{
+                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
+                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
+                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
+                            compHtml += `</div>`;
+                        }});
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
@@ -732,18 +731,6 @@ def dashboard():
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
-                    
-                    // Add Related Keywords column
-                    let relatedHtml = '<div style="font-size: 12px;">';
-                    if (r.related_keywords && r.related_keywords.length > 0) {{
-                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
-                            let kw = r.related_keywords[idx];
-                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
-                        }}
-                    }} else {{
-                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
-                    }}
-                    row.insertCell(5).innerHTML = relatedHtml;
                 }});
                 document.getElementById('results').style.display = 'block';
             }}
@@ -824,32 +811,26 @@ def api_research():
     usage_tracker[email][today] += 1
     save_usage_to_db(email, today, usage_tracker[email][today])
     
-# Get search volume AND related keywords from Amazon suggestions
-related_keywords = []
-try:
-    url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
-    r = requests.get(url, timeout=15)
-    suggestions_data = r.json()
-    suggestions = suggestions_data.get('suggestions', [])
-    related_keywords = suggestions[:5]  # Get top 5 related keywords
-    
-    count = len(suggestions)
-    if count >= 8:
-        volume_category = "HIGH"
-        volume_number = 2500
-    elif count >= 4:
+    # Get search volume from Amazon suggestions (fallback)
+    try:
+        url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
+        r = requests.get(url, timeout=15)
+        count = len(r.json().get('suggestions', []))
+        if count >= 8:
+            volume_category = "HIGH"
+            volume_number = 2500
+        elif count >= 4:
+            volume_category = "MEDIUM"
+            volume_number = 750
+        elif count >= 1:
+            volume_category = "LOW"
+            volume_number = 300
+        else:
+            volume_category = "VERY LOW"
+            volume_number = 50
+    except:
         volume_category = "MEDIUM"
-        volume_number = 750
-    elif count >= 1:
-        volume_category = "LOW"
-        volume_number = 300
-    else:
-        volume_category = "VERY LOW"
-        volume_number = 50
-except:
-    volume_category = "MEDIUM"
-    volume_number = 500
-    related_keywords = []
+        volume_number = 500
     
     if user_plan == "free":
         competition = "UPGRADE TO SEE"
@@ -869,8 +850,7 @@ except:
             'keyword': keyword,
             'volume': volume,
             'competition': competition,
-            'score': score,
-            'related_keywords': related_keywords
+            'score': score
         })
     
     if not ASINSPOTLIGHT_API_KEY:
@@ -981,8 +961,7 @@ except:
             'volume': volume,
             'competition': competition,
             'score': score,
-            'competitors': competitors,
-            'related_keywords': related_keywords
+            'competitors': competitors
         })
         
     except Exception as e:
