@@ -636,7 +636,13 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-                <h3>Results (Best Opportunities First)</h3>
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    Results (Best Opportunities First)
+    <div>
+        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    </div>
+                </h3>
                 <table id="resultsTable">
                     <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
