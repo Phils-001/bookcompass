@@ -836,7 +836,7 @@ def api_research():
         suggestions_data = r.json()
         suggestions = suggestions_data.get('suggestions', [])
         related_keywords = suggestions[:5]  # Get top 5 related keywords
-        
+        print(f"🔑 RELATED KEYWORDS for '{keyword}': {related_keywords}")
         count = len(suggestions)
         if count >= 8:
             volume_category = "HIGH"
@@ -854,6 +854,7 @@ def api_research():
         volume_category = "MEDIUM"
         volume_number = 500
         related_keywords = []
+        print(f"⚠️ Failed to get related keywords for '{keyword}'")
     
     if user_plan == "free":
         competition = "UPGRADE TO SEE"
