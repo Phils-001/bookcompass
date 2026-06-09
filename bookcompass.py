@@ -644,7 +644,7 @@ def dashboard():
     </div>
                 </h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -732,6 +732,17 @@ def dashboard():
                         }});
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
+                        // Add Related Keywords column
+let relatedHtml = '<div style="font-size: 12px;">';
+if (r.related_keywords && r.related_keywords.length > 0) {
+    for (let idx = 0; idx < r.related_keywords.length; idx++) {
+        let kw = r.related_keywords[idx];
+        relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
+    }
+} else {
+    relatedHtml = '<span style="color: #999;">No related keywords</span>';
+}
+row.insertCell(5).innerHTML = relatedHtml;
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
@@ -817,7 +828,7 @@ def api_research():
     usage_tracker[email][today] += 1
     save_usage_to_db(email, today, usage_tracker[email][today])
     
-# Get search volume AND related keywords from Amazon suggestions
+    # Get search volume AND related keywords from Amazon suggestions
 related_keywords = []
 try:
     url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
@@ -827,22 +838,22 @@ try:
     related_keywords = suggestions[:5]  # Get top 5 related keywords
     
     count = len(suggestions)
-    if count >= 8:
-        volume_category = "HIGH"
-        volume_number = 2500
-    elif count >= 4:
+        if count >= 8:
+            volume_category = "HIGH"
+            volume_number = 2500
+        elif count >= 4:
+            volume_category = "MEDIUM"
+            volume_number = 750
+        elif count >= 1:
+            volume_category = "LOW"
+            volume_number = 300
+        else:
+            volume_category = "VERY LOW"
+            volume_number = 50
+    except:
         volume_category = "MEDIUM"
-        volume_number = 750
-    elif count >= 1:
-        volume_category = "LOW"
-        volume_number = 300
-    else:
-        volume_category = "VERY LOW"
-        volume_number = 50
-except:
-    volume_category = "MEDIUM"
-    volume_number = 500
-    related_keywords = []
+        volume_number = 500
+        related_keywords = []
     
     if user_plan == "free":
         competition = "UPGRADE TO SEE"
@@ -862,7 +873,8 @@ except:
             'keyword': keyword,
             'volume': volume,
             'competition': competition,
-            'score': score
+            'score': score,
+            'related_keywords': related_keywords
         })
     
     if not ASINSPOTLIGHT_API_KEY:
@@ -974,6 +986,7 @@ except:
             'competition': competition,
             'score': score,
             'competitors': competitors
+            'related_keywords': related_keywords
         })
         
     except Exception as e:
