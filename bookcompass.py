@@ -835,7 +835,13 @@ def api_research():
         r = requests.get(url, timeout=15)
         suggestions_data = r.json()
         suggestions = suggestions_data.get('suggestions', [])
-        related_keywords = suggestions[:5]  # Get top 5 related keywords
+        # Extract the 'value' field from each suggestion (they are objects, not strings)
+        related_keywords = []
+        for item in suggestions[:5]:
+            if isinstance(item, dict) and 'value' in item:
+                related_keywords.append(item['value'])
+            elif isinstance(item, str):
+                related_keywords.append(item)
         print(f"🔑 RELATED KEYWORDS for '{keyword}': {related_keywords}")
         count = len(suggestions)
         if count >= 8:
