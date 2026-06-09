@@ -710,7 +710,7 @@ def dashboard():
                     let cls = 'bad';
                     if(r.score >= 7) cls = 'good';
                     else if(r.score >= 5) cls = 'medium';
-                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
+                    row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
                     row.insertCell(1).innerHTML = r.keyword;
                     row.insertCell(2).innerHTML = r.volume;
                     row.insertCell(3).innerHTML = r.competition;
@@ -718,15 +718,16 @@ def dashboard():
                     // Add competitors column
                     if (r.competitors && r.competitors.length > 0) {{
                         let compHtml = '<div style="font-size: 12px;">';
-                        r.competitors.forEach((comp, idx) => {{
-                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
-                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
-                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
-                            compHtml += `</div>`;
-                        }});
+                        for (let idx = 0; idx < r.competitors.length; idx++) {{
+                            let comp = r.competitors[idx];
+                            compHtml += '<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">';
+                            compHtml += '<strong>' + (idx+1) + '.</strong> ' + comp.title + '<br>';
+                            compHtml += '<span style="color: #666;">Rank: ' + comp.bsr + '</span>';
+                            compHtml += '</div>';
+                        }}
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
-                    } else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
+                    }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
@@ -734,14 +735,14 @@ def dashboard():
                     
                     // Add Related Keywords column
                     let relatedHtml = '<div style="font-size: 12px;">';
-                    if (r.related_keywords && r.related_keywords.length > 0) {
-                        for (let idx = 0; idx < r.related_keywords.length; idx++) {
+                    if (r.related_keywords && r.related_keywords.length > 0) {{
+                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
                             let kw = r.related_keywords[idx];
                             relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
-                        }
-                    } else {
+                        }}
+                    }} else {{
                         relatedHtml = '<span style="color: #999;">No related keywords</span>';
-                    }
+                    }}
                     row.insertCell(5).innerHTML = relatedHtml;
                 }});
                 document.getElementById('results').style.display = 'block';
