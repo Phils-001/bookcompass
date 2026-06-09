@@ -817,26 +817,32 @@ def api_research():
     usage_tracker[email][today] += 1
     save_usage_to_db(email, today, usage_tracker[email][today])
     
-    # Get search volume from Amazon suggestions (fallback)
-    try:
-        url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
-        r = requests.get(url, timeout=15)
-        count = len(r.json().get('suggestions', []))
-        if count >= 8:
-            volume_category = "HIGH"
-            volume_number = 2500
-        elif count >= 4:
-            volume_category = "MEDIUM"
-            volume_number = 750
-        elif count >= 1:
-            volume_category = "LOW"
-            volume_number = 300
-        else:
-            volume_category = "VERY LOW"
-            volume_number = 50
-    except:
+# Get search volume AND related keywords from Amazon suggestions
+related_keywords = []
+try:
+    url = f"https://completion.amazon.com/api/2017/suggestions?mid=ATVPDKIKX0DER&alias=stripbooks&prefix={keyword.replace(' ', '%20')}"
+    r = requests.get(url, timeout=15)
+    suggestions_data = r.json()
+    suggestions = suggestions_data.get('suggestions', [])
+    related_keywords = suggestions[:5]  # Get top 5 related keywords
+    
+    count = len(suggestions)
+    if count >= 8:
+        volume_category = "HIGH"
+        volume_number = 2500
+    elif count >= 4:
         volume_category = "MEDIUM"
-        volume_number = 500
+        volume_number = 750
+    elif count >= 1:
+        volume_category = "LOW"
+        volume_number = 300
+    else:
+        volume_category = "VERY LOW"
+        volume_number = 50
+except:
+    volume_category = "MEDIUM"
+    volume_number = 500
+    related_keywords = []
     
     if user_plan == "free":
         competition = "UPGRADE TO SEE"
