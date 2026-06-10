@@ -734,14 +734,14 @@ def dashboard():
                         row.insertCell(4).innerHTML = compHtml;
                         // Add Related Keywords column
                     let relatedHtml = '<div style="font-size: 12px;">';
-                    console.log("related_keywords data:", r.related_keywords);
-                    if (r.related_keywords && r.related_keywords.length > 0) {
-                        for (let idx = 0; idx < r.related_keywords.length; idx++) {
-                            relatedHtml += '<div style="padding: 4px 0;">🔗 ' + r.related_keywords[idx] + '</div>';
-                        }
-                    } else {
-                        relatedHtml = '<span style="color: #999;">No related keywords found</span>';
-                    }
+                    if (r.related_keywords && r.related_keywords.length > 0) {{
+                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
+                            let kw = r.related_keywords[idx];
+                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
+                        }}
+                    }} else {{
+                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
+                    }}
                     row.insertCell(5).innerHTML = relatedHtml;
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
