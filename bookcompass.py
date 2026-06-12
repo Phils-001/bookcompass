@@ -644,7 +644,7 @@ def dashboard():
     </div>
                 </h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th><th>Copy</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -743,6 +743,11 @@ def dashboard():
                         relatedHtml = '<span style="color: #999;">No related keywords</span>';
                     }}
                     row.insertCell(5).innerHTML = relatedHtml;
+                    
+                    // Add Copy button
+                    const copyCell = row.insertCell(6);
+                    copyCell.innerHTML = '<button onclick="alert(\'Keyword: ' + r.keyword.replace(/'/g, "\\'") + '\\nScore: ' + r.score + '/10\\nVolume: ' + r.volume + '\\nCompetition: ' + r.competition + '\')" style="background:#2196F3; color:white; border:none; border-radius:3px; padding:4px 8px; cursor:pointer; font-size:11px;">📋 Copy</button>';
+                    
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
