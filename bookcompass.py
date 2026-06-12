@@ -2506,8 +2506,9 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
+            
             // Copy results table to clipboard
-        function copyResultsToClipboard() {
+            function copyResultsToClipboard() {
             const resultsTable = document.getElementById('resultsTable');
             if (!resultsTable) {
                 alert('No results to copy. Please run a keyword search first.');
