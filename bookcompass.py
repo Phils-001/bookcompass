@@ -639,8 +639,9 @@ def dashboard():
                 <h3 style="display: flex; justify-content: space-between; align-items: center;">
     Results (Best Opportunities First)
     <div>
-        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+    <button onclick="copyAllResults()" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
+    <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
     </div>
                 </h3>
                 <table id="resultsTable">
@@ -743,11 +744,6 @@ def dashboard():
                         relatedHtml = '<span style="color: #999;">No related keywords</span>';
                     }}
                     row.insertCell(5).innerHTML = relatedHtml;
-                    
-                    // Add Copy button
-                    const copyCell = row.insertCell(6);
-                    copyCell.innerHTML = '<button onclick="alert(\'Keyword: ' + r.keyword.replace(/'/g, "\\'") + '\\nScore: ' + r.score + '/10\\nVolume: ' + r.volume + '\\nCompetition: ' + r.competition + '\')" style="background:#2196F3; color:white; border:none; border-radius:3px; padding:4px 8px; cursor:pointer; font-size:11px;">📋 Copy</button>';
-                    
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
@@ -2510,10 +2506,33 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
+            
+            // ========== COPY ALL RESULTS FUNCTION ==========
+            function copyAllResults() {
+                const rows = document.querySelectorAll('#resultsBody tr');
+                if (rows.length === 0) {
+                    alert('No results to copy. Please run a keyword search first.');
+                    return;
+                }
+                
+                let copyText = '';
+                
+                for (let row of rows) {
+                    const cells = row.cells;
+                    copyText += 'Keyword: ' + cells[1].innerText + '\n';
+                    copyText += 'Score: ' + cells[0].innerText + '\n';
+                    copyText += 'Volume: ' + cells[2].innerText + '\n';
+                    copyText += 'Competition: ' + cells[3].innerText + '\n';
+                    copyText += '------------------------\n';
+                }
+                
+                alert('Copy the text below:\n\n' + copyText);
+            }
+            
         </script>
     </body>
     </html>
-    '''  # <-- THIS CLOSES THE HTML STRING  
+    '''   
 # ============================================
 # TERMS OF SERVICE PAGE
 # ============================================
