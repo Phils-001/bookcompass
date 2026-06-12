@@ -640,6 +640,7 @@ def dashboard():
     Results (Best Opportunities First)
     <div>
         <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="copyResultsToClipboard()" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy Results</button>
         <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
     </div>
                 </h3>
@@ -2505,6 +2506,80 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
+            // Copy results table to clipboard
+        function copyResultsToClipboard() {
+            const resultsTable = document.getElementById('resultsTable');
+            if (!resultsTable) {
+                alert('No results to copy. Please run a keyword search first.');
+                return;
+            }
+            
+            // Get all rows from the table body
+            const rows = document.querySelectorAll('#resultsBody tr');
+            if (rows.length === 0) {
+                alert('No results to copy. Please run a keyword search first.');
+                return;
+            }
+            
+            // Prepare the data for copying
+            let copyText = '';
+            
+            // Add headers
+            const headers = ['Niche Score', 'Keyword', 'Search Volume', 'Competition', 'Top Competitors', 'Related Keywords'];
+            copyText += headers.join('\t') + '\n';
+            copyText += '='.repeat(80) + '\n';
+            
+            // Add each row's data
+            for (let row of rows) {
+                const rowData = [];
+                
+                // Get Niche Score (first cell)
+                const scoreCell = row.cells[0];
+                rowData.push(scoreCell.innerText.trim());
+                
+                // Get Keyword (second cell)
+                const keywordCell = row.cells[1];
+                rowData.push(keywordCell.innerText.trim());
+                
+                // Get Search Volume (third cell)
+                const volumeCell = row.cells[2];
+                rowData.push(volumeCell.innerText.trim());
+                
+                // Get Competition (fourth cell)
+                const compCell = row.cells[3];
+                rowData.push(compCell.innerText.trim());
+                
+                // Get Top Competitors (fifth cell) - format nicely
+                const competitorsCell = row.cells[4];
+                let competitorsText = '';
+                const competitorDivs = competitorsCell.querySelectorAll('div');
+                for (let i = 0; i < competitorDivs.length; i++) {
+                    let compText = competitorDivs[i].innerText.trim();
+                    // Clean up the text
+                    compText = compText.replace(/\n/g, ' | ');
+                    if (i > 0) competitorsText += '; ';
+                    competitorsText += compText;
+                }
+                rowData.push(competitorsText || 'No competitors');
+                
+                // Get Related Keywords (sixth cell)
+                const relatedCell = row.cells[5];
+                let relatedText = relatedCell.innerText.trim();
+                if (relatedText === 'No related keywords found') {
+                    relatedText = '';
+                }
+                rowData.push(relatedText);
+                
+                copyText += rowData.join('\t') + '\n';
+            }
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(copyText).then(function() {
+                alert(`✅ Copied ${rows.length} keyword results to clipboard!\n\nYou can now paste (Ctrl+V) into Excel, Google Sheets, or any text editor.`);
+            }, function() {
+                alert('❌ Failed to copy. Please try again or copy manually.');
+            });
+        }
         </script>
     </body>
     </html>
