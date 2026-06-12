@@ -640,12 +640,11 @@ def dashboard():
     Results (Best Opportunities First)
     <div>
         <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-        <button onclick="copyResultsToClipboard()" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy Results</button>
         <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
     </div>
                 </h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th><th>Copy</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -722,28 +721,21 @@ def dashboard():
                     row.insertCell(2).innerHTML = r.volume;
                     row.insertCell(3).innerHTML = r.competition;
                     
-                    // Add competitors column
-                    if (r.competitors && r.competitors.length > 0) {{
-                        let compHtml = '<div style="font-size: 12px;">';
-                        r.competitors.forEach((comp, idx) => {{
-                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
-                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
-                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
-                            compHtml += `</div>`;
-                        }});
-                        compHtml += '</div>';
-                        row.insertCell(4).innerHTML = compHtml;
-                        // Add Related Keywords column
+                    // Add Related Keywords column
                     let relatedHtml = '<div style="font-size: 12px;">';
                     if (r.related_keywords && r.related_keywords.length > 0) {{
                         for (let idx = 0; idx < r.related_keywords.length; idx++) {{
                             let kw = r.related_keywords[idx];
-                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
+                            relatedHtml += '<div style="padding: 4px 0;">🔗 ' + kw + '</div>';
                         }}
                     }} else {{
-                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
+                        relatedHtml = '<span style="color: #999;">No related keywords found</span>';
                     }}
                     row.insertCell(5).innerHTML = relatedHtml;
+                    
+                    // Add Copy column - ADD THIS NEW CODE
+                    const copyCell = row.insertCell(6);
+                    copyCell.innerHTML = '<button onclick="copyRowData(this)" style="background:#2196F3; color:white; border:none; border-radius:3px; padding:4px 8px; cursor:pointer; font-size:11px;">📋 Copy</button>';
                     }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
                     }} else {{
@@ -795,6 +787,43 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
+                // Copy individual row data to clipboard
+        function copyRowData(button) {
+            const row = button.parentElement.parentElement;
+            const cells = row.cells;
+            
+            let copyText = '';
+            copyText += 'Keyword: ' + cells[1].innerText + '\n';
+            copyText += 'Niche Score: ' + cells[0].innerText + '\n';
+            copyText += 'Search Volume: ' + cells[2].innerText + '\n';
+            copyText += 'Competition: ' + cells[3].innerText + '\n';
+            
+            // Get competitor names
+            const competitorDivs = cells[4].querySelectorAll('div');
+            if (competitorDivs.length > 0) {
+                copyText += 'Top Competitors:\n';
+                for (let i = 0; i < competitorDivs.length; i++) {
+                    let compText = competitorDivs[i].innerText.trim().replace(/\n/g, ' | ');
+                    copyText += '  ' + (i+1) + '. ' + compText + '\n';
+                }
+            }
+            
+            // Get related keywords
+            const relatedText = cells[5].innerText.trim();
+            if (relatedText && relatedText !== 'No related keywords found') {
+                copyText += 'Related Keywords: ' + relatedText + '\n';
+            }
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(copyText).then(function() {
+                button.textContent = '✓ Copied!';
+                setTimeout(function() { 
+                    button.textContent = '📋 Copy'; 
+                }, 2000);
+            }).catch(function() {
+                alert('Failed to copy. Please try again.');
+            });
+        }
         </script>
     </body>
     </html>
@@ -2506,64 +2535,10 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
-            
-            // ========== COPY RESULTS TO CLIPBOARD ==========
-            function copyResultsToClipboard() {
-                const resultsTable = document.getElementById('resultsTable');
-                if (!resultsTable) {
-                    alert('No results to copy. Please run a keyword search first.');
-                    return;
-                }
-                
-                const rows = document.querySelectorAll('#resultsBody tr');
-                if (rows.length === 0) {
-                    alert('No results to copy. Please run a keyword search first.');
-                    return;
-                }
-                
-                let copyText = '';
-                const headers = ['Niche Score', 'Keyword', 'Search Volume', 'Competition', 'Top Competitors', 'Related Keywords'];
-                copyText += headers.join('\t') + '\n';
-                copyText += '='.repeat(80) + '\n';
-                
-                for (let row of rows) {
-                    const rowData = [];
-                    rowData.push(row.cells[0].innerText.trim());
-                    rowData.push(row.cells[1].innerText.trim());
-                    rowData.push(row.cells[2].innerText.trim());
-                    rowData.push(row.cells[3].innerText.trim());
-                    
-                    const competitorsCell = row.cells[4];
-                    let competitorsText = '';
-                    const competitorDivs = competitorsCell.querySelectorAll('div');
-                    for (let i = 0; i < competitorDivs.length; i++) {
-                        let compText = competitorDivs[i].innerText.trim().replace(/\n/g, ' | ');
-                        if (i > 0) competitorsText += '; ';
-                        competitorsText += compText;
-                    }
-                    rowData.push(competitorsText || 'No competitors');
-                    
-                    const relatedCell = row.cells[5];
-                    let relatedText = relatedCell.innerText.trim();
-                    if (relatedText === 'No related keywords found') {
-                        relatedText = '';
-                    }
-                    rowData.push(relatedText);
-                    
-                    copyText += rowData.join('\t') + '\n';
-                }
-                
-                navigator.clipboard.writeText(copyText).then(function() {
-                    alert('✅ Copied ' + rows.length + ' keyword results to clipboard!\n\nYou can now paste (Ctrl+V) into Excel, Google Sheets, or any text editor.');
-                }, function() {
-                    alert('❌ Failed to copy. Please try again or copy manually.');
-                });
-            }
-            
         </script>
     </body>
     </html>
-    '''  # <-- This closes the f-string  
+    '''  # <-- THIS CLOSES THE HTML STRING  
 # ============================================
 # TERMS OF SERVICE PAGE
 # ============================================
