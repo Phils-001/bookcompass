@@ -639,12 +639,13 @@ def dashboard():
                 <h3 style="display: flex; justify-content: space-between; align-items: center;">
     Results (Best Opportunities First)
     <div>
-        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+    <button onclick="copyAllResults()" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
+    <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
     </div>
                 </h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th><th>Copy</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -2505,6 +2506,28 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
+            
+            // Copy All Results function
+            function copyAllResults() {
+                var rows = document.querySelectorAll('#resultsBody tr');
+                if (rows.length === 0) {
+                    alert('No results to copy. Please run a keyword search first.');
+                    return;
+                }
+                
+                var copyText = '';
+                
+                for (var i = 0; i < rows.length; i++) {
+                    var cells = rows[i].cells;
+                    copyText += 'Keyword: ' + cells[1].innerText + '\n';
+                    copyText += 'Score: ' + cells[0].innerText + '\n';
+                    copyText += 'Volume: ' + cells[2].innerText + '\n';
+                    copyText += 'Competition: ' + cells[3].innerText + '\n';
+                    copyText += '------------------------\n';
+                }
+                
+                alert('Copy the text below:\n\n' + copyText);
+            }
         </script>
     </body>
     </html>
