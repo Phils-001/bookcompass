@@ -266,6 +266,26 @@ def home():
             </div>
             </div>
             <div class="card">
+            <h2 style="text-align: center;">✨ Why KDP Authors Choose BookCompass</h2>
+            <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 20px;">
+                <div style="flex: 1; text-align: center; padding: 20px;">
+                    <div style="font-size: 48px;">🎯</div>
+                    <h3>Niche Score</h3>
+                    <p>Our unique 1-10 score tells you exactly which keywords to target. No more guessing.</p>
+                </div>
+                <div style="flex: 1; text-align: center; padding: 20px;">
+                    <div style="font-size: 48px;">⚡</div>
+                    <h3>Real-Time Data</h3>
+                    <p>Live Amazon data, not outdated estimates. See what's actually selling right now.</p>
+                </div>
+                <div style="flex: 1; text-align: center; padding: 20px;">
+                    <div style="font-size: 48px;">💰</div>
+                    <h3>Affordable Plans</h3>
+                    <p>Starting at just $12/month. Cancel anytime. Free plan available to get started.</p>
+                </div>
+            </div>
+            </div>
+            <div class="card">
                 <h2 style="text-align: center;">How BookCompass Works</h2>
                 <div class="how-it-works">
                     <div class="step"><div class="step-icon">1️⃣</div><h3>Enter Keywords</h3><p>Paste up to 30 keywords related to your book idea</p></div>
