@@ -286,6 +286,29 @@ def home():
             </div>
             </div>
             <div class="card">
+            <h2 style="text-align: center;">📊 BookCompass by the Numbers</h2>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 30px 0;">
+                <div style="flex: 1; text-align: center; background: #232f3e; color: white; padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 42px; font-weight: bold;">1,000+</div>
+                    <div style="margin-top: 10px;">Keywords Researched</div>
+                </div>
+                <div style="flex: 1; text-align: center; background: #232f3e; color: white; padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 42px; font-weight: bold;">40+</div>
+                    <div style="margin-top: 10px;">Active Users</div>
+                </div>
+                <div style="flex: 1; text-align: center; background: #232f3e; color: white; padding: 25px; border-radius: 10px;">
+                    <div style="font-size: 42px; font-weight: bold;">100%</div>
+                    <div style="margin-top: 10px;">Satisfaction Rate</div>
+                </div>
+            </div>
+            
+            <div style="text-align: center; background: #fff8f0; padding: 15px; border-radius: 10px; border: 1px solid #ff9900;">
+                <div style="font-size: 24px; color: #ff9900;">⭐⭐⭐⭐⭐</div>
+                <div style="font-weight: bold; margin: 5px 0;">Trusted by KDP Authors</div>
+                <div style="font-size: 14px; color: #666;">Join a growing community of successful publishers</div>
+            </div>
+            </div>
+            <div class="card">
                 <h2 style="text-align: center;">How BookCompass Works</h2>
                 <div class="how-it-works">
                     <div class="step"><div class="step-icon">1️⃣</div><h3>Enter Keywords</h3><p>Paste up to 30 keywords related to your book idea</p></div>
