@@ -252,6 +252,20 @@ def home():
                 <a href="/signup"><button>🚀 Get Started Free →</button></a>
             </div>
             <div class="card">
+            <h2 style="color: #232f3e;">What is BookCompass?</h2>
+            <p style="font-size: 16px; line-height: 1.6;">BookCompass is a keyword research tool specifically designed for Amazon KDP publishers. It helps you analyze keywords, discover profitable opportunities, and identify high-potential keywords for your book titles and listings.</p>
+            
+            <div style="background: #fff8f0; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #ff9900;">
+                <p style="margin: 0; font-size: 16px; line-height: 1.6;"><strong>💡 One of the biggest mistakes many KDP publishers make is publishing books based on guesswork.</strong> With BookCompass, you can stop guessing and start making data-driven decisions. This gives you more confidence that you're targeting keywords readers are actively searching for, increasing your chances of making sales.</p>
+            </div>
+            
+            <p style="font-size: 16px; line-height: 1.6;">Whether you're a beginner or an experienced publisher, this tool can help you find better niches, improve your book visibility, and publish more strategically.</p>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="/signup"><button style="background: #ff9900; padding: 10px 25px;">Start Your Free Trial →</button></a>
+            </div>
+            </div>
+            <div class="card">
                 <h2 style="text-align: center;">How BookCompass Works</h2>
                 <div class="how-it-works">
                     <div class="step"><div class="step-icon">1️⃣</div><h3>Enter Keywords</h3><p>Paste up to 30 keywords related to your book idea</p></div>
@@ -639,13 +653,12 @@ def dashboard():
                 <h3 style="display: flex; justify-content: space-between; align-items: center;">
     Results (Best Opportunities First)
     <div>
-    <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-    <button onclick="copyAllResults()" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
-    <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
     </div>
                 </h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th><th>Copy</th></tr></thead>
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -2506,28 +2519,6 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
-            
-            // Copy All Results function
-            function copyAllResults() {
-                var rows = document.querySelectorAll('#resultsBody tr');
-                if (rows.length === 0) {
-                    alert('No results to copy. Please run a keyword search first.');
-                    return;
-                }
-                
-                var copyText = '';
-                
-                for (var i = 0; i < rows.length; i++) {
-                    var cells = rows[i].cells;
-                    copyText += 'Keyword: ' + cells[1].innerText + '\n';
-                    copyText += 'Score: ' + cells[0].innerText + '\n';
-                    copyText += 'Volume: ' + cells[2].innerText + '\n';
-                    copyText += 'Competition: ' + cells[3].innerText + '\n';
-                    copyText += '------------------------\n';
-                }
-                
-                alert('Copy the text below:\n\n' + copyText);
-            }
         </script>
     </body>
     </html>
