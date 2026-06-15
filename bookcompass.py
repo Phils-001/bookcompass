@@ -1089,7 +1089,7 @@ def api_research():
             score -= 2
         
         if volume_category == "HIGH":
-            score += 2
+            score += 1
         elif volume_category == "MEDIUM":
             score += 1
         elif volume_category == "VERY LOW":
