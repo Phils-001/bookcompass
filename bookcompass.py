@@ -2334,7 +2334,70 @@ def admin_panel():
                 <!-- JavaScript will populate this -->
             </div>
         </div>
-        
+        <!-- ============================================ -->
+        <!-- APIFY + BULK KEYWORD EXPLORER (ADMIN ONLY) -->
+        <!-- ============================================ -->
+        <div class="card">
+            <h2>🚀 Apify + Bulk Keyword Explorer (Admin Only)</h2>
+            <p style="color: #666; margin-bottom: 15px;">Use Apify to automatically discover related keywords, then analyze them with BookCompass.</p>
+            
+            <!-- Apify Configuration -->
+            <div style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                <h3 style="margin-top: 0;">🔑 Apify Configuration</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Apify API Token:</label>
+                    <input type="password" id="apifyToken" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" placeholder="Enter your Apify API token">
+                    <small style="color: #666;">Get your token from <a href="https://console.apify.com/settings/integrations" target="_blank">console.apify.com/settings/integrations</a></small>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">🌱 Seed Keyword:</label>
+                    <input type="text" id="seedKeyword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" placeholder="e.g., prayer journal">
+                    <small style="color: #666;">Apify will find related keywords automatically</small>
+                </div>
+                
+                <button onclick="fetchAndAnalyzeWithApify()" id="apifyBtn" style="background: #ff9900; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">🔍 Fetch & Analyze (One Click!)</button>
+            </div>
+            
+            <div style="text-align: center; margin: 15px 0;">— OR —</div>
+            
+            <!-- Manual Bulk Input -->
+            <div style="margin-bottom: 20px;">
+                <h3>📝 Manual Keyword Input</h3>
+                <textarea id="bulkKeywords" rows="5" style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px;" placeholder="Enter keywords one per line...&#10;prayer journal for women&#10;christian prayer journal&#10;daily prayer journal"></textarea>
+                <button onclick="runManualBulkResearch()" id="manualBulkBtn" style="background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">🧠 Run Bulk Research</button>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div id="bulkProgress" style="display: none; margin-top: 15px;">
+                <div style="background: #e0e0e0; border-radius: 10px; height: 20px;">
+                    <div id="bulkProgressBar" style="background: #ff9900; border-radius: 10px; width: 0%; height: 20px; text-align: center; color: white; font-size: 11px; line-height: 20px;">0%</div>
+                </div>
+                <p id="bulkStatus" style="margin-top: 5px;">Processing...</p>
+            </div>
+            
+            <!-- Results Table -->
+            <div id="bulkResults" style="margin-top: 20px; overflow-x: auto; display: none;">
+                <h3>📊 Bulk Results</h3>
+                <div style="margin-bottom: 10px;">
+                    <button onclick="exportBulkResultsToCSV()" id="exportBtn" style="background: #2196F3; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; display: none;">📥 Export to CSV</button>
+                </div>
+                <table id="bulkResultsTable" style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="background: #ff9900; color: white; padding: 10px;">Niche Score</th>
+                            <th style="background: #ff9900; color: white; padding: 10px;">Keyword</th>
+                            <th style="background: #ff9900; color: white; padding: 10px;">Search Volume</th>
+                            <th style="background: #ff9900; color: white; padding: 10px;">Competition</th>
+                            <th style="background: #ff9900; color: white; padding: 10px;">Top Competitor</th>
+                            <th style="background: #ff9900; color: white; padding: 10px;">Copy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bulkResultsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <!-- System Info -->
                 <!-- ASINSpotlight API Credits -->
         <div class="card">
@@ -2605,6 +2668,230 @@ def admin_panel():
             
             // Load credits when page loads
             checkASINSpotlightCredits();
+            
+            // ============================================
+            // APIFY + BULK KEYWORD FUNCTIONS
+            // ============================================
+            
+            async function fetchAndAnalyzeWithApify() {
+                const apifyToken = document.getElementById('apifyToken').value;
+                const seedKeyword = document.getElementById('seedKeyword').value.trim();
+                
+                if (!apifyToken) {
+                    alert('Please enter your Apify API token');
+                    return;
+                }
+                
+                if (!seedKeyword) {
+                    alert('Please enter a seed keyword');
+                    return;
+                }
+                
+                document.getElementById('bulkProgress').style.display = 'block';
+                document.getElementById('bulkStatus').innerHTML = '🌐 Calling Apify to fetch related keywords...';
+                document.getElementById('apifyBtn').disabled = true;
+                document.getElementById('manualBulkBtn').disabled = true;
+                
+                let relatedKeywords = [];
+                
+                try {
+                    const apifyResponse = await fetch('https://api.apify.com/v2/acts/scrapers-hub~amazon-search-autocomplete-api/run-sync-get-dataset-items', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            query: seedKeyword,
+                            max_results: 15
+                        })
+                    });
+                    
+                    if (!apifyResponse.ok) {
+                        throw new Error(`Apify API error: ${apifyResponse.status}`);
+                    }
+                    
+                    const apifyData = await apifyResponse.json();
+                    
+                    const keywordSet = new Set();
+                    for (const item of apifyData) {
+                        if (item.suggestion_01) keywordSet.add(item.suggestion_01);
+                        if (item.suggestion_02) keywordSet.add(item.suggestion_02);
+                        if (item.suggestion_03) keywordSet.add(item.suggestion_03);
+                        if (item.suggestion_04) keywordSet.add(item.suggestion_04);
+                        if (item.suggestion_05) keywordSet.add(item.suggestion_05);
+                        if (item.suggestion_06) keywordSet.add(item.suggestion_06);
+                        if (item.suggestion_07) keywordSet.add(item.suggestion_07);
+                        if (item.suggestion_08) keywordSet.add(item.suggestion_08);
+                        if (item.suggestion_09) keywordSet.add(item.suggestion_09);
+                        if (item.suggestion_10) keywordSet.add(item.suggestion_10);
+                    }
+                    
+                    relatedKeywords = Array.from(keywordSet);
+                    
+                    if (relatedKeywords.length === 0) {
+                        throw new Error('No related keywords found. Try a different seed keyword.');
+                    }
+                    
+                    document.getElementById('bulkStatus').innerHTML = `✅ Found ${relatedKeywords.length} related keywords. Now analyzing with BookCompass...`;
+                    
+                } catch (err) {
+                    document.getElementById('bulkProgress').style.display = 'none';
+                    alert('Apify error: ' + err.message);
+                    document.getElementById('apifyBtn').disabled = false;
+                    document.getElementById('manualBulkBtn').disabled = false;
+                    return;
+                }
+                
+                const results = [];
+                for (let i = 0; i < relatedKeywords.length; i++) {
+                    const percent = Math.round((i / relatedKeywords.length) * 100);
+                    document.getElementById('bulkProgressBar').style.width = percent + '%';
+                    document.getElementById('bulkProgressBar').innerText = percent + '%';
+                    document.getElementById('bulkStatus').innerHTML = `Analyzing ${i+1}/${relatedKeywords.length}: ${relatedKeywords[i]}`;
+                    
+                    try {
+                        const response = await fetch('/api/research', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ keyword: relatedKeywords[i] })
+                        });
+                        const data = await response.json();
+                        results.push(data);
+                    } catch (err) {
+                        results.push({ keyword: relatedKeywords[i], error: err.message });
+                    }
+                    
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                
+                renderBulkResults(results);
+                document.getElementById('bulkProgress').style.display = 'none';
+                document.getElementById('apifyBtn').disabled = false;
+                document.getElementById('manualBulkBtn').disabled = false;
+                document.getElementById('exportBtn').style.display = 'inline-block';
+            }
+            
+            async function runManualBulkResearch() {
+                const keywordsText = document.getElementById('bulkKeywords').value;
+                const keywords = keywordsText.split('\n').filter(k => k.trim().length > 0);
+                
+                if (keywords.length === 0) {
+                    alert('Please paste at least one keyword');
+                    return;
+                }
+                
+                if (keywords.length > 100) {
+                    alert('Please limit to 100 keywords per batch');
+                    return;
+                }
+                
+                document.getElementById('bulkProgress').style.display = 'block';
+                document.getElementById('apifyBtn').disabled = true;
+                document.getElementById('manualBulkBtn').disabled = true;
+                document.getElementById('bulkResults').style.display = 'none';
+                document.getElementById('exportBtn').style.display = 'none';
+                
+                const results = [];
+                for (let i = 0; i < keywords.length; i++) {
+                    const keyword = keywords[i].trim();
+                    if (!keyword) continue;
+                    
+                    const percent = Math.round((i / keywords.length) * 100);
+                    document.getElementById('bulkProgressBar').style.width = percent + '%';
+                    document.getElementById('bulkProgressBar').innerText = percent + '%';
+                    document.getElementById('bulkStatus').innerHTML = `Analyzing ${i+1}/${keywords.length}: ${keyword}`;
+                    
+                    try {
+                        const response = await fetch('/api/research', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ keyword: keyword })
+                        });
+                        const data = await response.json();
+                        results.push(data);
+                    } catch (err) {
+                        results.push({ keyword: keyword, error: err.message });
+                    }
+                    
+                    await new Promise(r => setTimeout(r, 300));
+                }
+                
+                renderBulkResults(results);
+                document.getElementById('bulkProgress').style.display = 'none';
+                document.getElementById('apifyBtn').disabled = false;
+                document.getElementById('manualBulkBtn').disabled = false;
+                document.getElementById('exportBtn').style.display = 'inline-block';
+            }
+            
+            function renderBulkResults(results) {
+                const tbody = document.getElementById('bulkResultsBody');
+                tbody.innerHTML = '';
+                
+                results.sort((a, b) => {
+                    if (a.error) return 1;
+                    if (b.error) return -1;
+                    return (b.score || 0) - (a.score || 0);
+                });
+                
+                for (const r of results) {
+                    const row = tbody.insertRow();
+                    
+                    if (r.error) {
+                        row.insertCell(0).innerHTML = '<span style="color: #f44336;">❌ Error</span>';
+                        row.insertCell(1).innerHTML = r.keyword;
+                        row.insertCell(2).innerHTML = '-';
+                        row.insertCell(3).innerHTML = '-';
+                        row.insertCell(4).innerHTML = '-';
+                        row.insertCell(5).innerHTML = '-';
+                        continue;
+                    }
+                    
+                    let cls = 'bad';
+                    if (r.score >= 7) cls = 'good';
+                    else if (r.score >= 5) cls = 'medium';
+                    
+                    row.insertCell(0).innerHTML = `<span class="${cls}">${r.score}/10</span>`;
+                    row.insertCell(1).innerHTML = r.keyword;
+                    row.insertCell(2).innerHTML = r.volume;
+                    row.insertCell(3).innerHTML = r.competition;
+                    
+                    let topComp = '';
+                    if (r.competitors && r.competitors.length > 0) {
+                        topComp = `${r.competitors[0].title.substring(0, 50)}... (Rank: ${r.competitors[0].bsr})`;
+                    } else {
+                        topComp = 'No data';
+                    }
+                    row.insertCell(4).innerHTML = topComp;
+                    
+                    row.insertCell(5).innerHTML = `<button onclick="copyBulkResult('${r.keyword.replace(/'/g, "\\'")}', '${r.score}', '${r.volume}', '${r.competition}')" style="background:#2196F3; color:white; border:none; border-radius:3px; padding:4px 8px; cursor:pointer;">📋 Copy</button>`;
+                }
+                
+                document.getElementById('bulkResults').style.display = 'block';
+            }
+            
+            function copyBulkResult(keyword, score, volume, competition) {
+                const text = `Keyword: ${keyword}\nScore: ${score}/10\nVolume: ${volume}\nCompetition: ${competition}`;
+                navigator.clipboard.writeText(text);
+                alert('Copied to clipboard!');
+            }
+            
+            function exportBulkResultsToCSV() {
+                const table = document.getElementById('bulkResultsTable');
+                const rows = table.querySelectorAll('tbody tr');
+                let csv = 'Niche Score,Keyword,Search Volume,Competition,Top Competitor\n';
+                
+                for (const row of rows) {
+                    const cells = row.cells;
+                    csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}","${cells[4].innerText.replace(/"/g, '""')}"\n`;
+                }
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `bookcompass-bulk-${new Date().toISOString().slice(0,19)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+            
         </script>
     </body>
     </html>
