@@ -3402,12 +3402,9 @@ def check_asinspottlight_credits():
 @app.route('/admin/bulk-analyze', methods=['POST'])
 def admin_bulk_analyze():
     # Check admin password
-    admin_password = request.form.get('password', '')
+    admin_password = request.args.get('password', '')
     if admin_password != 'BookCompassAdmin@@2026!':
-        # Get password from URL if not in form
-        admin_password = request.args.get('password', '')
-        if admin_password != 'BookCompassAdmin@@2026!':
-            return '<div style="text-align:center; margin-top:50px;"><h2>Unauthorized</h2><a href="/admin">Back</a></div>'
+        return '<div style="text-align:center; margin-top:50px;"><h2>Unauthorized</h2><a href="/admin">Back</a></div>'
     
     apify_token = request.form.get('apify_token', '')
     seed_keyword = request.form.get('seed_keyword', '').strip()
@@ -3418,17 +3415,16 @@ def admin_bulk_analyze():
     # Step 1: If Apify token and seed keyword provided, fetch suggestions
     if apify_token and seed_keyword:
         try:
-            import requests
             apify_url = "https://api.apify.com/v2/acts/scrapers-hub~amazon-search-autocomplete-api/run-sync-get-dataset-items"
             params = {"token": apify_token}
-            payload = {"query": seed_keyword, "max_results": 15}
+            payload = {"query": seed_keyword, "max_results": 10}
             
             response = requests.post(apify_url, params=params, json=payload, timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
                 for item in data:
-                    for i in range(1, 11):
+                    for i in range(1, 6):  # Limit to 5 suggestions
                         suggestion = item.get(f'suggestion_{i:02d}')
                         if suggestion and suggestion not in all_keywords:
                             all_keywords.append(suggestion)
@@ -3442,26 +3438,29 @@ def admin_bulk_analyze():
             if kw not in all_keywords:
                 all_keywords.append(kw)
     
+    # Limit to 20 keywords max to avoid timeout
+    if len(all_keywords) > 20:
+        all_keywords = all_keywords[:20]
+    
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Analyze each keyword with BookCompass
+    # Step 3: Analyze each keyword with BookCompass (with progress)
     results = []
-    for keyword in all_keywords:
+    for i, keyword in enumerate(all_keywords):
         try:
             # Call your own API
-            import requests as req
-            research_response = req.post(
-                'http://localhost:10000/api/research' if os.environ.get('RENDER') else 'http://127.0.0.1:5000/api/research',
+            research_response = requests.post(
+                'https://bookcompass.app/api/research',
                 json={'keyword': keyword},
-                timeout=30
+                timeout=60
             )
             data = research_response.json()
             results.append(data)
         except Exception as e:
             results.append({'keyword': keyword, 'error': str(e)})
     
-    # Step 4: Display results as HTML table
+    # Rest of the HTML generation stays the same...
     html = '''
     <!DOCTYPE html>
     <html>
@@ -3480,11 +3479,13 @@ def admin_bulk_analyze():
             .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
             .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+            .warning { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📊 Bulk Analysis Results</h1>
+            ''' + (f'<div class="warning">⚠️ Note: Only the first 20 keywords were processed to avoid timeout. Please run in smaller batches.</div>' if len(results) < len(all_keywords) else '') + '''
             <p>Analyzed <strong>''' + str(len(results)) + '''</strong> keywords</p>
             
             <div style="margin-bottom: 15px;">
@@ -3509,11 +3510,11 @@ def admin_bulk_analyze():
         if 'error' in r and r['error']:
             html += f'''
                     <tr>
-                        <td><span class="bad">Error</span></td>
-                        <td>{r['keyword']}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td><button class="copy-btn" onclick="copyRow('{r['keyword']}', 'Error', '-', '-')">📋</button></td>
+                        <td><span class="bad">Error</span></span></td>
+                        <td>{r['keyword']}</span></td>
+                        <td>-</span></td>
+                        <td>-</span></td>
+                        <td><button class="copy-btn" onclick="copyRow('{r['keyword']}', 'Error', '-', '-')">📋</button></span></td>
                     </tr>
             '''
         else:
@@ -3525,13 +3526,16 @@ def admin_bulk_analyze():
             else:
                 score_class = 'bad'
             
+            # Escape single quotes for JavaScript
+            keyword_safe = r['keyword'].replace("'", "\\'")
+            
             html += f'''
                     <tr>
                         <td><span class="{score_class}">{score}/10</span></td>
-                        <td>{r['keyword']}</td>
-                        <td>{r.get('volume', '-')}</td>
-                        <td>{r.get('competition', '-')}</td>
-                        <td><button class="copy-btn" onclick="copyRow('{r['keyword']}', '{score}', '{r.get('volume', '-')}', '{r.get('competition', '-')}')">📋</button></td>
+                        <td>{r['keyword']}</span></td>
+                        <td>{r.get('volume', '-')}</span></td>
+                        <td>{r.get('competition', '-')}</span></td>
+                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{r.get('volume', '-')}', '{r.get('competition', '-')}')">📋</button></span></td>
                     </tr>
             '''
     
