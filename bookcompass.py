@@ -2339,23 +2339,28 @@ def admin_panel():
         <!-- ============================================ -->
         <div class="card">
             <h2>🚀 Apify Bulk Keyword Tool (Server Processed)</h2>
-            <p>Enter a seed keyword. The system will fetch related keywords from Apify and analyze them.</p>
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <strong>📌 How to use:</strong><br>
+                • <strong>Option 1 (Manual):</strong> Leave token and seed blank. Enter keywords in manual box.<br>
+                • <strong>Option 2 (Apify):</strong> Enter Apify token + seed keyword. Manual keywords optional.
+            </div>
             
             <form method="POST" action="/admin/bulk-analyze?password=BookCompassAdmin@@2026!">
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">🔑 Apify API Token:</label>
-                    <input type="password" name="apify_token" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" placeholder="Enter your Apify API token" required>
-                    <small style="color: #666;">Get your token from console.apify.com</small>
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">🔑 Apify API Token (Optional for manual mode):</label>
+                    <input type="password" name="apify_token" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" placeholder="Leave blank for manual mode">
+                    <small style="color: #666;">Get token from console.apify.com (only needed for auto-discovery)</small>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">🌱 Seed Keyword:</label>
-                    <input type="text" name="seed_keyword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" placeholder="e.g., prayer journal" required>
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">🌱 Seed Keyword (Optional):</label>
+                    <input type="text" name="seed_keyword" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" placeholder="Only needed with Apify token">
                 </div>
                 
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">📝 Or paste manual keywords (one per line):</label>
-                    <textarea name="manual_keywords" rows="4" style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px;" placeholder="prayer journal for women&#10;christian prayer journal"></textarea>
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">📝 Manual Keywords (One per line):</label>
+                    <textarea name="manual_keywords" rows="5" style="width: 100%; padding: 10px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px;" placeholder="Enter keywords here...&#10;coloring book&#10;adult coloring book&#10;stress relief coloring book"></textarea>
                 </div>
                 
                 <button type="submit" style="background: #ff9900; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">🔍 Start Bulk Analysis</button>
