@@ -3424,7 +3424,7 @@ def admin_bulk_analyze():
             if response.status_code == 200:
                 data = response.json()
                 for item in data:
-                    for i in range(1, 6):  # Limit to 5 suggestions
+                    for i in range(1, 6):
                         suggestion = item.get(f'suggestion_{i:02d}')
                         if suggestion and suggestion not in all_keywords:
                             all_keywords.append(suggestion)
@@ -3438,29 +3438,24 @@ def admin_bulk_analyze():
             if kw not in all_keywords:
                 all_keywords.append(kw)
     
-    # Limit to 20 keywords max to avoid timeout
-    if len(all_keywords) > 20:
-        all_keywords = all_keywords[:20]
-    
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Analyze each keyword with BookCompass (with progress)
+    # Step 3: Analyze each keyword by calling the function DIRECTLY
     results = []
-    for i, keyword in enumerate(all_keywords):
+    for keyword in all_keywords:
         try:
-            # Call your own API
-            research_response = requests.post(
-                'https://bookcompass.app/api/research',
-                json={'keyword': keyword},
-                timeout=60
-            )
-            data = research_response.json()
-            results.append(data)
+            # Create a mock request object
+            with app.test_request_context(json={'keyword': keyword}):
+                # Call the api_research function directly
+                response = api_research()
+                # Get the JSON data from the response
+                data = response.get_json()
+                results.append(data)
         except Exception as e:
             results.append({'keyword': keyword, 'error': str(e)})
     
-    # Rest of the HTML generation stays the same...
+    # HTML generation (same as before)
     html = '''
     <!DOCTYPE html>
     <html>
@@ -3479,13 +3474,11 @@ def admin_bulk_analyze():
             .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
             .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-            .warning { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📊 Bulk Analysis Results</h1>
-            ''' + (f'<div class="warning">⚠️ Note: Only the first 20 keywords were processed to avoid timeout. Please run in smaller batches.</div>' if len(results) < len(all_keywords) else '') + '''
             <p>Analyzed <strong>''' + str(len(results)) + '''</strong> keywords</p>
             
             <div style="margin-bottom: 15px;">
@@ -3510,11 +3503,11 @@ def admin_bulk_analyze():
         if 'error' in r and r['error']:
             html += f'''
                     <tr>
-                        <td><span class="bad">Error</span></span></td>
-                        <td>{r['keyword']}</span></td>
+                        <td><span class="bad">Error</span></td>
+                        <td>{r['keyword']}</td>
                         <td>-</span></td>
                         <td>-</span></td>
-                        <td><button class="copy-btn" onclick="copyRow('{r['keyword']}', 'Error', '-', '-')">📋</button></span></td>
+                        <td><button class="copy-btn" onclick="copyRow('{r['keyword']}', 'Error', '-', '-')">📋</button></td>
                     </tr>
             '''
         else:
@@ -3526,16 +3519,16 @@ def admin_bulk_analyze():
             else:
                 score_class = 'bad'
             
-            # Escape single quotes for JavaScript
+            # Escape single quotes
             keyword_safe = r['keyword'].replace("'", "\\'")
             
             html += f'''
                     <tr>
                         <td><span class="{score_class}">{score}/10</span></td>
-                        <td>{r['keyword']}</span></td>
+                        <td>{r['keyword']}</td>
                         <td>{r.get('volume', '-')}</span></td>
                         <td>{r.get('competition', '-')}</span></td>
-                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{r.get('volume', '-')}', '{r.get('competition', '-')}')">📋</button></span></td>
+                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{r.get('volume', '-')}', '{r.get('competition', '-')}')">📋</button></td>
                     </tr>
             '''
     
