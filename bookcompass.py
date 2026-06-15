@@ -3441,21 +3441,32 @@ def admin_bulk_analyze():
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Analyze each keyword by calling the function DIRECTLY
+    # Step 3: Analyze each keyword by calling the function with a session
     results = []
+    
+    # Get admin email to create session
+    admin_email = 'bookcompass.app@gmail.com'
+    
     for keyword in all_keywords:
         try:
-            # Create a mock request object
+            # Create a mock request with session
             with app.test_request_context(json={'keyword': keyword}):
-                # Call the api_research function directly
+                # Manually set the session for the admin user
+                session['user_id'] = admin_email
+                session['email'] = admin_email
+                
+                # Call the api_research function
                 response = api_research()
-                # Get the JSON data from the response
                 data = response.get_json()
-                results.append(data)
+                
+                if data and 'error' not in data:
+                    results.append(data)
+                else:
+                    results.append({'keyword': keyword, 'error': data.get('error', 'Unknown error')})
         except Exception as e:
             results.append({'keyword': keyword, 'error': str(e)})
     
-    # HTML generation (same as before)
+    # HTML generation
     html = '''
     <!DOCTYPE html>
     <html>
@@ -3501,13 +3512,14 @@ def admin_bulk_analyze():
     
     for r in results:
         if 'error' in r and r['error']:
+            keyword_display = r.get('keyword', 'Unknown')
             html += f'''
                     <tr>
                         <td><span class="bad">Error</span></td>
-                        <td>{r['keyword']}</td>
+                        <td>{keyword_display}</td>
                         <td>-</span></td>
                         <td>-</span></td>
-                        <td><button class="copy-btn" onclick="copyRow('{r['keyword']}', 'Error', '-', '-')">📋</button></td>
+                        <td><button class="copy-btn" onclick="copyRow('{keyword_display}', 'Error', '-', '-')">📋</button></td>
                     </tr>
             '''
         else:
@@ -3519,16 +3531,17 @@ def admin_bulk_analyze():
             else:
                 score_class = 'bad'
             
-            # Escape single quotes
-            keyword_safe = r['keyword'].replace("'", "\\'")
+            keyword_safe = r.get('keyword', '').replace("'", "\\'")
+            volume = r.get('volume', '-')
+            competition = r.get('competition', '-')
             
             html += f'''
                     <tr>
                         <td><span class="{score_class}">{score}/10</span></td>
-                        <td>{r['keyword']}</td>
-                        <td>{r.get('volume', '-')}</span></td>
-                        <td>{r.get('competition', '-')}</span></td>
-                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{r.get('volume', '-')}', '{r.get('competition', '-')}')">📋</button></td>
+                        <td>{r.get('keyword', 'Unknown')}</td>
+                        <td>{volume}</span></td>
+                        <td>{competition}</span></td>
+                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{volume}', '{competition}')">📋</button></td>
                     </tr>
             '''
     
