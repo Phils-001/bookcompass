@@ -1009,18 +1009,48 @@ def api_research():
             except:
                 pass
         
-        # Calculate competition level
-        if strong >= 3:
-            competition = "LOW"
-        elif strong >= 1:
+        # Calculate competition level based on TOTAL products and review counts
+        total_products = len(products) if products else 0
+        
+        # Count products with significant reviews (500+ reviews = established competitor)
+        high_review_count = 0
+        for item in products[:20]:  # Check top 20 products
+            reviews = item.get('reviews', 0)
+            if reviews and reviews > 500:
+                high_review_count += 1
+        
+        # Also check total pages of results
+        total_pages = result.get('data', {}).get('last_page_number', 1)
+        estimated_total_products = total_pages * 48
+        
+        # Determine competition level
+        if estimated_total_products > 200 or high_review_count > 10:
+            competition = "HIGH"
+        elif estimated_total_products > 50 or high_review_count > 3:
             competition = "MEDIUM"
         else:
-            competition = "HIGH"
+            competition = "LOW"
         
-        # Calculate actual search volume from bought_past_month
+        print(f"📊 Estimated total products: {estimated_total_products}, High reviews: {high_review_count}, Competition: {competition}")
+        
+        # Calculate search volume from monthly_demand when available
+        monthly_demand_values = []
+        for item in products[:10]:  # Check top 10 products
+            monthly_demand = item.get('monthly_demand', 0)
+            if monthly_demand and monthly_demand > 0:
+                monthly_demand_values.append(monthly_demand)
+        
+        # Also get total pages to estimate demand
+        total_pages = result.get('data', {}).get('last_page_number', 1)
+        estimated_total_products = total_pages * 48
+        
         if monthly_demand_values:
+            # Use actual sales data when available
             avg_monthly_demand = sum(monthly_demand_values) // len(monthly_demand_values)
             volume_number = avg_monthly_demand
+            volume_source = "actual sales data"
+            
+            # Map sales numbers to volume categories
             if avg_monthly_demand >= 1000:
                 volume_category = "HIGH"
             elif avg_monthly_demand >= 500:
@@ -1029,11 +1059,24 @@ def api_research():
                 volume_category = "LOW"
             else:
                 volume_category = "VERY LOW"
-            print(f"📊 Avg monthly demand: {avg_monthly_demand}")
         else:
-            print(f"⚠️ No bought_past_month values found")
+            # Fallback: estimate from number of products available
+            volume_source = "estimated from product count"
+            if estimated_total_products >= 300:
+                volume_category = "HIGH"
+                volume_number = 5000
+            elif estimated_total_products >= 100:
+                volume_category = "MEDIUM"
+                volume_number = 1500
+            elif estimated_total_products >= 30:
+                volume_category = "LOW"
+                volume_number = 500
+            else:
+                volume_category = "VERY LOW"
+                volume_number = 100
         
         volume = f"{volume_number:,} ({volume_category})"
+        print(f"📊 Volume: {volume_number} ({volume_category}) - Source: {volume_source}")
         
         # Calculate Niche Score
         score = 5
