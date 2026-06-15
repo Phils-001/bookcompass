@@ -2666,7 +2666,7 @@ def admin_panel():
                     }});
             }}
             
-            // Load credits when page loads
+                        // Load credits when page loads
             checkASINSpotlightCredits();
             
             // ============================================
@@ -2674,8 +2674,8 @@ def admin_panel():
             // ============================================
             
             async function fetchAndAnalyzeWithApify() {
-                const apifyToken = document.getElementById('apifyToken').value;
-                const seedKeyword = document.getElementById('seedKeyword').value.trim();
+                var apifyToken = document.getElementById('apifyToken').value;
+                var seedKeyword = document.getElementById('seedKeyword').value.trim();
                 
                 if (!apifyToken) {
                     alert('Please enter your Apify API token');
@@ -2692,10 +2692,10 @@ def admin_panel():
                 document.getElementById('apifyBtn').disabled = true;
                 document.getElementById('manualBulkBtn').disabled = true;
                 
-                let relatedKeywords = [];
+                var relatedKeywords = [];
                 
                 try {
-                    const apifyResponse = await fetch('https://api.apify.com/v2/acts/scrapers-hub~amazon-search-autocomplete-api/run-sync-get-dataset-items', {
+                    var apifyResponse = await fetch('https://api.apify.com/v2/acts/scrapers-hub~amazon-search-autocomplete-api/run-sync-get-dataset-items', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
@@ -2705,13 +2705,14 @@ def admin_panel():
                     });
                     
                     if (!apifyResponse.ok) {
-                        throw new Error(`Apify API error: ${apifyResponse.status}`);
+                        throw new Error('Apify API error: ' + apifyResponse.status);
                     }
                     
-                    const apifyData = await apifyResponse.json();
+                    var apifyData = await apifyResponse.json();
                     
-                    const keywordSet = new Set();
-                    for (const item of apifyData) {
+                    var keywordSet = new Set();
+                    for (var i = 0; i < apifyData.length; i++) {
+                        var item = apifyData[i];
                         if (item.suggestion_01) keywordSet.add(item.suggestion_01);
                         if (item.suggestion_02) keywordSet.add(item.suggestion_02);
                         if (item.suggestion_03) keywordSet.add(item.suggestion_03);
@@ -2730,7 +2731,7 @@ def admin_panel():
                         throw new Error('No related keywords found. Try a different seed keyword.');
                     }
                     
-                    document.getElementById('bulkStatus').innerHTML = `✅ Found ${relatedKeywords.length} related keywords. Now analyzing with BookCompass...`;
+                    document.getElementById('bulkStatus').innerHTML = '✅ Found ' + relatedKeywords.length + ' related keywords. Now analyzing with BookCompass...';
                     
                 } catch (err) {
                     document.getElementById('bulkProgress').style.display = 'none';
@@ -2740,26 +2741,26 @@ def admin_panel():
                     return;
                 }
                 
-                const results = [];
-                for (let i = 0; i < relatedKeywords.length; i++) {
-                    const percent = Math.round((i / relatedKeywords.length) * 100);
+                var results = [];
+                for (var i = 0; i < relatedKeywords.length; i++) {
+                    var percent = Math.round((i / relatedKeywords.length) * 100);
                     document.getElementById('bulkProgressBar').style.width = percent + '%';
                     document.getElementById('bulkProgressBar').innerText = percent + '%';
-                    document.getElementById('bulkStatus').innerHTML = `Analyzing ${i+1}/${relatedKeywords.length}: ${relatedKeywords[i]}`;
+                    document.getElementById('bulkStatus').innerHTML = 'Analyzing ' + (i+1) + '/' + relatedKeywords.length + ': ' + relatedKeywords[i];
                     
                     try {
-                        const response = await fetch('/api/research', {
+                        var response = await fetch('/api/research', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ keyword: relatedKeywords[i] })
                         });
-                        const data = await response.json();
+                        var data = await response.json();
                         results.push(data);
                     } catch (err) {
                         results.push({ keyword: relatedKeywords[i], error: err.message });
                     }
                     
-                    await new Promise(r => setTimeout(r, 300));
+                    await new Promise(function(r) { setTimeout(r, 300); });
                 }
                 
                 renderBulkResults(results);
@@ -2770,8 +2771,8 @@ def admin_panel():
             }
             
             async function runManualBulkResearch() {
-                const keywordsText = document.getElementById('bulkKeywords').value;
-                const keywords = keywordsText.split('\n').filter(k => k.trim().length > 0);
+                var keywordsText = document.getElementById('bulkKeywords').value;
+                var keywords = keywordsText.split('\n').filter(function(k) { return k.trim().length > 0; });
                 
                 if (keywords.length === 0) {
                     alert('Please paste at least one keyword');
@@ -2789,29 +2790,29 @@ def admin_panel():
                 document.getElementById('bulkResults').style.display = 'none';
                 document.getElementById('exportBtn').style.display = 'none';
                 
-                const results = [];
-                for (let i = 0; i < keywords.length; i++) {
-                    const keyword = keywords[i].trim();
+                var results = [];
+                for (var i = 0; i < keywords.length; i++) {
+                    var keyword = keywords[i].trim();
                     if (!keyword) continue;
                     
-                    const percent = Math.round((i / keywords.length) * 100);
+                    var percent = Math.round((i / keywords.length) * 100);
                     document.getElementById('bulkProgressBar').style.width = percent + '%';
                     document.getElementById('bulkProgressBar').innerText = percent + '%';
-                    document.getElementById('bulkStatus').innerHTML = `Analyzing ${i+1}/${keywords.length}: ${keyword}`;
+                    document.getElementById('bulkStatus').innerHTML = 'Analyzing ' + (i+1) + '/' + keywords.length + ': ' + keyword;
                     
                     try {
-                        const response = await fetch('/api/research', {
+                        var response = await fetch('/api/research', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ keyword: keyword })
                         });
-                        const data = await response.json();
+                        var data = await response.json();
                         results.push(data);
                     } catch (err) {
                         results.push({ keyword: keyword, error: err.message });
                     }
                     
-                    await new Promise(r => setTimeout(r, 300));
+                    await new Promise(function(r) { setTimeout(r, 300); });
                 }
                 
                 renderBulkResults(results);
@@ -2822,17 +2823,18 @@ def admin_panel():
             }
             
             function renderBulkResults(results) {
-                const tbody = document.getElementById('bulkResultsBody');
+                var tbody = document.getElementById('bulkResultsBody');
                 tbody.innerHTML = '';
                 
-                results.sort((a, b) => {
+                results.sort(function(a, b) {
                     if (a.error) return 1;
                     if (b.error) return -1;
                     return (b.score || 0) - (a.score || 0);
                 });
                 
-                for (const r of results) {
-                    const row = tbody.insertRow();
+                for (var i = 0; i < results.length; i++) {
+                    var r = results[i];
+                    var row = tbody.insertRow();
                     
                     if (r.error) {
                         row.insertCell(0).innerHTML = '<span style="color: #f44336;">❌ Error</span>';
@@ -2844,50 +2846,50 @@ def admin_panel():
                         continue;
                     }
                     
-                    let cls = 'bad';
+                    var cls = 'bad';
                     if (r.score >= 7) cls = 'good';
                     else if (r.score >= 5) cls = 'medium';
                     
-                    row.insertCell(0).innerHTML = `<span class="${cls}">${r.score}/10</span>`;
+                    row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
                     row.insertCell(1).innerHTML = r.keyword;
                     row.insertCell(2).innerHTML = r.volume;
                     row.insertCell(3).innerHTML = r.competition;
                     
-                    let topComp = '';
+                    var topComp = '';
                     if (r.competitors && r.competitors.length > 0) {
-                        topComp = `${r.competitors[0].title.substring(0, 50)}... (Rank: ${r.competitors[0].bsr})`;
+                        topComp = r.competitors[0].title.substring(0, 50) + '... (Rank: ' + r.competitors[0].bsr + ')';
                     } else {
                         topComp = 'No data';
                     }
                     row.insertCell(4).innerHTML = topComp;
                     
-                    row.insertCell(5).innerHTML = `<button onclick="copyBulkResult('${r.keyword.replace(/'/g, "\\'")}', '${r.score}', '${r.volume}', '${r.competition}')" style="background:#2196F3; color:white; border:none; border-radius:3px; padding:4px 8px; cursor:pointer;">📋 Copy</button>`;
+                    row.insertCell(5).innerHTML = '<button onclick="copyBulkResult(\'' + r.keyword.replace(/'/g, "\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')" style="background:#2196F3; color:white; border:none; border-radius:3px; padding:4px 8px; cursor:pointer;">📋 Copy</button>';
                 }
                 
                 document.getElementById('bulkResults').style.display = 'block';
             }
             
             function copyBulkResult(keyword, score, volume, competition) {
-                const text = `Keyword: ${keyword}\nScore: ${score}/10\nVolume: ${volume}\nCompetition: ${competition}`;
+                var text = 'Keyword: ' + keyword + '\nScore: ' + score + '/10\nVolume: ' + volume + '\nCompetition: ' + competition;
                 navigator.clipboard.writeText(text);
                 alert('Copied to clipboard!');
             }
             
             function exportBulkResultsToCSV() {
-                const table = document.getElementById('bulkResultsTable');
-                const rows = table.querySelectorAll('tbody tr');
-                let csv = 'Niche Score,Keyword,Search Volume,Competition,Top Competitor\n';
+                var table = document.getElementById('bulkResultsTable');
+                var rows = table.querySelectorAll('tbody tr');
+                var csv = 'Niche Score,Keyword,Search Volume,Competition,Top Competitor\n';
                 
-                for (const row of rows) {
-                    const cells = row.cells;
-                    csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}","${cells[4].innerText.replace(/"/g, '""')}"\n`;
+                for (var i = 0; i < rows.length; i++) {
+                    var cells = rows[i].cells;
+                    csv += '"' + cells[0].innerText + '","' + cells[1].innerText + '","' + cells[2].innerText + '","' + cells[3].innerText + '","' + cells[4].innerText.replace(/"/g, '""') + '"\n';
                 }
                 
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
+                var blob = new Blob([csv], { type: 'text/csv' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
                 a.href = url;
-                a.download = `bookcompass-bulk-${new Date().toISOString().slice(0,19)}.csv`;
+                a.download = 'bookcompass-bulk-' + new Date().toISOString().slice(0,19) + '.csv';
                 a.click();
                 URL.revokeObjectURL(url);
             }
@@ -2895,7 +2897,7 @@ def admin_panel():
         </script>
     </body>
     </html>
-    '''  # <-- THIS CLOSES THE HTML STRING  
+    '''    # <-- THIS CLOSES THE HTML STRING
 # ============================================
 # TERMS OF SERVICE PAGE
 # ============================================
