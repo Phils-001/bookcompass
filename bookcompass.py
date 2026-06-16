@@ -872,18 +872,25 @@ def api_research():
     user_plan = users[email]['plan']
     print(f"🔍 USER PLAN CHECK - Email: {email}, Plan: '{user_plan}'")
     
+    # Check if this is an admin call (bypass daily limit for bulk analysis)
+    is_admin_call = False
+    if email == 'bookcompass.app@gmail.com':
+        is_admin_call = True
+        print(f"👑 Admin call detected - bypassing daily limit")
+    
     today = str(date.today())
     if email not in usage_tracker:
         usage_tracker[email] = {}
     if today not in usage_tracker[email]:
         usage_tracker[email][today] = 0
     
-    limit = PLANS[user_plan]['daily_limit']
-    if usage_tracker[email][today] >= limit:
-        return jsonify({'error': 'Daily limit reached'})
-    
-    usage_tracker[email][today] += 1
-    save_usage_to_db(email, today, usage_tracker[email][today])
+    # Only check and increment limit for non-admin users
+    if not is_admin_call:
+        limit = PLANS[user_plan]['daily_limit']
+        if usage_tracker[email][today] >= limit:
+            return jsonify({'error': 'Daily limit reached'})
+        usage_tracker[email][today] += 1
+        save_usage_to_db(email, today, usage_tracker[email][today])
     
     # Get search volume AND related keywords from Amazon suggestions
     related_keywords = []
