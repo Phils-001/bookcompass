@@ -693,18 +693,19 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-                <h3 style="display: flex; justify-content: space-between; align-items: center;">
-    Results (Best Opportunities First)
-    <div>
-        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
-    </div>
-                </h3>
-                <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
-                    <tbody id="resultsBody"></tbody>
-                </table>
-            </div>
+    <h3 style="display: flex; justify-content: space-between; align-items: center;">
+        Results (Best Opportunities First)
+        <div>
+            <button onclick="copyUserResults()" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
+            <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+            <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+        </div>
+    </h3>
+    <table id="resultsTable">
+        <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+        <tbody id="resultsBody"></tbody>
+    </table>
+</div>
         </div>
         
         <script>
@@ -851,6 +852,122 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
+        
+        // Copy results function for users
+        function copyUserResults() {
+            // Get all rows from the results table
+            const rows = document.querySelectorAll('#resultsBody tr');
+            if (rows.length === 0) {
+                alert('No results to copy. Please run a keyword search first.');
+                return;
+            }
+            
+            // Show loading message
+            alert('Preparing results to copy...');
+            
+            // Get the current user's email from session
+            fetch('/api/get-user-email')
+                .then(res => res.json())
+                .then(data => {
+                    const email = data.email;
+                    
+                    // Send the rows data to server for formatting
+                    const resultsData = [];
+                    for (let row of rows) {
+                        const cells = row.cells;
+                        const competitors = [];
+                        const competitorDivs = cells[4].querySelectorAll('div');
+                        for (let comp of competitorDivs) {
+                            competitors.push(comp.innerText.trim());
+                        }
+                        
+                        resultsData.push({
+                            score: cells[0].innerText.trim(),
+                            keyword: cells[1].innerText.trim(),
+                            volume: cells[2].innerText.trim(),
+                            competition: cells[3].innerText.trim(),
+                            competitors: competitors.join('; '),
+                            related: cells[5] ? cells[5].innerText.trim() : ''
+                        });
+                    }
+                    
+                    // Send to server to format
+                    fetch('/api/format-results', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ results: resultsData })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Create a text area with the formatted text
+                            const textArea = document.createElement('textarea');
+                            textArea.value = data.text;
+                            textArea.style.position = 'fixed';
+                            textArea.style.top = '10%';
+                            textArea.style.left = '10%';
+                            textArea.style.width = '80%';
+                            textArea.style.height = '60%';
+                            textArea.style.zIndex = '9999';
+                            textArea.style.padding = '20px';
+                            textArea.style.fontSize = '14px';
+                            textArea.style.border = '2px solid #ff9900';
+                            textArea.style.borderRadius = '10px';
+                            
+                            // Add a close button
+                            const closeBtn = document.createElement('button');
+                            closeBtn.innerText = '✕ Close';
+                            closeBtn.style.position = 'fixed';
+                            closeBtn.style.top = '8%';
+                            closeBtn.style.right = '12%';
+                            closeBtn.style.zIndex = '10000';
+                            closeBtn.style.background = '#f44336';
+                            closeBtn.style.color = 'white';
+                            closeBtn.style.border = 'none';
+                            closeBtn.style.borderRadius = '5px';
+                            closeBtn.style.padding = '8px 15px';
+                            closeBtn.style.cursor = 'pointer';
+                            closeBtn.onclick = function() {
+                                textArea.remove();
+                                closeBtn.remove();
+                                copyBtn.remove();
+                            };
+                            
+                            // Add copy button to popup
+                            const copyBtn = document.createElement('button');
+                            copyBtn.innerText = '📋 Copy to Clipboard';
+                            copyBtn.style.position = 'fixed';
+                            copyBtn.style.top = '8%';
+                            copyBtn.style.left = '12%';
+                            copyBtn.style.zIndex = '10000';
+                            copyBtn.style.background = '#4CAF50';
+                            copyBtn.style.color = 'white';
+                            copyBtn.style.border = 'none';
+                            copyBtn.style.borderRadius = '5px';
+                            copyBtn.style.padding = '8px 15px';
+                            copyBtn.style.cursor = 'pointer';
+                            copyBtn.onclick = function() {
+                                textArea.select();
+                                document.execCommand('copy');
+                                alert('Copied to clipboard!');
+                            };
+                            
+                            document.body.appendChild(textArea);
+                            document.body.appendChild(closeBtn);
+                            document.body.appendChild(copyBtn);
+                            textArea.select();
+                        } else {
+                            alert('Error formatting results: ' + data.error);
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error: ' + err.message);
+                    });
+                })
+                .catch(err => {
+                    alert('Error: ' + err.message);
+                });
+        }
         </script>
     </body>
     </html>
@@ -3598,6 +3715,56 @@ def admin_bulk_analyze():
     '''
     
     return html
+
+# ============================================
+# GET USER EMAIL FOR SESSION
+# ============================================
+
+@app.route('/api/get-user-email')
+def get_user_email():
+    if 'user_id' not in session:
+        return jsonify({'email': None})
+    return jsonify({'email': session['user_id']})
+
+# ============================================
+# FORMAT RESULTS FOR COPYING
+# ============================================
+
+@app.route('/api/format-results', methods=['POST'])
+def format_results():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'Not logged in'})
+    
+    data = request.json
+    results = data.get('results', [])
+    
+    if not results:
+        return jsonify({'success': False, 'error': 'No results to format'})
+    
+    # Format as a clean table
+    lines = []
+    lines.append("📊 BOOKCOMPASS KEYWORD RESULTS")
+    lines.append("=" * 60)
+    lines.append("")
+    
+    for r in results:
+        lines.append(f"Keyword: {r.get('keyword', 'N/A')}")
+        lines.append(f"Score: {r.get('score', 'N/A')}")
+        lines.append(f"Volume: {r.get('volume', 'N/A')}")
+        lines.append(f"Competition: {r.get('competition', 'N/A')}")
+        if r.get('competitors'):
+            lines.append(f"Competitors: {r.get('competitors', 'N/A')}")
+        if r.get('related') and r.get('related') != 'No related keywords found':
+            lines.append(f"Related: {r.get('related', 'N/A')}")
+        lines.append("-" * 40)
+    
+    lines.append("")
+    lines.append(f"Generated by BookCompass on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    return jsonify({
+        'success': True,
+        'text': '\n'.join(lines)
+    })
 # ============================================
 # RUN THE APP
 # ============================================
