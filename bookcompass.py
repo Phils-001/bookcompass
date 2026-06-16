@@ -693,19 +693,16 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-    <h3 style="display: flex; justify-content: space-between; align-items: center;">
-        Results (Best Opportunities First)
-        <div>
-            <form method="POST" action="/copy-results" style="display: inline;">
-                <input type="hidden" name="results_data" id="resultsDataInput">
-                <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
-            </form>
-            <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-            <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
-        </div>
-    </h3>
-    ...
-</div>
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    Results (Best Opportunities First)
+    <div>
+        <form method="POST" action="/copy-results" style="display: inline; margin: 0;">
+            <input type="hidden" name="results_data" id="resultsDataInput">
+            <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
+        </form>
+        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    </div>
                 </h3>
                 <table id="resultsTable">
                     <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
@@ -815,7 +812,7 @@ def dashboard():
                 }});
                 document.getElementById('results').style.display = 'block';
                 
-                // Update the copy form with results data
+                // Populate the hidden input with results data
                 const resultsData = [];
                 results.forEach(r => {
                     resultsData.push({
@@ -3621,6 +3618,10 @@ def admin_bulk_analyze():
     
     return html
 
+# ============================================
+# COPY RESULTS FOR USERS (SERVER-SIDE)
+# ============================================
+
 @app.route('/copy-results', methods=['POST'])
 def copy_results():
     if 'user_id' not in session:
@@ -3636,7 +3637,6 @@ def copy_results():
         </div>
         '''
     
-    # Format the results as plain text
     import json
     results = json.loads(results_data)
     
@@ -3662,13 +3662,15 @@ def copy_results():
     <!DOCTYPE html>
     <html>
     <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
         <title>Copy Results - BookCompass</title>
         <style>
             body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
             .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
             textarea {{ width: 100%; height: 400px; padding: 10px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px; }}
-            button {{ background: #ff9900; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }}
-            .back {{ display: inline-block; margin-top: 20px; color: #ff9900; text-decoration: none; }}
+            button {{ background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }}
+            button:hover {{ background: #45a049; }}
+            .back {{ display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
         </style>
     </head>
     <body>
@@ -3677,8 +3679,8 @@ def copy_results():
             <p>Select the text below and press <strong>Ctrl+C</strong> (Windows) or <strong>Cmd+C</strong> (Mac) to copy.</p>
             <textarea id="resultsText" readonly>{text}</textarea>
             <br><br>
-            <button onclick="document.getElementById('resultsText').select(); document.execCommand('copy'); alert('Copied!');">📋 Copy to Clipboard</button>
-            <br>
+            <button onclick="document.getElementById('resultsText').select(); document.execCommand('copy'); alert('Copied to clipboard!');">📋 Copy to Clipboard</button>
+            <br><br>
             <a href="/dashboard" class="back">← Back to Dashboard</a>
         </div>
         <script>
