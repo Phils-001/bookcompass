@@ -694,18 +694,27 @@ def dashboard():
             
             <div id="results" style="display:none;" class="card">
                 <h3 style="display: flex; justify-content: space-between; align-items: center;">
-    Results (Best Opportunities First)
-    <div>
-        <form method="POST" action="/copy-results" style="display: inline; margin: 0;">
-            <input type="hidden" name="results_data" id="resultsDataInput">
-            <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
-        </form>
-        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
-    </div>
+                    Results (Best Opportunities First)
+                    <div>
+                        <form method="POST" action="/copy-results" style="display: inline; margin: 0;">
+                            <input type="hidden" name="results_data" id="resultsDataInput">
+                            <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
+                        </form>
+                        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+                        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+                    </div>
                 </h3>
                 <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Niche Score</th>
+                            <th>Keyword</th>
+                            <th>Search Volume</th>
+                            <th>Competition</th>
+                            <th>Top Competitors</th>
+                            <th>Related Keywords</th>
+                        </tr>
+                    </thead>
                     <tbody id="resultsBody"></tbody>
                 </table>
             </div>
@@ -809,25 +818,26 @@ def dashboard():
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
-                }});
+                });
                 document.getElementById('results').style.display = 'block';
                 
                 // Populate the hidden input with results data
-                const resultsData = [];
-                results.forEach(r => {
-                    resultsData.push({
+                var resultsData = [];
+                for (var idx = 0; idx < results.length; idx++) {{
+                    var r = results[idx];
+                    resultsData.push({{
                         keyword: r.keyword,
                         score: r.score,
                         volume: r.volume,
                         competition: r.competition
-                    });
-                });
-                const resultsInput = document.getElementById('resultsDataInput');
-                if (resultsInput) {
+                    }});
+                }}
+                var resultsInput = document.getElementById('resultsDataInput');
+                if (resultsInput) {{
                     resultsInput.value = JSON.stringify(resultsData);
-                }
+                }}
             }}
-            
+                        
             // Show error summary if any keywords failed
             if (errors.length > 0) {{
                 let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
@@ -3617,7 +3627,6 @@ def admin_bulk_analyze():
     '''
     
     return html
-
 # ============================================
 # COPY RESULTS FOR USERS (SERVER-SIDE)
 # ============================================
@@ -3638,7 +3647,17 @@ def copy_results():
         '''
     
     import json
-    results = json.loads(results_data)
+    try:
+        results = json.loads(results_data)
+    except:
+        return '''
+        <div style="text-align:center; margin-top:50px; font-family: Arial;">
+            <h2>Invalid data</h2>
+            <a href="/dashboard">Back to Dashboard</a>
+        </div>
+        '''
+    
+    from datetime import datetime
     
     lines = []
     lines.append("📊 BOOKCOMPASS KEYWORD RESULTS")
@@ -3666,22 +3685,27 @@ def copy_results():
         <title>Copy Results - BookCompass</title>
         <style>
             body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
-            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
-            textarea {{ width: 100%; height: 400px; padding: 10px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px; }}
-            button {{ background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }}
-            button:hover {{ background: #45a049; }}
-            .back {{ display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+            textarea {{ width: 100%; height: 400px; padding: 15px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }}
+            .btn-copy {{ background: #4CAF50; color: white; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }}
+            .btn-copy:hover {{ background: #45a049; }}
+            .btn-back {{ display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 25px; text-decoration: none; border-radius: 5px; }}
+            .btn-back:hover {{ background: #e68a00; }}
+            .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h2>📋 Copy Results</h2>
+            <div class="header">
+                <h2 style="margin: 0;">📋 Copy Results</h2>
+                <span style="color: #666; font-size: 14px;">{len(results)} keywords</span>
+            </div>
             <p>Select the text below and press <strong>Ctrl+C</strong> (Windows) or <strong>Cmd+C</strong> (Mac) to copy.</p>
             <textarea id="resultsText" readonly>{text}</textarea>
             <br><br>
-            <button onclick="document.getElementById('resultsText').select(); document.execCommand('copy'); alert('Copied to clipboard!');">📋 Copy to Clipboard</button>
-            <br><br>
-            <a href="/dashboard" class="back">← Back to Dashboard</a>
+            <button class="btn-copy" onclick="document.getElementById('resultsText').select(); document.execCommand('copy'); alert('✅ Copied to clipboard!');">📋 Copy to Clipboard</button>
+            <br>
+            <a href="/dashboard" class="btn-back">← Back to Dashboard</a>
         </div>
         <script>
             // Auto-select text on page load
