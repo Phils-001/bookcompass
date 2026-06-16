@@ -693,32 +693,31 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-                <h3 style="display: flex; justify-content: space-between; align-items: center;">
-                    Results (Best Opportunities First)
-                    <div>
-                        <form method="POST" action="/copy-results" style="display: inline; margin: 0;">
-                            <input type="hidden" name="results_data" id="resultsDataInput">
-                            <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
-                        </form>
-                        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-                        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
-                    </div>
-                </h3>
-                <table id="resultsTable">
-                    <thead>
-                        <tr>
-                            <th>Niche Score</th>
-                            <th>Keyword</th>
-                            <th>Search Volume</th>
-                            <th>Competition</th>
-                            <th>Top Competitors</th>
-                            <th>Related Keywords</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsBody"></tbody>
-                </table>
-            </div>
+    <h3 style="display: flex; justify-content: space-between; align-items: center;">
+        Results (Best Opportunities First)
+        <div>
+            <form method="POST" action="/copy-results" style="display: inline; margin: 0;" id="copyResultsForm">
+                <input type="hidden" name="results_data" id="resultsDataInput" value="">
+                <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
+            </form>
+            <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+            <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
         </div>
+    </h3>
+    <table id="resultsTable">
+        <thead>
+            <tr>
+                <th>Niche Score</th>
+                <th>Keyword</th>
+                <th>Search Volume</th>
+                <th>Competition</th>
+                <th>Top Competitors</th>
+                <th>Related Keywords</th>
+            </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+    </table>
+</div>
         
         <script>
         function copyReferralLink() {{
@@ -818,26 +817,23 @@ def dashboard():
                     }} else {{
                         row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
                     }}
-                });
+                }});
                 document.getElementById('results').style.display = 'block';
                 
-                // Populate the hidden input with results data
+                // Populate the hidden input for copy feature
                 var resultsData = [];
-                for (var idx = 0; idx < results.length; idx++) {{
-                    var r = results[idx];
-                    resultsData.push({{
+                for (var i = 0; i < results.length; i++) {
+                    var r = results[i];
+                    resultsData.push({
                         keyword: r.keyword,
                         score: r.score,
                         volume: r.volume,
                         competition: r.competition
-                    }});
-                }}
-                var resultsInput = document.getElementById('resultsDataInput');
-                if (resultsInput) {{
-                    resultsInput.value = JSON.stringify(resultsData);
-                }}
+                    });
+                }
+                document.getElementById('resultsDataInput').value = JSON.stringify(resultsData);
             }}
-                        
+            
             // Show error summary if any keywords failed
             if (errors.length > 0) {{
                 let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
@@ -3659,24 +3655,24 @@ def copy_results():
     
     from datetime import datetime
     
+    # Build formatted text
     lines = []
     lines.append("📊 BOOKCOMPASS KEYWORD RESULTS")
     lines.append("=" * 50)
     lines.append("")
+    lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    lines.append("")
     
     for r in results:
         lines.append(f"Keyword: {r.get('keyword', 'N/A')}")
-        lines.append(f"Score: {r.get('score', 'N/A')}")
+        lines.append(f"Score: {r.get('score', 'N/A')}/10")
         lines.append(f"Volume: {r.get('volume', 'N/A')}")
         lines.append(f"Competition: {r.get('competition', 'N/A')}")
         lines.append("-" * 30)
     
-    lines.append("")
-    lines.append(f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    
     text = '\n'.join(lines)
     
-    # Display the text in a simple page
+    # Display the text in a clean page
     return f'''
     <!DOCTYPE html>
     <html>
@@ -3708,7 +3704,6 @@ def copy_results():
             <a href="/dashboard" class="btn-back">← Back to Dashboard</a>
         </div>
         <script>
-            // Auto-select text on page load
             window.onload = function() {{
                 document.getElementById('resultsText').select();
             }};
