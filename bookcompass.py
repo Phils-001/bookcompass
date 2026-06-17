@@ -6,6 +6,7 @@ import os
 import resend
 import psycopg2
 import psycopg2.extras
+import json
 
 app = Flask(__name__)
 # ============================================
