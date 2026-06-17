@@ -3628,9 +3628,31 @@ def render_bulk_results(results, total):
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
             th { background: #ff9900; color: white; }
-            .good { background: #4CAF50; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
-            .medium { background: #ff9800; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
-            .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
+            /* Replace your existing .good, .medium, .bad with these */
+            .good { 
+                background: #4CAF50; 
+                color: white; 
+                padding: 3px 10px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                font-weight: bold;
+            }
+            .medium { 
+                background: #ff9800; 
+                color: white; 
+                padding: 3px 10px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                font-weight: bold;
+            }
+            .bad { 
+                background: #f44336; 
+                color: white; 
+                padding: 3px 10px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                font-weight: bold;
+            }
             /* Add VERY HIGH competition styling */
             .competition-very-high {
              background: #8B0000;
@@ -3717,11 +3739,9 @@ def render_bulk_results(results, total):
             '''
         else:
             score = r.get('score', 0)
-            if score >= 8:
-                score_class = 'excellent'
-            elif score >= 6:
+            if score >= 7:
                 score_class = 'good'
-            elif score >= 4:
+            elif score >= 5:
                 score_class = 'medium'
             else:
                 score_class = 'bad'
