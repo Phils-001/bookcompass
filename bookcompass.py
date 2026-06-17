@@ -3461,7 +3461,11 @@ def admin_bulk_analyze():
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Generate the results page with progress indicator
+    # Step 3: Process all keywords on the server (WITH PROGRESS)
+    results = []
+    total = len(all_keywords)
+    
+    # Build HTML with server-side processing
     html = '''
     <!DOCTYPE html>
     <html>
@@ -3473,12 +3477,21 @@ def admin_bulk_analyze():
             .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
             h1 { color: #232f3e; }
             .progress-container { margin: 30px 0; }
-            .progress-bar { background: #e0e0e0; border-radius: 10px; height: 25px; overflow: hidden; }
+            .progress-bar { background: #e0e0e0; border-radius: 10px; height: 30px; overflow: hidden; position: relative; }
             .progress-fill { background: #ff9900; height: 100%; width: 0%; transition: width 0.5s; border-radius: 10px; }
-            .progress-text { text-align: center; font-size: 14px; line-height: 25px; color: white; font-weight: bold; }
+            .progress-text { 
+                position: absolute; 
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%);
+                color: #333; 
+                font-weight: bold; 
+                font-size: 14px;
+                z-index: 2;
+            }
             .status-text { text-align: center; margin-top: 15px; color: #666; font-size: 16px; }
             .keyword-counter { text-align: center; margin-top: 5px; color: #999; font-size: 14px; }
-            .results-container { display: none; margin-top: 30px; }
+            .results-container { margin-top: 30px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
             th { background: #ff9900; color: white; }
@@ -3489,24 +3502,24 @@ def admin_bulk_analyze():
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
             .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
             .error-row { background: #fff3f3; }
+            .refresh-note { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-top: 15px; text-align: center; }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📊 Bulk Analysis</h1>
-            <p>Processing <strong>''' + str(len(all_keywords)) + '''</strong> keywords...</p>
+            <p>Processing <strong>''' + str(total) + '''</strong> keywords...</p>
             
             <div class="progress-container">
                 <div class="progress-bar">
-                    <div id="progressFill" class="progress-fill" style="width: 0%;">
-                        <span id="progressText" class="progress-text">0%</span>
-                    </div>
+                    <div id="progressFill" class="progress-fill" style="width: 0%;"></div>
+                    <div id="progressText" class="progress-text">0%</div>
                 </div>
                 <div id="statusText" class="status-text">⏳ Starting analysis...</div>
-                <div id="keywordCounter" class="keyword-counter">0 / ''' + str(len(all_keywords)) + '''</div>
+                <div id="keywordCounter" class="keyword-counter">0 / ''' + str(total) + '''</div>
             </div>
             
-            <div id="resultsContainer" class="results-container">
+            <div id="resultsContainer" class="results-container" style="display: none;">
                 <h2>✅ Analysis Complete!</h2>
                 <div style="margin-bottom: 15px;">
                     <button onclick="copyAllToClipboard()" class="btn-export" style="background: #2196F3;">📋 Copy All Results</button>
@@ -3526,16 +3539,18 @@ def admin_bulk_analyze():
                 </table>
             </div>
             
+            <div class="refresh-note">
+                ⏳ Analysis running in the background. Results will appear below when complete.
+            </div>
+            
             <a href="/admin?password=BookCompassAdmin@@2026!" class="back-link">← Back to Admin</a>
         </div>
         
         <script>
-            // All keywords to process
-            const allKeywords = ''' + json.dumps(all_keywords) + ''';
-            const totalKeywords = allKeywords.length;
-            let results = [];
+            // This will be populated by the server with actual data
+            const resultsData = [];
             let currentIndex = 0;
-            let isProcessing = false;
+            const totalKeywords = ''' + str(total) + ''';
             
             function updateProgress(percent, status, current) {
                 document.getElementById('progressFill').style.width = percent + '%';
@@ -3544,24 +3559,59 @@ def admin_bulk_analyze():
                 document.getElementById('keywordCounter').innerHTML = current + ' / ' + totalKeywords;
             }
             
-            function renderResults() {
+            // Start processing with server-sent events
+            function startProcessing() {
+                // Use fetch to get results from server
+                const eventSource = new EventSource('/admin/bulk-progress?session=' + Date.now());
+                
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'progress') {
+                        updateProgress(data.percent, data.status, data.current);
+                    } else if (data.type === 'result') {
+                        resultsData.push(data.result);
+                        // Update the table in real-time
+                        renderPartialResults();
+                    } else if (data.type === 'complete') {
+                        updateProgress(100, '✅ Complete!', totalKeywords);
+                        renderResults();
+                        eventSource.close();
+                    } else if (data.type === 'error') {
+                        console.error('Error:', data.message);
+                        eventSource.close();
+                    }
+                };
+                
+                eventSource.onerror = function() {
+                    // Fallback: try to get results via regular fetch after delay
+                    setTimeout(function() {
+                        fetch('/admin/bulk-results?password=BookCompassAdmin@@2026!')
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.results) {
+                                    data.results.forEach(r => resultsData.push(r));
+                                    renderResults();
+                                    updateProgress(100, '✅ Complete!', totalKeywords);
+                                }
+                            })
+                            .catch(err => console.error('Fallback error:', err));
+                    }, 10000);
+                };
+            }
+            
+            function renderPartialResults() {
                 const tbody = document.getElementById('resultsBody');
+                // Only show if we have results
+                if (resultsData.length > 0) {
+                    document.getElementById('resultsContainer').style.display = 'block';
+                }
+                
                 tbody.innerHTML = '';
-                
-                // Sort: errors last, then by score descending
-                results.sort((a, b) => {
-                    if (a.error) return 1;
-                    if (b.error) return -1;
-                    return (b.score || 0) - (a.score || 0);
-                });
-                
-                for (const r of results) {
+                for (const r of resultsData) {
                     const row = tbody.insertRow();
                     if (r.error) {
                         row.className = 'error-row';
-                    }
-                    
-                    if (r.error) {
                         row.insertCell(0).innerHTML = '<span class="bad">Error</span>';
                         row.insertCell(1).innerHTML = r.keyword;
                         row.insertCell(2).innerHTML = '-';
@@ -3580,60 +3630,11 @@ def admin_bulk_analyze():
                     row.insertCell(3).innerHTML = r.competition;
                     row.insertCell(4).innerHTML = '<button class="copy-btn" onclick="copyRow(\'' + r.keyword.replace(/'/g, "\\\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')">📋</button>';
                 }
-                
-                document.getElementById('resultsContainer').style.display = 'block';
             }
             
-            function processNextKeyword() {
-                if (isProcessing) return;
-                if (currentIndex >= totalKeywords) {
-                    updateProgress(100, '✅ Complete!', totalKeywords);
-                    renderResults();
-                    return;
-                }
-                
-                isProcessing = true;
-                const keyword = allKeywords[currentIndex];
-                const percent = Math.round(((currentIndex + 1) / totalKeywords) * 100);
-                const status = '🔍 Researching ' + (currentIndex + 1) + '/' + totalKeywords + ': ' + keyword + '...';
-                updateProgress(percent, status, currentIndex + 1);
-                
-                // Include the admin password in the request
-                const adminPassword = 'BookCompassAdmin@@2026!';
-                
-                fetch('/api/research?admin=true&password=' + encodeURIComponent(adminPassword), {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ keyword: keyword })
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('HTTP ' + res.status + ': ' + res.statusText);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        results.push({ keyword: keyword, error: data.error });
-                        console.warn('Error analyzing "' + keyword + '":', data.error);
-                    } else {
-                        results.push(data);
-                        console.log('✅ Analyzed "' + keyword + '": score ' + data.score);
-                    }
-                    currentIndex++;
-                    isProcessing = false;
-                    setTimeout(processNextKeyword, 200);
-                })
-                .catch(err => {
-                    results.push({ keyword: keyword, error: err.message });
-                    console.error('Error analyzing "' + keyword + '":', err);
-                    currentIndex++;
-                    isProcessing = false;
-                    setTimeout(processNextKeyword, 200);
-                });
+            function renderResults() {
+                renderPartialResults();
+                document.querySelector('.refresh-note').innerHTML = '✅ Analysis complete! You can close this page.';
             }
             
             function copyRow(keyword, score, volume, competition) {
@@ -3669,9 +3670,44 @@ def admin_bulk_analyze():
                 URL.revokeObjectURL(url);
             }
             
-            // Start processing after page load
+            // Start processing on page load
             window.onload = function() {
-                setTimeout(processNextKeyword, 500);
+                // Show initial progress
+                updateProgress(0, '⏳ Starting analysis...', 0);
+                
+                // Use fetch to process in background
+                const formData = new FormData();
+                formData.append('keywords', JSON.stringify(''' + json.dumps(all_keywords) + '''));
+                
+                fetch('/admin/bulk-process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        keywords: ''' + json.dumps(all_keywords) + ''',
+                        password: 'BookCompassAdmin@@2026!'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Process results
+                    if (data.results) {
+                        data.results.forEach((r, index) => {
+                            resultsData.push(r);
+                            const percent = Math.round(((index + 1) / totalKeywords) * 100);
+                            const status = '✅ Researched ' + (index + 1) + '/' + totalKeywords + ': ' + r.keyword;
+                            updateProgress(percent, status, index + 1);
+                            renderPartialResults();
+                        });
+                        updateProgress(100, '✅ Complete!', totalKeywords);
+                        renderResults();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('statusText').innerHTML = '❌ Error: ' + error.message;
+                });
             };
         </script>
     </body>
