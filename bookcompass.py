@@ -3461,144 +3461,339 @@ def admin_bulk_analyze():
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Process keywords SERVER-SIDE (BEFORE rendering HTML)
-    print(f"🚀 Starting bulk analysis of {len(all_keywords)} keywords...")
-    results = []
+    # Store keywords in session for the progress route
+    session['bulk_keywords'] = all_keywords
+    session['bulk_results'] = []
+    session['bulk_index'] = 0
     
-    # Set admin session
-    session['user_id'] = 'bookcompass.app@gmail.com'
-    session['email'] = 'bookcompass.app@gmail.com'
+    # Generate the results page with progress bar
+    total = len(all_keywords)
     
-    for idx, keyword in enumerate(all_keywords):
-        print(f"🔍 Analyzing {idx+1}/{len(all_keywords)}: {keyword}")
-        try:
-            # Create a request context with the keyword
-            with app.test_request_context(json={'keyword': keyword}):
-                # Set session for this request
-                session['user_id'] = 'bookcompass.app@gmail.com'
-                session['email'] = 'bookcompass.app@gmail.com'
-                
-                # Call the API endpoint directly
-                response = api_research()
-                data = response.get_json()
-                
-                if data and 'error' not in data:
-                    results.append(data)
-                    print(f"✅ {keyword}: Score {data.get('score', 'N/A')}")
-                else:
-                    error_msg = data.get('error', 'Unknown error') if data else 'No response'
-                    results.append({'keyword': keyword, 'error': error_msg})
-                    print(f"❌ {keyword}: {error_msg}")
-        except Exception as e:
-            print(f"❌ Exception for {keyword}: {str(e)}")
-            results.append({'keyword': keyword, 'error': str(e)})
-    
-    print(f"✅ Bulk analysis complete. {len([r for r in results if 'error' not in r or not r['error']])} successful, {len([r for r in results if 'error' in r and r['error']])} failed.")
-    
-    # Step 4: Build the results page (with the results already processed)
     html = '''
     <!DOCTYPE html>
     <html>
     <head>
         <link rel="icon" type="image/png" href="/static/favicon.png">
-        <title>Bulk Analysis Results - BookCompass</title>
+        <title>Bulk Analysis - BookCompass</title>
         <style>
             body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }
-            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
             h1 { color: #232f3e; }
-            .summary { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-            .summary .success { color: #4CAF50; }
-            .summary .error { color: #f44336; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-            th { background: #ff9900; color: white; }
-            .good { background: #4CAF50; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
-            .medium { background: #ff9800; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
-            .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
-            .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
-            .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-            .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+            .progress-container { margin: 30px 0; }
+            .progress-bar { 
+                background: #e0e0e0; 
+                border-radius: 10px; 
+                height: 30px; 
+                overflow: hidden; 
+                position: relative;
+                box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+            }
+            .progress-fill { 
+                background: linear-gradient(90deg, #ff9900, #ffb84d);
+                height: 100%; 
+                width: 0%; 
+                transition: width 0.8s ease-in-out;
+                border-radius: 10px;
+            }
+            .progress-text { 
+                position: absolute; 
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%);
+                color: #333; 
+                font-weight: bold; 
+                font-size: 14px;
+                z-index: 2;
+                text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            }
+            .status-text { 
+                text-align: center; 
+                margin-top: 15px; 
+                color: #666; 
+                font-size: 16px;
+                min-height: 30px;
+            }
+            .keyword-counter { 
+                text-align: center; 
+                margin-top: 5px; 
+                color: #999; 
+                font-size: 14px; 
+            }
+            .results-container { 
+                display: none; 
+                margin-top: 30px; 
+            }
+            table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-top: 20px; 
+            }
+            th, td { 
+                padding: 10px; 
+                text-align: left; 
+                border-bottom: 1px solid #ddd; 
+            }
+            th { 
+                background: #ff9900; 
+                color: white; 
+            }
+            tr:hover { background: #f5f5f5; }
+            .good { 
+                background: #4CAF50; 
+                color: white; 
+                padding: 3px 10px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                font-weight: bold;
+            }
+            .medium { 
+                background: #ff9800; 
+                color: white; 
+                padding: 3px 10px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                font-weight: bold;
+            }
+            .bad { 
+                background: #f44336; 
+                color: white; 
+                padding: 3px 10px; 
+                border-radius: 20px; 
+                display: inline-block; 
+                font-weight: bold;
+            }
+            .back-link { 
+                display: inline-block; 
+                margin-top: 20px; 
+                background: #ff9900; 
+                color: white; 
+                padding: 10px 20px; 
+                text-decoration: none; 
+                border-radius: 5px; 
+            }
+            .back-link:hover { background: #e68a00; }
+            .copy-btn { 
+                background: #2196F3; 
+                color: white; 
+                border: none; 
+                padding: 5px 12px; 
+                border-radius: 3px; 
+                cursor: pointer; 
+            }
+            .copy-btn:hover { background: #1976D2; }
+            .btn-export { 
+                background: #4CAF50; 
+                color: white; 
+                padding: 8px 15px; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                margin: 5px;
+            }
+            .btn-export:hover { background: #388E3C; }
+            .btn-export.copy { background: #2196F3; }
+            .btn-export.copy:hover { background: #1976D2; }
             .error-row { background: #fff3f3; }
-            .refresh-note { background: #e8f5e9; padding: 10px; border-radius: 5px; margin-top: 15px; text-align: center; border: 1px solid #4CAF50; }
+            .summary { 
+                background: #f8f9fa; 
+                padding: 15px; 
+                border-radius: 8px; 
+                margin-bottom: 20px; 
+            }
+            .summary .success { color: #4CAF50; font-weight: bold; }
+            .summary .error { color: #f44336; font-weight: bold; }
+            .processing-spinner {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #ff9900;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                vertical-align: middle;
+                margin-right: 10px;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            .current-keyword {
+                font-weight: bold;
+                color: #ff9900;
+            }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>📊 Bulk Analysis Results</h1>
-            <div class="summary">
-                <strong>''' + str(len(results)) + '''</strong> keywords analyzed
-                <span style="margin-left: 20px;" class="success">✅ Successful: <strong>''' + str(sum(1 for r in results if 'error' not in r or not r['error'])) + '''</strong></span>
-                <span style="margin-left: 20px;" class="error">❌ Failed: <strong>''' + str(sum(1 for r in results if 'error' in r and r['error'])) + '''</strong></span>
+            <h1>📊 Bulk Analysis</h1>
+            <p>Processing <strong>''' + str(total) + '''</strong> keywords...</p>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill" style="width: 0%;"></div>
+                    <div id="progressText" class="progress-text">0%</div>
+                </div>
+                <div id="statusText" class="status-text">
+                    <span class="processing-spinner"></span>
+                    <span>Starting analysis...</span>
+                </div>
+                <div id="keywordCounter" class="keyword-counter">0 / ''' + str(total) + '''</div>
             </div>
             
-            <div style="margin-bottom: 15px;">
-                <button onclick="copyAllToClipboard()" class="btn-export" style="background: #2196F3;">📋 Copy All Results</button>
-                <button onclick="exportToCSV()" class="btn-export" style="background: #4CAF50;">📥 Export CSV</button>
-            </div>
-            
-            <table id="resultsTable">
-                <thead>
-                    <tr>
-                        <th>Niche Score</th>
-                        <th>Keyword</th>
-                        <th>Search Volume</th>
-                        <th>Competition</th>
-                        <th>Copy</th>
-                    </tr>
-                </thead>
-                <tbody>
-    '''
-    
-    for r in results:
-        if 'error' in r and r['error']:
-            html += f'''
-                    <tr class="error-row">
-                        <td><span class="bad">Error</span></td>
-                        <td>{r.get('keyword', 'Unknown')}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                    </tr>
-            '''
-        else:
-            score = r.get('score', 0)
-            if score >= 7:
-                score_class = 'good'
-            elif score >= 5:
-                score_class = 'medium'
-            else:
-                score_class = 'bad'
-            
-            keyword_safe = r.get('keyword', '').replace("'", "\\'")
-            volume = r.get('volume', '-')
-            competition = r.get('competition', '-')
-            
-            html += f'''
-                    <tr>
-                        <td><span class="{score_class}">{score}/10</span></td>
-                        <td>{r.get('keyword', 'Unknown')}</td>
-                        <td>{volume}</td>
-                        <td>{competition}</td>
-                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{volume}', '{competition}')">📋</button></td>
-                    </tr>
-            '''
-    
-    html += '''
-                </tbody>
-            </table>
-            
-            <div class="refresh-note">
-                ✅ Analysis complete! Results shown above.
+            <div id="resultsContainer" class="results-container">
+                <h2>✅ Analysis Complete!</h2>
+                <div class="summary" id="summaryContainer"></div>
+                <div style="margin-bottom: 15px;">
+                    <button onclick="copyAllToClipboard()" class="btn-export copy">📋 Copy All Results</button>
+                    <button onclick="exportToCSV()" class="btn-export">📥 Export CSV</button>
+                </div>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Niche Score</th>
+                            <th>Keyword</th>
+                            <th>Search Volume</th>
+                            <th>Competition</th>
+                            <th>Copy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
             </div>
             
             <a href="/admin?password=BookCompassAdmin@@2026!" class="back-link">← Back to Admin</a>
         </div>
         
         <script>
+            let results = [];
+            let totalKeywords = ''' + str(total) + ''';
+            let currentIndex = 0;
+            let isProcessing = false;
+            
+            function updateProgress(percent, status, current, keyword) {
+                document.getElementById('progressFill').style.width = percent + '%';
+                document.getElementById('progressText').innerText = percent + '%';
+                
+                let statusHtml = '';
+                if (percent < 100) {
+                    statusHtml = '<span class="processing-spinner"></span> ' + status;
+                    if (keyword) {
+                        statusHtml += ' <span class="current-keyword">"' + keyword + '"</span>';
+                    }
+                } else {
+                    statusHtml = '✅ ' + status;
+                }
+                document.getElementById('statusText').innerHTML = statusHtml;
+                document.getElementById('keywordCounter').innerHTML = current + ' / ' + totalKeywords;
+            }
+            
+            function renderResults() {
+                const tbody = document.getElementById('resultsBody');
+                tbody.innerHTML = '';
+                
+                // Sort: errors last, then by score descending
+                results.sort((a, b) => {
+                    if (a.error) return 1;
+                    if (b.error) return -1;
+                    return (b.score || 0) - (a.score || 0);
+                });
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const r of results) {
+                    const row = tbody.insertRow();
+                    if (r.error) {
+                        row.className = 'error-row';
+                        errorCount++;
+                    } else {
+                        successCount++;
+                    }
+                    
+                    if (r.error) {
+                        row.insertCell(0).innerHTML = '<span class="bad">Error</span>';
+                        row.insertCell(1).innerHTML = r.keyword;
+                        row.insertCell(2).innerHTML = '-';
+                        row.insertCell(3).innerHTML = '-';
+                        row.insertCell(4).innerHTML = '-';
+                        continue;
+                    }
+                    
+                    let cls = 'bad';
+                    if (r.score >= 7) cls = 'good';
+                    else if (r.score >= 5) cls = 'medium';
+                    
+                    row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
+                    row.insertCell(1).innerHTML = r.keyword;
+                    row.insertCell(2).innerHTML = r.volume;
+                    row.insertCell(3).innerHTML = r.competition;
+                    row.insertCell(4).innerHTML = '<button class="copy-btn" onclick="copyRow(\'' + r.keyword.replace(/'/g, "\\\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')">📋 Copy</button>';
+                }
+                
+                // Update summary
+                const summary = document.getElementById('summaryContainer');
+                summary.innerHTML = `
+                    <strong>${results.length}</strong> keywords analyzed
+                    <span style="margin-left: 20px;" class="success">✅ Successful: <strong>${successCount}</strong></span>
+                    <span style="margin-left: 20px;" class="error">❌ Failed: <strong>${errorCount}</strong></span>
+                `;
+                
+                document.getElementById('resultsContainer').style.display = 'block';
+            }
+            
+            function processNextKeyword() {
+                if (isProcessing) return;
+                if (currentIndex >= totalKeywords) {
+                    updateProgress(100, 'Complete! All keywords analyzed.', totalKeywords);
+                    renderResults();
+                    return;
+                }
+                
+                isProcessing = true;
+                const keyword = allKeywords[currentIndex];
+                const percent = Math.round(((currentIndex + 1) / totalKeywords) * 100);
+                const status = 'Researching ' + (currentIndex + 1) + '/' + totalKeywords;
+                updateProgress(percent, status, currentIndex + 1, keyword);
+                
+                // Make the API call
+                fetch('/api/research', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ keyword: keyword })
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        results.push({ keyword: keyword, error: data.error });
+                        console.warn('Error analyzing "' + keyword + '":', data.error);
+                    } else {
+                        results.push(data);
+                        console.log('✅ Analyzed "' + keyword + '": score ' + data.score);
+                    }
+                    currentIndex++;
+                    isProcessing = false;
+                    setTimeout(processNextKeyword, 300);
+                })
+                .catch(err => {
+                    results.push({ keyword: keyword, error: err.message });
+                    console.error('Error analyzing "' + keyword + '":', err);
+                    currentIndex++;
+                    isProcessing = false;
+                    setTimeout(processNextKeyword, 300);
+                });
+            }
+            
             function copyRow(keyword, score, volume, competition) {
-                const text = `Keyword: ${keyword}\\nScore: ${score}/10\\nVolume: ${volume}\\nCompetition: ${competition}`;
+                const text = 'Keyword: ' + keyword + '\\nScore: ' + score + '/10\\nVolume: ' + volume + '\\nCompetition: ' + competition;
                 navigator.clipboard.writeText(text);
-                alert('Copied to clipboard!');
+                alert('✅ Copied to clipboard!');
             }
             
             function copyAllToClipboard() {
@@ -3606,10 +3801,10 @@ def admin_bulk_analyze():
                 let text = '';
                 for (let row of rows) {
                     const cells = row.cells;
-                    text += `Keyword: ${cells[1].innerText}\\nScore: ${cells[0].innerText}\\nVolume: ${cells[2].innerText}\\nCompetition: ${cells[3].innerText}\\n------------------------\\n`;
+                    text += 'Keyword: ' + cells[1].innerText + '\\nScore: ' + cells[0].innerText + '\\nVolume: ' + cells[2].innerText + '\\nCompetition: ' + cells[3].innerText + '\\n------------------------\\n';
                 }
                 navigator.clipboard.writeText(text);
-                alert('Copied all results!');
+                alert('✅ Copied all results to clipboard!');
             }
             
             function exportToCSV() {
@@ -3617,16 +3812,29 @@ def admin_bulk_analyze():
                 let csv = 'Niche Score,Keyword,Search Volume,Competition\\n';
                 for (let row of rows) {
                     const cells = row.cells;
-                    csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}"\\n`;
+                    csv += '"' + cells[0].innerText + '","' + cells[1].innerText + '","' + cells[2].innerText + '","' + cells[3].innerText + '"\\n';
                 }
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `bookcompass-bulk-${new Date().toISOString().slice(0,19)}.csv`;
+                a.download = 'bookcompass-bulk-' + new Date().toISOString().slice(0,19) + '.csv';
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                alert('✅ CSV exported successfully!');
             }
+            
+            // Store keywords for processing
+            const allKeywords = ''' + json.dumps(all_keywords) + ''';
+            
+            // Start processing after page loads
+            window.onload = function() {
+                console.log('🚀 Starting bulk analysis of ' + totalKeywords + ' keywords...');
+                updateProgress(0, 'Starting analysis...', 0);
+                setTimeout(processNextKeyword, 500);
+            };
         </script>
     </body>
     </html>
