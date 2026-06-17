@@ -1050,9 +1050,11 @@ def api_research():
         estimated_total_products = total_pages * 48
         
         # Determine competition level
-        if estimated_total_products > 200 or high_review_count > 10:
+        if estimated_total_products > 1000 or high_review_count > 50:
+            competition = "VERY HIGH"
+        elif estimated_total_products > 500 or high_review_count > 20:
             competition = "HIGH"
-        elif estimated_total_products > 50 or high_review_count > 3:
+        elif estimated_total_products > 100 or high_review_count > 5:
             competition = "MEDIUM"
         else:
             competition = "LOW"
@@ -1111,8 +1113,10 @@ def api_research():
             score += 3
         elif competition == "MEDIUM":
             score += 1
+        elif competition == "HIGH":
+            score -= 1
         else:
-            score -= 2
+            score -= 3
         
         if volume_category == "HIGH":
             score += 1
@@ -3627,6 +3631,39 @@ def render_bulk_results(results, total):
             .good { background: #4CAF50; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
             .medium { background: #ff9800; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
             .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
+            /* Add VERY HIGH competition styling */
+            .competition-very-high {
+             background: #8B0000;
+             color: white;
+             padding: 3px 10px;
+             border-radius: 20px;
+             display: inline-block;
+             font-weight: bold;
+            }
+            .competition-high {
+                background: #f44336;
+                color: white;
+                padding: 3px 10px;
+                border-radius: 20px;
+                display: inline-block;
+                font-weight: bold;
+            }
+            .competition-medium {
+                background: #ff9800;
+                color: white;
+                padding: 3px 10px;
+                border-radius: 20px;
+                display: inline-block;
+                font-weight: bold;
+            }
+            .competition-low {
+                background: #4CAF50;
+                color: white;
+                padding: 3px 10px;
+                border-radius: 20px;
+                display: inline-block;
+                font-weight: bold;
+            }
             .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
             .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
@@ -3680,9 +3717,11 @@ def render_bulk_results(results, total):
             '''
         else:
             score = r.get('score', 0)
-            if score >= 7:
+            if score >= 8:
+                score_class = 'excellent'
+            elif score >= 6:
                 score_class = 'good'
-            elif score >= 5:
+            elif score >= 4:
                 score_class = 'medium'
             else:
                 score_class = 'bad'
@@ -3690,6 +3729,13 @@ def render_bulk_results(results, total):
             keyword_safe = r.get('keyword', '').replace("'", "\\'")
             volume = r.get('volume', '-')
             competition = r.get('competition', '-')
+            competition_display = competition
+            competition_class = {
+                "VERY HIGH": "competition-very-high",
+                "HIGH": "competition-high",
+                "MEDIUM": "competition-medium",
+                "LOW": "competition-low"
+            }.get(competition, "competition-medium")
             
             html += f'''
                     <tr>
