@@ -860,34 +860,24 @@ def dashboard():
 # ============================================
 # API RESEARCH ENDPOINT
 # ============================================
-
 @app.route('/api/research', methods=['POST'])
 def api_research():
     # ====== ADMIN BYPASS FOR BULK ANALYSIS ======
     # Check if this is an admin bypass request
     admin_bypass = request.args.get('admin', 'false') == 'true'
     admin_password = request.args.get('password', '')
+    is_admin_call = False
     
     if admin_bypass and admin_password == 'BookCompassAdmin@@2026!':
         # Admin bypass - set session for this request
         session['user_id'] = 'bookcompass.app@gmail.com'
         session['email'] = 'bookcompass.app@gmail.com'
-        # Skip daily limit check for admin
         is_admin_call = True
         print(f"👑 Admin bypass: Processing keyword via API")
     else:
         # Regular authentication check
         if 'user_id' not in session:
             return jsonify({'error': 'Not logged in'})
-        is_admin_call = False
-    
-    email = session['user_id']
-    data = request.json
-    keyword = data.get('keyword', '')
-    
-    # ... rest of your existing api_research code continues below ...
-    if 'user_id' not in session:
-        return jsonify({'error': 'Not logged in'})
     
     email = session['user_id']
     data = request.json
@@ -897,7 +887,6 @@ def api_research():
     print(f"🔍 USER PLAN CHECK - Email: {email}, Plan: '{user_plan}'")
     
     # Check if this is an admin call (bypass daily limit for bulk analysis)
-    is_admin_call = False
     if email == 'bookcompass.app@gmail.com':
         is_admin_call = True
         print(f"👑 Admin call detected - bypassing daily limit")
@@ -961,7 +950,7 @@ def api_research():
         related_keywords = []
         print(f"⚠️ Failed to get related keywords for '{keyword}'")
     
-    if user_plan == "free":
+    if user_plan == "free" and not is_admin_call:
         competition = "UPGRADE TO SEE"
         volume = f"{volume_number} ({volume_category})"
         score = 5
