@@ -868,6 +868,8 @@ def api_research():
     admin_password = request.args.get('password', '')
     is_admin_call = False
     
+    print(f"🔍 API CALL - admin_bypass: {admin_bypass}, has_password: {bool(admin_password)}")
+    
     if admin_bypass and admin_password == 'BookCompassAdmin@@2026!':
         # Admin bypass - set session for this request
         session['user_id'] = 'bookcompass.app@gmail.com'
@@ -877,14 +879,18 @@ def api_research():
     else:
         # Regular authentication check
         if 'user_id' not in session:
-            return jsonify({'error': 'Not logged in'})
+            print(f"❌ No session found. Session keys: {list(session.keys())}")
+            return jsonify({'error': 'Not logged in. Please login first.'})
     
     email = session['user_id']
     data = request.json
     keyword = data.get('keyword', '')
     
+    print(f"🔍 Processing keyword: '{keyword}' for user: {email}")
+    
     user_plan = users[email]['plan']
-    print(f"🔍 USER PLAN CHECK - Email: {email}, Plan: '{user_plan}'")
+    print(f"📋 User plan: {user_plan}")
+    
     
     # Check if this is an admin call (bypass daily limit for bulk analysis)
     if email == 'bookcompass.app@gmail.com':
@@ -3461,11 +3467,6 @@ def admin_bulk_analyze():
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Store keywords in session for the progress route
-    session['bulk_keywords'] = all_keywords
-    session['bulk_results'] = []
-    session['bulk_index'] = 0
-    
     # Generate the results page with progress bar
     total = len(all_keywords)
     
@@ -3621,6 +3622,14 @@ def admin_bulk_analyze():
                 font-weight: bold;
                 color: #ff9900;
             }
+            .error-message {
+                color: #f44336;
+                background: #fff3f3;
+                padding: 10px;
+                border-radius: 5px;
+                margin-top: 10px;
+                display: none;
+            }
         </style>
     </head>
     <body>
@@ -3638,6 +3647,7 @@ def admin_bulk_analyze():
                     <span>Starting analysis...</span>
                 </div>
                 <div id="keywordCounter" class="keyword-counter">0 / ''' + str(total) + '''</div>
+                <div id="errorMessage" class="error-message"></div>
             </div>
             
             <div id="resultsContainer" class="results-container">
@@ -3685,6 +3695,12 @@ def admin_bulk_analyze():
                 }
                 document.getElementById('statusText').innerHTML = statusHtml;
                 document.getElementById('keywordCounter').innerHTML = current + ' / ' + totalKeywords;
+            }
+            
+            function showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.innerHTML = '❌ ' + message;
+                errorDiv.style.display = 'block';
             }
             
             function renderResults() {
@@ -3739,6 +3755,7 @@ def admin_bulk_analyze():
                 `;
                 
                 document.getElementById('resultsContainer').style.display = 'block';
+                document.querySelector('.progress-container').style.display = 'none';
             }
             
             function processNextKeyword() {
@@ -3755,15 +3772,26 @@ def admin_bulk_analyze():
                 const status = 'Researching ' + (currentIndex + 1) + '/' + totalKeywords;
                 updateProgress(percent, status, currentIndex + 1, keyword);
                 
-                // Make the API call
-                fetch('/api/research', {
+                // Add admin bypass parameters
+                const adminPassword = 'BookCompassAdmin@@2026!';
+                
+                console.log('🔍 Analyzing ' + (currentIndex + 1) + '/' + totalKeywords + ': "' + keyword + '"');
+                
+                // Add a timeout to prevent hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                
+                fetch('/api/research?admin=true&password=' + encodeURIComponent(adminPassword), {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ keyword: keyword })
+                    body: JSON.stringify({ keyword: keyword }),
+                    signal: controller.signal
                 })
                 .then(res => {
+                    clearTimeout(timeoutId);
                     if (!res.ok) {
                         throw new Error('HTTP ' + res.status + ': ' + res.statusText);
                     }
@@ -3772,7 +3800,7 @@ def admin_bulk_analyze():
                 .then(data => {
                     if (data.error) {
                         results.push({ keyword: keyword, error: data.error });
-                        console.warn('Error analyzing "' + keyword + '":', data.error);
+                        console.warn('❌ Error analyzing "' + keyword + '":', data.error);
                     } else {
                         results.push(data);
                         console.log('✅ Analyzed "' + keyword + '": score ' + data.score);
@@ -3782,8 +3810,14 @@ def admin_bulk_analyze():
                     setTimeout(processNextKeyword, 300);
                 })
                 .catch(err => {
-                    results.push({ keyword: keyword, error: err.message });
-                    console.error('Error analyzing "' + keyword + '":', err);
+                    clearTimeout(timeoutId);
+                    if (err.name === 'AbortError') {
+                        results.push({ keyword: keyword, error: 'Request timed out after 30 seconds' });
+                        console.error('⏰ Timeout for "' + keyword + '"');
+                    } else {
+                        results.push({ keyword: keyword, error: err.message });
+                        console.error('❌ Exception for "' + keyword + '":', err);
+                    }
                     currentIndex++;
                     isProcessing = false;
                     setTimeout(processNextKeyword, 300);
@@ -3832,6 +3866,7 @@ def admin_bulk_analyze():
             // Start processing after page loads
             window.onload = function() {
                 console.log('🚀 Starting bulk analysis of ' + totalKeywords + ' keywords...');
+                console.log('📝 Keywords:', allKeywords);
                 updateProgress(0, 'Starting analysis...', 0);
                 setTimeout(processNextKeyword, 500);
             };
