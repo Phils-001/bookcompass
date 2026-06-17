@@ -693,31 +693,19 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-    <h3 style="display: flex; justify-content: space-between; align-items: center;">
-        Results (Best Opportunities First)
-        <div>
-            <form method="POST" action="/copy-results" style="display: inline; margin: 0;" id="copyResultsForm">
-                <input type="hidden" name="results_data" id="resultsDataInput" value="">
-                <button type="submit" style="background: #4CAF50; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 11px; margin-right: 5px;">📋 Copy All</button>
-            </form>
-            <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-            <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    Results (Best Opportunities First)
+    <div>
+        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    </div>
+                </h3>
+                <table id="resultsTable">
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
         </div>
-    </h3>
-    <table id="resultsTable">
-        <thead>
-            <tr>
-                <th>Niche Score</th>
-                <th>Keyword</th>
-                <th>Search Volume</th>
-                <th>Competition</th>
-                <th>Top Competitors</th>
-                <th>Related Keywords</th>
-            </tr>
-        </thead>
-        <tbody id="resultsBody"></tbody>
-    </table>
-</div>
         
         <script>
         function copyReferralLink() {{
@@ -819,19 +807,6 @@ def dashboard():
                     }}
                 }});
                 document.getElementById('results').style.display = 'block';
-                
-                // Populate the hidden input for copy feature
-                var resultsData = [];
-                for (var i = 0; i < results.length; i++) {
-                    var r = results[i];
-                    resultsData.push({
-                        keyword: r.keyword,
-                        score: r.score,
-                        volume: r.volume,
-                        competition: r.competition
-                    });
-                }
-                document.getElementById('resultsDataInput').value = JSON.stringify(resultsData);
             }}
             
             // Show error summary if any keywords failed
@@ -3473,42 +3448,24 @@ def admin_bulk_analyze():
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Analyze each keyword by calling the function with a session
-    results = []
-    
-    # Get admin email to create session
-    admin_email = 'bookcompass.app@gmail.com'
-    
-    for keyword in all_keywords:
-        try:
-            # Create a mock request with session
-            with app.test_request_context(json={'keyword': keyword}):
-                # Manually set the session for the admin user
-                session['user_id'] = admin_email
-                session['email'] = admin_email
-                
-                # Call the api_research function
-                response = api_research()
-                data = response.get_json()
-                
-                if data and 'error' not in data:
-                    results.append(data)
-                else:
-                    results.append({'keyword': keyword, 'error': data.get('error', 'Unknown error')})
-        except Exception as e:
-            results.append({'keyword': keyword, 'error': str(e)})
-    
-    # HTML generation
+    # Step 3: Generate the results page with progress indicator
     html = '''
     <!DOCTYPE html>
     <html>
     <head>
         <link rel="icon" type="image/png" href="/static/favicon.png">
-        <title>Bulk Analysis Results - BookCompass</title>
+        <title>Bulk Analysis - BookCompass</title>
         <style>
             body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }
-            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+            .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
             h1 { color: #232f3e; }
+            .progress-container { margin: 30px 0; }
+            .progress-bar { background: #e0e0e0; border-radius: 10px; height: 25px; overflow: hidden; }
+            .progress-fill { background: #ff9900; height: 100%; width: 0%; transition: width 0.5s; border-radius: 10px; }
+            .progress-text { text-align: center; font-size: 14px; line-height: 25px; color: white; font-weight: bold; }
+            .status-text { text-align: center; margin-top: 15px; color: #666; font-size: 16px; }
+            .keyword-counter { text-align: center; margin-top: 5px; color: #999; font-size: 14px; }
+            .results-container { display: none; margin-top: 30px; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
             th { background: #ff9900; color: white; }
@@ -3517,76 +3474,133 @@ def admin_bulk_analyze():
             .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
             .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
+            .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>📊 Bulk Analysis Results</h1>
-            <p>Analyzed <strong>''' + str(len(results)) + '''</strong> keywords</p>
+            <h1>📊 Bulk Analysis</h1>
+            <p>Processing <strong>''' + str(len(all_keywords)) + '''</strong> keywords...</p>
             
-            <div style="margin-bottom: 15px;">
-                <button onclick="copyAllToClipboard()" style="background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">📋 Copy All Results</button>
-                <button onclick="exportToCSV()" style="background: #2196F3; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">📥 Export CSV</button>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill" style="width: 0%;">
+                        <span id="progressText" class="progress-text">0%</span>
+                    </div>
+                </div>
+                <div id="statusText" class="status-text">⏳ Starting analysis...</div>
+                <div id="keywordCounter" class="keyword-counter">0 / ''' + str(len(all_keywords)) + '''</div>
             </div>
             
-            <table id="resultsTable">
-                <thead>
-                    <tr>
-                        <th>Niche Score</th>
-                        <th>Keyword</th>
-                        <th>Search Volume</th>
-                        <th>Competition</th>
-                        <th>Copy</th>
-                    </tr>
-                </thead>
-                <tbody>
-    '''
-    
-    for r in results:
-        if 'error' in r and r['error']:
-            keyword_display = r.get('keyword', 'Unknown')
-            html += f'''
-                    <tr>
-                        <td><span class="bad">Error</span></td>
-                        <td>{keyword_display}</td>
-                        <td>-</span></td>
-                        <td>-</span></td>
-                        <td><button class="copy-btn" onclick="copyRow('{keyword_display}', 'Error', '-', '-')">📋</button></td>
-                    </tr>
-            '''
-        else:
-            score = r.get('score', 0)
-            if score >= 7:
-                score_class = 'good'
-            elif score >= 5:
-                score_class = 'medium'
-            else:
-                score_class = 'bad'
-            
-            keyword_safe = r.get('keyword', '').replace("'", "\\'")
-            volume = r.get('volume', '-')
-            competition = r.get('competition', '-')
-            
-            html += f'''
-                    <tr>
-                        <td><span class="{score_class}">{score}/10</span></td>
-                        <td>{r.get('keyword', 'Unknown')}</td>
-                        <td>{volume}</span></td>
-                        <td>{competition}</span></td>
-                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{volume}', '{competition}')">📋</button></td>
-                    </tr>
-            '''
-    
-    html += '''
-                </tbody>
-            </table>
+            <div id="resultsContainer" class="results-container">
+                <h2>✅ Analysis Complete!</h2>
+                <div style="margin-bottom: 15px;">
+                    <button onclick="copyAllToClipboard()" class="btn-export" style="background: #2196F3;">📋 Copy All Results</button>
+                    <button onclick="exportToCSV()" class="btn-export" style="background: #4CAF50;">📥 Export CSV</button>
+                </div>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Niche Score</th>
+                            <th>Keyword</th>
+                            <th>Search Volume</th>
+                            <th>Competition</th>
+                            <th>Copy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
             
             <a href="/admin?password=BookCompassAdmin@@2026!" class="back-link">← Back to Admin</a>
         </div>
         
         <script>
+            // All keywords to process
+            const allKeywords = ''' + json.dumps(all_keywords) + ''';
+            const totalKeywords = allKeywords.length;
+            let results = [];
+            let currentIndex = 0;
+            
+            function updateProgress(percent, status, current) {
+                document.getElementById('progressFill').style.width = percent + '%';
+                document.getElementById('progressText').innerText = percent + '%';
+                document.getElementById('statusText').innerHTML = status;
+                document.getElementById('keywordCounter').innerHTML = current + ' / ' + totalKeywords;
+            }
+            
+            function renderResults() {
+                const tbody = document.getElementById('resultsBody');
+                tbody.innerHTML = '';
+                
+                results.sort((a, b) => {
+                    if (a.error) return 1;
+                    if (b.error) return -1;
+                    return (b.score || 0) - (a.score || 0);
+                });
+                
+                for (const r of results) {
+                    const row = tbody.insertRow();
+                    
+                    if (r.error) {
+                        row.insertCell(0).innerHTML = '<span class="bad">Error</span>';
+                        row.insertCell(1).innerHTML = r.keyword;
+                        row.insertCell(2).innerHTML = '-';
+                        row.insertCell(3).innerHTML = '-';
+                        row.insertCell(4).innerHTML = '-';
+                        continue;
+                    }
+                    
+                    let cls = 'bad';
+                    if (r.score >= 7) cls = 'good';
+                    else if (r.score >= 5) cls = 'medium';
+                    
+                    row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
+                    row.insertCell(1).innerHTML = r.keyword;
+                    row.insertCell(2).innerHTML = r.volume;
+                    row.insertCell(3).innerHTML = r.competition;
+                    row.insertCell(4).innerHTML = '<button class="copy-btn" onclick="copyRow(\'' + r.keyword.replace(/'/g, "\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')">📋</button>';
+                }
+                
+                document.getElementById('resultsContainer').style.display = 'block';
+            }
+            
+            function processNextKeyword() {
+                if (currentIndex >= totalKeywords) {
+                    updateProgress(100, '✅ Complete!', totalKeywords);
+                    renderResults();
+                    return;
+                }
+                
+                const keyword = allKeywords[currentIndex];
+                const percent = Math.round(((currentIndex + 1) / totalKeywords) * 100);
+                const status = '🔍 Researching ' + (currentIndex + 1) + '/' + totalKeywords + ': ' + keyword + '...';
+                updateProgress(percent, status, currentIndex + 1);
+                
+                fetch('/api/research', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: keyword })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        results.push({ keyword: keyword, error: data.error });
+                    } else {
+                        results.push(data);
+                    }
+                    currentIndex++;
+                    setTimeout(processNextKeyword, 300);
+                })
+                .catch(err => {
+                    results.push({ keyword: keyword, error: err.message });
+                    currentIndex++;
+                    setTimeout(processNextKeyword, 300);
+                });
+            }
+            
             function copyRow(keyword, score, volume, competition) {
-                const text = `Keyword: ${keyword}\\nScore: ${score}/10\\nVolume: ${volume}\\nCompetition: ${competition}`;
+                const text = 'Keyword: ' + keyword + '\\nScore: ' + score + '/10\\nVolume: ' + volume + '\\nCompetition: ' + competition;
                 navigator.clipboard.writeText(text);
                 alert('Copied to clipboard!');
             }
@@ -3596,7 +3610,7 @@ def admin_bulk_analyze():
                 let text = '';
                 for (let row of rows) {
                     const cells = row.cells;
-                    text += `Keyword: ${cells[1].innerText}\\nScore: ${cells[0].innerText}\\nVolume: ${cells[2].innerText}\\nCompetition: ${cells[3].innerText}\\n------------------------\\n`;
+                    text += 'Keyword: ' + cells[1].innerText + '\\nScore: ' + cells[0].innerText + '\\nVolume: ' + cells[2].innerText + '\\nCompetition: ' + cells[3].innerText + '\\n------------------------\\n';
                 }
                 navigator.clipboard.writeText(text);
                 alert('Copied all results!');
@@ -3607,110 +3621,25 @@ def admin_bulk_analyze():
                 let csv = 'Niche Score,Keyword,Search Volume,Competition\\n';
                 for (let row of rows) {
                     const cells = row.cells;
-                    csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}"\\n`;
+                    csv += '"' + cells[0].innerText + '","' + cells[1].innerText + '","' + cells[2].innerText + '","' + cells[3].innerText + '"\\n';
                 }
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `bookcompass-bulk-${new Date().toISOString().slice(0,19)}.csv`;
+                a.download = 'bookcompass-bulk-' + new Date().toISOString().slice(0,19) + '.csv';
                 a.click();
                 URL.revokeObjectURL(url);
             }
+            
+            // Start processing
+            setTimeout(processNextKeyword, 500);
         </script>
     </body>
     </html>
     '''
     
     return html
-# ============================================
-# COPY RESULTS FOR USERS (SERVER-SIDE)
-# ============================================
-
-@app.route('/copy-results', methods=['POST'])
-def copy_results():
-    if 'user_id' not in session:
-        return '<script>window.location.href="/login"</script>'
-    
-    results_data = request.form.get('results_data', '')
-    
-    if not results_data:
-        return '''
-        <div style="text-align:center; margin-top:50px; font-family: Arial;">
-            <h2>No results to copy</h2>
-            <a href="/dashboard">Back to Dashboard</a>
-        </div>
-        '''
-    
-    import json
-    try:
-        results = json.loads(results_data)
-    except:
-        return '''
-        <div style="text-align:center; margin-top:50px; font-family: Arial;">
-            <h2>Invalid data</h2>
-            <a href="/dashboard">Back to Dashboard</a>
-        </div>
-        '''
-    
-    from datetime import datetime
-    
-    # Build formatted text
-    lines = []
-    lines.append("📊 BOOKCOMPASS KEYWORD RESULTS")
-    lines.append("=" * 50)
-    lines.append("")
-    lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    lines.append("")
-    
-    for r in results:
-        lines.append(f"Keyword: {r.get('keyword', 'N/A')}")
-        lines.append(f"Score: {r.get('score', 'N/A')}/10")
-        lines.append(f"Volume: {r.get('volume', 'N/A')}")
-        lines.append(f"Competition: {r.get('competition', 'N/A')}")
-        lines.append("-" * 30)
-    
-    text = '\n'.join(lines)
-    
-    # Display the text in a clean page
-    return f'''
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="icon" type="image/png" href="/static/favicon.png">
-        <title>Copy Results - BookCompass</title>
-        <style>
-            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
-            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-            textarea {{ width: 100%; height: 400px; padding: 15px; font-family: monospace; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }}
-            .btn-copy {{ background: #4CAF50; color: white; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }}
-            .btn-copy:hover {{ background: #45a049; }}
-            .btn-back {{ display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 25px; text-decoration: none; border-radius: 5px; }}
-            .btn-back:hover {{ background: #e68a00; }}
-            .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h2 style="margin: 0;">📋 Copy Results</h2>
-                <span style="color: #666; font-size: 14px;">{len(results)} keywords</span>
-            </div>
-            <p>Select the text below and press <strong>Ctrl+C</strong> (Windows) or <strong>Cmd+C</strong> (Mac) to copy.</p>
-            <textarea id="resultsText" readonly>{text}</textarea>
-            <br><br>
-            <button class="btn-copy" onclick="document.getElementById('resultsText').select(); document.execCommand('copy'); alert('✅ Copied to clipboard!');">📋 Copy to Clipboard</button>
-            <br>
-            <a href="/dashboard" class="btn-back">← Back to Dashboard</a>
-        </div>
-        <script>
-            window.onload = function() {{
-                document.getElementById('resultsText').select();
-            }};
-        </script>
-    </body>
-    </html>
-    '''
 # ============================================
 # RUN THE APP
 # ============================================
