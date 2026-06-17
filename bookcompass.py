@@ -863,19 +863,29 @@ def dashboard():
 
 @app.route('/api/research', methods=['POST'])
 def api_research():
-    # Check if admin bypass is enabled
+    # ====== ADMIN BYPASS FOR BULK ANALYSIS ======
+    # Check if this is an admin bypass request
     admin_bypass = request.args.get('admin', 'false') == 'true'
     admin_password = request.args.get('password', '')
     
     if admin_bypass and admin_password == 'BookCompassAdmin@@2026!':
-        # Admin bypass - set a temporary session
+        # Admin bypass - set session for this request
         session['user_id'] = 'bookcompass.app@gmail.com'
         session['email'] = 'bookcompass.app@gmail.com'
+        # Skip daily limit check for admin
+        is_admin_call = True
+        print(f"👑 Admin bypass: Processing keyword via API")
     else:
         # Regular authentication check
         if 'user_id' not in session:
-            return jsonify({'error': 'Not authenticated'}), 401
+            return jsonify({'error': 'Not logged in'})
+        is_admin_call = False
     
+    email = session['user_id']
+    data = request.json
+    keyword = data.get('keyword', '')
+    
+    # ... rest of your existing api_research code continues below ...
     if 'user_id' not in session:
         return jsonify({'error': 'Not logged in'})
     
