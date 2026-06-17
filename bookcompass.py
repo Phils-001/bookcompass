@@ -3461,37 +3461,54 @@ def admin_bulk_analyze():
     if not all_keywords:
         return '<div style="text-align:center; margin-top:50px;"><h2>No keywords to analyze</h2><a href="/admin?password=BookCompassAdmin@@2026!">Back</a></div>'
     
-    # Step 3: Process all keywords on the server (WITH PROGRESS)
+    # Step 3: Process keywords SERVER-SIDE (BEFORE rendering HTML)
+    print(f"🚀 Starting bulk analysis of {len(all_keywords)} keywords...")
     results = []
-    total = len(all_keywords)
     
-    # Build HTML with server-side processing
+    # Set admin session
+    session['user_id'] = 'bookcompass.app@gmail.com'
+    session['email'] = 'bookcompass.app@gmail.com'
+    
+    for idx, keyword in enumerate(all_keywords):
+        print(f"🔍 Analyzing {idx+1}/{len(all_keywords)}: {keyword}")
+        try:
+            # Create a request context with the keyword
+            with app.test_request_context(json={'keyword': keyword}):
+                # Set session for this request
+                session['user_id'] = 'bookcompass.app@gmail.com'
+                session['email'] = 'bookcompass.app@gmail.com'
+                
+                # Call the API endpoint directly
+                response = api_research()
+                data = response.get_json()
+                
+                if data and 'error' not in data:
+                    results.append(data)
+                    print(f"✅ {keyword}: Score {data.get('score', 'N/A')}")
+                else:
+                    error_msg = data.get('error', 'Unknown error') if data else 'No response'
+                    results.append({'keyword': keyword, 'error': error_msg})
+                    print(f"❌ {keyword}: {error_msg}")
+        except Exception as e:
+            print(f"❌ Exception for {keyword}: {str(e)}")
+            results.append({'keyword': keyword, 'error': str(e)})
+    
+    print(f"✅ Bulk analysis complete. {len([r for r in results if 'error' not in r or not r['error']])} successful, {len([r for r in results if 'error' in r and r['error']])} failed.")
+    
+    # Step 4: Build the results page (with the results already processed)
     html = '''
     <!DOCTYPE html>
     <html>
     <head>
         <link rel="icon" type="image/png" href="/static/favicon.png">
-        <title>Bulk Analysis - BookCompass</title>
+        <title>Bulk Analysis Results - BookCompass</title>
         <style>
             body { font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }
-            .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
             h1 { color: #232f3e; }
-            .progress-container { margin: 30px 0; }
-            .progress-bar { background: #e0e0e0; border-radius: 10px; height: 30px; overflow: hidden; position: relative; }
-            .progress-fill { background: #ff9900; height: 100%; width: 0%; transition: width 0.5s; border-radius: 10px; }
-            .progress-text { 
-                position: absolute; 
-                top: 50%; 
-                left: 50%; 
-                transform: translate(-50%, -50%);
-                color: #333; 
-                font-weight: bold; 
-                font-size: 14px;
-                z-index: 2;
-            }
-            .status-text { text-align: center; margin-top: 15px; color: #666; font-size: 16px; }
-            .keyword-counter { text-align: center; margin-top: 5px; color: #999; font-size: 14px; }
-            .results-container { margin-top: 30px; }
+            .summary { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            .summary .success { color: #4CAF50; }
+            .summary .error { color: #f44336; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
             th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
             th { background: #ff9900; color: white; }
@@ -3500,145 +3517,86 @@ def admin_bulk_analyze():
             .bad { background: #f44336; color: white; padding: 3px 8px; border-radius: 20px; display: inline-block; }
             .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
-            .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+            .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
             .error-row { background: #fff3f3; }
-            .refresh-note { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-top: 15px; text-align: center; }
+            .refresh-note { background: #e8f5e9; padding: 10px; border-radius: 5px; margin-top: 15px; text-align: center; border: 1px solid #4CAF50; }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>📊 Bulk Analysis</h1>
-            <p>Processing <strong>''' + str(total) + '''</strong> keywords...</p>
-            
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div id="progressFill" class="progress-fill" style="width: 0%;"></div>
-                    <div id="progressText" class="progress-text">0%</div>
-                </div>
-                <div id="statusText" class="status-text">⏳ Starting analysis...</div>
-                <div id="keywordCounter" class="keyword-counter">0 / ''' + str(total) + '''</div>
+            <h1>📊 Bulk Analysis Results</h1>
+            <div class="summary">
+                <strong>''' + str(len(results)) + '''</strong> keywords analyzed
+                <span style="margin-left: 20px;" class="success">✅ Successful: <strong>''' + str(sum(1 for r in results if 'error' not in r or not r['error'])) + '''</strong></span>
+                <span style="margin-left: 20px;" class="error">❌ Failed: <strong>''' + str(sum(1 for r in results if 'error' in r and r['error'])) + '''</strong></span>
             </div>
             
-            <div id="resultsContainer" class="results-container" style="display: none;">
-                <h2>✅ Analysis Complete!</h2>
-                <div style="margin-bottom: 15px;">
-                    <button onclick="copyAllToClipboard()" class="btn-export" style="background: #2196F3;">📋 Copy All Results</button>
-                    <button onclick="exportToCSV()" class="btn-export" style="background: #4CAF50;">📥 Export CSV</button>
-                </div>
-                <table id="resultsTable">
-                    <thead>
-                        <tr>
-                            <th>Niche Score</th>
-                            <th>Keyword</th>
-                            <th>Search Volume</th>
-                            <th>Competition</th>
-                            <th>Copy</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsBody"></tbody>
-                </table>
+            <div style="margin-bottom: 15px;">
+                <button onclick="copyAllToClipboard()" class="btn-export" style="background: #2196F3;">📋 Copy All Results</button>
+                <button onclick="exportToCSV()" class="btn-export" style="background: #4CAF50;">📥 Export CSV</button>
             </div>
+            
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Niche Score</th>
+                        <th>Keyword</th>
+                        <th>Search Volume</th>
+                        <th>Competition</th>
+                        <th>Copy</th>
+                    </tr>
+                </thead>
+                <tbody>
+    '''
+    
+    for r in results:
+        if 'error' in r and r['error']:
+            html += f'''
+                    <tr class="error-row">
+                        <td><span class="bad">Error</span></td>
+                        <td>{r.get('keyword', 'Unknown')}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+            '''
+        else:
+            score = r.get('score', 0)
+            if score >= 7:
+                score_class = 'good'
+            elif score >= 5:
+                score_class = 'medium'
+            else:
+                score_class = 'bad'
+            
+            keyword_safe = r.get('keyword', '').replace("'", "\\'")
+            volume = r.get('volume', '-')
+            competition = r.get('competition', '-')
+            
+            html += f'''
+                    <tr>
+                        <td><span class="{score_class}">{score}/10</span></td>
+                        <td>{r.get('keyword', 'Unknown')}</td>
+                        <td>{volume}</td>
+                        <td>{competition}</td>
+                        <td><button class="copy-btn" onclick="copyRow('{keyword_safe}', '{score}', '{volume}', '{competition}')">📋</button></td>
+                    </tr>
+            '''
+    
+    html += '''
+                </tbody>
+            </table>
             
             <div class="refresh-note">
-                ⏳ Analysis running in the background. Results will appear below when complete.
+                ✅ Analysis complete! Results shown above.
             </div>
             
             <a href="/admin?password=BookCompassAdmin@@2026!" class="back-link">← Back to Admin</a>
         </div>
         
         <script>
-            // This will be populated by the server with actual data
-            const resultsData = [];
-            let currentIndex = 0;
-            const totalKeywords = ''' + str(total) + ''';
-            
-            function updateProgress(percent, status, current) {
-                document.getElementById('progressFill').style.width = percent + '%';
-                document.getElementById('progressText').innerText = percent + '%';
-                document.getElementById('statusText').innerHTML = status;
-                document.getElementById('keywordCounter').innerHTML = current + ' / ' + totalKeywords;
-            }
-            
-            // Start processing with server-sent events
-            function startProcessing() {
-                // Use fetch to get results from server
-                const eventSource = new EventSource('/admin/bulk-progress?session=' + Date.now());
-                
-                eventSource.onmessage = function(event) {
-                    const data = JSON.parse(event.data);
-                    
-                    if (data.type === 'progress') {
-                        updateProgress(data.percent, data.status, data.current);
-                    } else if (data.type === 'result') {
-                        resultsData.push(data.result);
-                        // Update the table in real-time
-                        renderPartialResults();
-                    } else if (data.type === 'complete') {
-                        updateProgress(100, '✅ Complete!', totalKeywords);
-                        renderResults();
-                        eventSource.close();
-                    } else if (data.type === 'error') {
-                        console.error('Error:', data.message);
-                        eventSource.close();
-                    }
-                };
-                
-                eventSource.onerror = function() {
-                    // Fallback: try to get results via regular fetch after delay
-                    setTimeout(function() {
-                        fetch('/admin/bulk-results?password=BookCompassAdmin@@2026!')
-                            .then(res => res.json())
-                            .then(data => {
-                                if (data.results) {
-                                    data.results.forEach(r => resultsData.push(r));
-                                    renderResults();
-                                    updateProgress(100, '✅ Complete!', totalKeywords);
-                                }
-                            })
-                            .catch(err => console.error('Fallback error:', err));
-                    }, 10000);
-                };
-            }
-            
-            function renderPartialResults() {
-                const tbody = document.getElementById('resultsBody');
-                // Only show if we have results
-                if (resultsData.length > 0) {
-                    document.getElementById('resultsContainer').style.display = 'block';
-                }
-                
-                tbody.innerHTML = '';
-                for (const r of resultsData) {
-                    const row = tbody.insertRow();
-                    if (r.error) {
-                        row.className = 'error-row';
-                        row.insertCell(0).innerHTML = '<span class="bad">Error</span>';
-                        row.insertCell(1).innerHTML = r.keyword;
-                        row.insertCell(2).innerHTML = '-';
-                        row.insertCell(3).innerHTML = '-';
-                        row.insertCell(4).innerHTML = '-';
-                        continue;
-                    }
-                    
-                    let cls = 'bad';
-                    if (r.score >= 7) cls = 'good';
-                    else if (r.score >= 5) cls = 'medium';
-                    
-                    row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
-                    row.insertCell(1).innerHTML = r.keyword;
-                    row.insertCell(2).innerHTML = r.volume;
-                    row.insertCell(3).innerHTML = r.competition;
-                    row.insertCell(4).innerHTML = '<button class="copy-btn" onclick="copyRow(\'' + r.keyword.replace(/'/g, "\\\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')">📋</button>';
-                }
-            }
-            
-            function renderResults() {
-                renderPartialResults();
-                document.querySelector('.refresh-note').innerHTML = '✅ Analysis complete! You can close this page.';
-            }
-            
             function copyRow(keyword, score, volume, competition) {
-                const text = 'Keyword: ' + keyword + '\\nScore: ' + score + '/10\\nVolume: ' + volume + '\\nCompetition: ' + competition;
+                const text = `Keyword: ${keyword}\\nScore: ${score}/10\\nVolume: ${volume}\\nCompetition: ${competition}`;
                 navigator.clipboard.writeText(text);
                 alert('Copied to clipboard!');
             }
@@ -3648,7 +3606,7 @@ def admin_bulk_analyze():
                 let text = '';
                 for (let row of rows) {
                     const cells = row.cells;
-                    text += 'Keyword: ' + cells[1].innerText + '\\nScore: ' + cells[0].innerText + '\\nVolume: ' + cells[2].innerText + '\\nCompetition: ' + cells[3].innerText + '\\n------------------------\\n';
+                    text += `Keyword: ${cells[1].innerText}\\nScore: ${cells[0].innerText}\\nVolume: ${cells[2].innerText}\\nCompetition: ${cells[3].innerText}\\n------------------------\\n`;
                 }
                 navigator.clipboard.writeText(text);
                 alert('Copied all results!');
@@ -3659,56 +3617,16 @@ def admin_bulk_analyze():
                 let csv = 'Niche Score,Keyword,Search Volume,Competition\\n';
                 for (let row of rows) {
                     const cells = row.cells;
-                    csv += '"' + cells[0].innerText + '","' + cells[1].innerText + '","' + cells[2].innerText + '","' + cells[3].innerText + '"\\n';
+                    csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}"\\n`;
                 }
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'bookcompass-bulk-' + new Date().toISOString().slice(0,19) + '.csv';
+                a.download = `bookcompass-bulk-${new Date().toISOString().slice(0,19)}.csv`;
                 a.click();
                 URL.revokeObjectURL(url);
             }
-            
-            // Start processing on page load
-            window.onload = function() {
-                // Show initial progress
-                updateProgress(0, '⏳ Starting analysis...', 0);
-                
-                // Use fetch to process in background
-                const formData = new FormData();
-                formData.append('keywords', JSON.stringify(''' + json.dumps(all_keywords) + '''));
-                
-                fetch('/admin/bulk-process', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        keywords: ''' + json.dumps(all_keywords) + ''',
-                        password: 'BookCompassAdmin@@2026!'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Process results
-                    if (data.results) {
-                        data.results.forEach((r, index) => {
-                            resultsData.push(r);
-                            const percent = Math.round(((index + 1) / totalKeywords) * 100);
-                            const status = '✅ Researched ' + (index + 1) + '/' + totalKeywords + ': ' + r.keyword;
-                            updateProgress(percent, status, index + 1);
-                            renderPartialResults();
-                        });
-                        updateProgress(100, '✅ Complete!', totalKeywords);
-                        renderResults();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById('statusText').innerHTML = '❌ Error: ' + error.message;
-                });
-            };
         </script>
     </body>
     </html>
