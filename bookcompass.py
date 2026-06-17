@@ -3404,7 +3404,7 @@ def check_asinspottlight_credits():
         return jsonify({'success': False, 'error': str(e)})
 
 # ============================================
-# ADMIN BULK ANALYSIS WITH APIFY
+# ADMIN BULK ANALYSIS WITH APIFY - FIXED VERSION
 # ============================================
 
 @app.route('/admin/bulk-analyze', methods=['POST'])
@@ -3476,6 +3476,7 @@ def admin_bulk_analyze():
             .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
             .copy-btn { background: #2196F3; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; }
             .btn-export { background: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+            .error-row { background: #fff3f3; }
         </style>
     </head>
     <body>
@@ -3522,6 +3523,7 @@ def admin_bulk_analyze():
             const totalKeywords = allKeywords.length;
             let results = [];
             let currentIndex = 0;
+            let isProcessing = false;
             
             function updateProgress(percent, status, current) {
                 document.getElementById('progressFill').style.width = percent + '%';
@@ -3534,6 +3536,7 @@ def admin_bulk_analyze():
                 const tbody = document.getElementById('resultsBody');
                 tbody.innerHTML = '';
                 
+                // Sort: errors last, then by score descending
                 results.sort((a, b) => {
                     if (a.error) return 1;
                     if (b.error) return -1;
@@ -3542,6 +3545,9 @@ def admin_bulk_analyze():
                 
                 for (const r of results) {
                     const row = tbody.insertRow();
+                    if (r.error) {
+                        row.className = 'error-row';
+                    }
                     
                     if (r.error) {
                         row.insertCell(0).innerHTML = '<span class="bad">Error</span>';
@@ -3560,43 +3566,61 @@ def admin_bulk_analyze():
                     row.insertCell(1).innerHTML = r.keyword;
                     row.insertCell(2).innerHTML = r.volume;
                     row.insertCell(3).innerHTML = r.competition;
-                    row.insertCell(4).innerHTML = '<button class="copy-btn" onclick="copyRow(\'' + r.keyword.replace(/'/g, "\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')">📋</button>';
+                    row.insertCell(4).innerHTML = '<button class="copy-btn" onclick="copyRow(\'' + r.keyword.replace(/'/g, "\\\\'") + '\', \'' + r.score + '\', \'' + r.volume + '\', \'' + r.competition + '\')">📋</button>';
                 }
                 
                 document.getElementById('resultsContainer').style.display = 'block';
             }
             
             function processNextKeyword() {
+                if (isProcessing) return;
                 if (currentIndex >= totalKeywords) {
                     updateProgress(100, '✅ Complete!', totalKeywords);
                     renderResults();
                     return;
                 }
                 
+                isProcessing = true;
                 const keyword = allKeywords[currentIndex];
                 const percent = Math.round(((currentIndex + 1) / totalKeywords) * 100);
                 const status = '🔍 Researching ' + (currentIndex + 1) + '/' + totalKeywords + ': ' + keyword + '...';
                 updateProgress(percent, status, currentIndex + 1);
                 
-                fetch('/api/research', {
+                // Include the admin password in the request
+                const adminPassword = 'BookCompassAdmin@@2026!';
+                
+                fetch('/api/research?admin=true&password=' + encodeURIComponent(adminPassword), {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ keyword: keyword })
                 })
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+                    }
+                    return res.json();
+                })
                 .then(data => {
                     if (data.error) {
                         results.push({ keyword: keyword, error: data.error });
+                        console.warn('Error analyzing "' + keyword + '":', data.error);
                     } else {
                         results.push(data);
+                        console.log('✅ Analyzed "' + keyword + '": score ' + data.score);
                     }
                     currentIndex++;
-                    setTimeout(processNextKeyword, 300);
+                    isProcessing = false;
+                    setTimeout(processNextKeyword, 200);
                 })
                 .catch(err => {
                     results.push({ keyword: keyword, error: err.message });
+                    console.error('Error analyzing "' + keyword + '":', err);
                     currentIndex++;
-                    setTimeout(processNextKeyword, 300);
+                    isProcessing = false;
+                    setTimeout(processNextKeyword, 200);
                 });
             }
             
@@ -3633,8 +3657,10 @@ def admin_bulk_analyze():
                 URL.revokeObjectURL(url);
             }
             
-            // Start processing
-            setTimeout(processNextKeyword, 500);
+            // Start processing after page load
+            window.onload = function() {
+                setTimeout(processNextKeyword, 500);
+            };
         </script>
     </body>
     </html>
