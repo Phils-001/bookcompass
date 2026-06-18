@@ -768,6 +768,8 @@ def dashboard():
             
             // Show partial results if any
             if (results.length > 0) {
+                // Sort by score (highest first) before displaying
+                results.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
                 const tbody = document.getElementById('resultsBody');
                 tbody.innerHTML = '';
                 
@@ -1221,6 +1223,10 @@ def api_research():
         
         print(f"📊 Competition: {competition}, Score: {score}")
         print(f"🔑 FINAL related_keywords for PAID user: {related_keywords}")
+
+        # Sort competitors by BSR (lower is better)
+        if competitors:
+            competitors.sort(key=lambda x: x.get('bsr', 999))
         
         return jsonify({
             'keyword': keyword,
