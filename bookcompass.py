@@ -717,9 +717,55 @@ def dashboard():
             alert('Referral link copied! Share it with your friends.');
         }}
         
-        async function researchKeywords() {{
-            const keywords = document.getElementById('keywords').value.split('\\n').filter(k => k.trim());
-            if(keywords.length === 0) {{ alert('Enter keywords'); return; }}
+        async function researchKeywords() {
+    // ====== GET KEYWORDS ======
+    const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
+    if(keywords.length === 0) { 
+        alert('Enter keywords'); 
+        return; 
+    }
+    
+    // ====== REMOVE DUPLICATES ======
+    const uniqueKeywords = [];
+    const seen = new Set();
+    for (const kw of keywords) {
+        const trimmed = kw.trim();
+        const lower = trimmed.toLowerCase();
+        if (!seen.has(lower) && trimmed) {
+            seen.add(lower);
+            uniqueKeywords.push(trimmed);
+        }
+    }
+    
+    // ====== SHOW WARNING IF DUPLICATES FOUND ======
+    const duplicateCount = keywords.length - uniqueKeywords.length;
+    if (duplicateCount > 0) {
+        alert(`⚠️ Found ${duplicateCount} duplicate keyword(s). They will be skipped.`);
+    }
+    
+    if (uniqueKeywords.length === 0) { 
+        alert('No valid keywords to research'); 
+        return; 
+    }
+    
+    // ====== USE UNIQUE KEYWORDS FOR THE REST ======
+    const remaining = {remaining};
+    if(uniqueKeywords.length > remaining && remaining >= 0) {
+        if(!confirm(`You have ${{remaining}} searches left today. Researching ${{uniqueKeywords.length}} keywords will use them all. Continue?`)) return;
+    }
+    
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    
+    const results = [];
+    const errors = [];
+    
+    // ====== LOOP THROUGH UNIQUE KEYWORDS ======
+    for(let i = 0; i < uniqueKeywords.length; i++) {
+        const keyword = uniqueKeywords[i];  // ← Use uniqueKeywords
+        if(!keyword) continue;
+        
+        // ... THE REST OF THE FUNCTION STAYS THE SAME ...
             
             const remaining = {remaining};
             if(keywords.length > remaining && remaining >= 0) {{
