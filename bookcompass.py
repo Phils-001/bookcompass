@@ -768,7 +768,6 @@ def dashboard():
             
             // Show partial results if any
             if (results.length > 0) {
-                // Sort by score (highest first) before displaying
                 results.sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
                 const tbody = document.getElementById('resultsBody');
                 tbody.innerHTML = '';
