@@ -768,7 +768,7 @@ def dashboard():
             
             // Show partial results if any
             if (results.length > 0) {
-                results.sort((a,b) => b.score - a.score);
+                results.sort(function(a,b) { return b.score - a.score; });
                 const tbody = document.getElementById('resultsBody');
                 tbody.innerHTML = '';
                 
