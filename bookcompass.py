@@ -865,24 +865,24 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
-                // ====== COPY ALL RESULTS TO CLIPBOARD ======
+                 // ====== COPY ALL RESULTS TO CLIPBOARD ======
         function copyAllToClipboard() {
-            const rows = document.querySelectorAll('#resultsTable tbody tr');
+            var rows = document.querySelectorAll('#resultsTable tbody tr');
             
             if (rows.length === 0) {
                 alert('No results to copy!');
                 return;
             }
             
-            let text = '';
-            for (let row of rows) {
-                const cells = row.cells;
+            var text = '';
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].cells;
                 if (cells.length < 4) continue;
                 
-                const keyword = cells[1].innerText || 'N/A';
-                const score = cells[0].innerText || 'N/A';
-                const volume = cells[2].innerText || 'N/A';
-                const competition = cells[3].innerText || 'N/A';
+                var keyword = cells[1].innerText || 'N/A';
+                var score = cells[0].innerText || 'N/A';
+                var volume = cells[2].innerText || 'N/A';
+                var competition = cells[3].innerText || 'N/A';
                 
                 text += 'Keyword: ' + keyword + '\n';
                 text += 'Score: ' + score + '\n';
@@ -915,7 +915,7 @@ def dashboard():
         
         // ====== EXPORT RESULTS TO CSV ======
         function exportToCSV() {
-            const rows = document.querySelectorAll('#resultsTable tbody tr');
+            var rows = document.querySelectorAll('#resultsTable tbody tr');
             
             if (rows.length === 0) {
                 alert('No results to export!');
@@ -926,8 +926,7 @@ def dashboard():
             var csv = 'Niche Score,Keyword,Search Volume,Competition\n';
             
             for (var i = 0; i < rows.length; i++) {
-                var row = rows[i];
-                var cells = row.cells;
+                var cells = rows[i].cells;
                 if (cells.length < 4) continue;
                 
                 var score = (cells[0].innerText || '').replace(/"/g, '""');
