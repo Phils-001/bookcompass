@@ -765,51 +765,128 @@ def dashboard():
                 }}
             }}
             
-                        // Show partial results if any
-            if (results.length > 0) {{
+            
+            // Show partial results if any
+            if (results.length > 0) {
                 results.sort((a,b) => b.score - a.score);
                 const tbody = document.getElementById('resultsBody');
                 tbody.innerHTML = '';
-                results.forEach(r => {{
-                    const row = tbody.insertRow();
-                    let cls = 'bad';
-                    if(r.score >= 7) cls = 'good';
-                    else if(r.score >= 5) cls = 'medium';
-                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
-                    row.insertCell(1).innerHTML = r.keyword;
-                    row.insertCell(2).innerHTML = r.volume;
-                    row.insertCell(3).innerHTML = r.competition;
+                
+                // ====== THIS IS THE CORRECTLY INDENTED BLOCK ======
+                results.forEach(r => {
+                    // DETERMINE SCORE CLASS
+                    let scoreClass = 'bad';
+                    if (r.score >= 7) scoreClass = 'good';
+                    else if (r.score >= 5) scoreClass = 'medium';
                     
-                    // Add competitors column
-                    if (r.competitors && r.competitors.length > 0) {{
-                        let compHtml = '<div style="font-size: 12px;">';
-                        r.competitors.forEach((comp, idx) => {{
-                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
-                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
-                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
+                    // DETERMINE COMPETITION CLASS
+                    let compClass = 'bad';
+                    let compEmoji = '🔴';
+                    let compDesc = '';
+                    if (r.competition === 'LOW') {
+                        compClass = 'good';
+                        compEmoji = '🟢';
+                        compDesc = '🟢 Excellent opportunity! Low competition.';
+                    } else if (r.competition === 'MEDIUM') {
+                        compClass = 'medium';
+                        compEmoji = '🟡';
+                        compDesc = '🟡 Moderate competition. Good opportunity.';
+                    } else if (r.competition === 'HIGH') {
+                        compClass = 'bad';
+                        compEmoji = '🔴';
+                        compDesc = '🔴 Very competitive. Find a sub-niche.';
+                    } else {
+                        compDesc = r.competition || 'Unknown competition';
+                    }
+                    
+                    // DETERMINE VOLUME COLOR
+                    let volumeColor = '#f44336';
+                    if (r.volume && r.volume.includes('HIGH')) volumeColor = '#4CAF50';
+                    else if (r.volume && r.volume.includes('MEDIUM')) volumeColor = '#FF9800';
+                    
+                    // CREATE ROW
+                    const row = tbody.insertRow();
+                    row.style.background = 'white';
+                    row.style.borderRadius = '10px';
+                    row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                    row.style.marginBottom = '10px';
+                    row.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                    
+                    // SCORE CELL
+                    let scoreCell = row.insertCell(0);
+                    scoreCell.innerHTML = `<span class="${scoreClass}" style="font-size: 18px; padding: 6px 15px;">${r.score}/10</span>`;
+                    scoreCell.style.padding = '15px';
+                    scoreCell.style.background = 'white';
+                    scoreCell.style.borderRadius = '10px 0 0 10px';
+                    
+                    // KEYWORD CELL
+                    let keywordCell = row.insertCell(1);
+                    keywordCell.innerHTML = `<strong style="font-size: 16px; color: #232f3e;">${r.keyword}</strong>`;
+                    keywordCell.style.padding = '15px';
+                    keywordCell.style.background = 'white';
+                    
+                    // VOLUME CELL
+                    let volumeCell = row.insertCell(2);
+                    volumeCell.innerHTML = `<span style="color: ${volumeColor}; font-weight: bold;">${r.volume}</span>`;
+                    volumeCell.style.padding = '15px';
+                    volumeCell.style.background = 'white';
+                    
+                    // COMPETITION CELL
+                    let compCell = row.insertCell(3);
+                    compCell.innerHTML = `
+                        <div>
+                            <span class="${compClass}" style="font-size: 14px; padding: 4px 12px;">${compEmoji} ${r.competition}</span>
+                            <br>
+                            <span style="font-size: 12px; color: #666; display: block; margin-top: 4px;">${compDesc}</span>
+                        </div>
+                    `;
+                    compCell.style.padding = '15px';
+                    compCell.style.background = 'white';
+                    compCell.style.borderRadius = '0 10px 10px 0';
+                    
+                    // COMPETITORS CELL
+                    if (r.competitors && r.competitors.length > 0) {
+                        let compHtml = '<div style="font-size: 12px; max-height: 120px; overflow-y: auto;">';
+                        r.competitors.forEach((comp, idx) => {
+                            let rankColor = '#ff9900';
+                            if (idx === 0) rankColor = '#4CAF50';
+                            else if (idx === 1) rankColor = '#2196F3';
+                            else if (idx === 2) rankColor = '#FF9800';
+                            
+                            let titleDisplay = comp.title || 'Unknown Title';
+                            if (titleDisplay.length > 50) titleDisplay = titleDisplay.substring(0, 50) + '...';
+                            
+                            compHtml += `<div style="background: #f8f9fa; padding: 6px 10px; margin-bottom: 4px; border-radius: 5px; border-left: 3px solid ${rankColor}; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">`;
+                            compHtml += `<strong>#${idx+1}</strong> ${titleDisplay}<br>`;
+                            compHtml += `<span style="color: #888; font-size: 11px;">📊 Rank: ${comp.bsr}</span>`;
                             compHtml += `</div>`;
-                        }});
+                        });
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
-                        // Add Related Keywords column
-                    let relatedHtml = '<div style="font-size: 12px;">';
-                    if (r.related_keywords && r.related_keywords.length > 0) {{
-                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
-                            let kw = r.related_keywords[idx];
-                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
-                        }}
-                    }} else {{
-                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
-                    }}
-                    row.insertCell(5).innerHTML = relatedHtml;
-                    }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
+                    } else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {
                         row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
-                    }} else {{
-                        row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
-                    }}
-                }});
+                    } else {
+                        row.insertCell(4).innerHTML = '<span style="color: #999; font-size: 13px;">🔒 Upgrade to see competitors</span>';
+                    }
+                    
+                    // RELATED KEYWORDS CELL
+                    let relatedHtml = '';
+                    if (r.related_keywords && r.related_keywords.length > 0) {
+                        relatedHtml = '<div style="display: flex; flex-wrap: wrap; gap: 5px;">';
+                        r.related_keywords.forEach(kw => {
+                            relatedHtml += `<span style="background: #e3f2fd; color: #1565C0; padding: 2px 10px; border-radius: 12px; font-size: 11px; border: 1px solid #90CAF9;">🔗 ${kw}</span>`;
+                        });
+                        relatedHtml += '</div>';
+                    } else {
+                        relatedHtml = '<span style="color: #999; font-size: 13px;">No related keywords</span>';
+                    }
+                    row.insertCell(5).innerHTML = relatedHtml;
+                });
+                // ====== END OF RESULTS.FOREACH ======
+                
                 document.getElementById('results').style.display = 'block';
-            }}
+            }
+            
             
             // Show error summary if any keywords failed
             if (errors.length > 0) {{
