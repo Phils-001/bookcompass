@@ -717,7 +717,7 @@ def dashboard():
             alert('Referral link copied! Share it with your friends.');
         }}
         
-async function researchKeywords() {
+async function researchKeywords() {{
     // ====== GET KEYWORDS ======
     const keywords = document.getElementById('keywords').value.split('\\n').filter(k => k.trim());
     if(keywords.length === 0) {{ 
@@ -801,7 +801,7 @@ async function researchKeywords() {
             let cls = 'bad';
             if(r.score >= 7) cls = 'good';
             else if(r.score >= 5) cls = 'medium';
-            row.insertCell(0).innerHTML = `<span class="${cls}">${r.score}/10</span>`;
+            row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
             row.insertCell(1).innerHTML = r.keyword;
             row.insertCell(2).innerHTML = r.volume;
             row.insertCell(3).innerHTML = r.competition;
@@ -810,8 +810,8 @@ async function researchKeywords() {
                 let compHtml = '<div style="font-size: 12px;">';
                 r.competitors.forEach((comp, idx) => {{
                     compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
-                    compHtml += `<strong>${idx+1}.</strong> ${comp.title}<br>`;
-                    compHtml += `<span style="color: #666;">Rank: ${comp.bsr}</span>`;
+                    compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
+                    compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
                     compHtml += `</div>`;
                 }});
                 compHtml += '</div>';
@@ -840,7 +840,7 @@ async function researchKeywords() {
         let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
         errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
         errors.forEach(e => {{
-            errorHtml += `<li><strong>${e.keyword}</strong>: ${e.error}</li>`;
+            errorHtml += `<li><strong>${{e.keyword}}</strong>: ${{e.error}}</li>`;
         }});
         errorHtml += '</ul></div>';
         
@@ -867,9 +867,9 @@ async function researchKeywords() {
         msg.style.marginTop = '10px';
         msg.style.textAlign = 'center';
         
-        let messageText = `✅ Research complete! ${results.length} keywords processed successfully.`;
+        let messageText = `✅ Research complete! ${{results.length}} keywords processed successfully.`;
         if (errors.length > 0) {{
-            messageText += ` ${errors.length} keywords failed.`;
+            messageText += ` ${{errors.length}} keywords failed.`;
         }}
         messageText += ` <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.`;
         msg.innerHTML = messageText;
