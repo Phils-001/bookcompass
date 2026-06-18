@@ -1151,7 +1151,6 @@ def api_research():
             'volume': volume,
             'competition': competition,
             'competition_desc': competition_desc,
-            'total_products': total_products,
             'score': score,
             'competitors': competitors,
             'related_keywords': related_keywords
@@ -3741,7 +3740,6 @@ def render_bulk_results(results, total):
             volume = r.get('volume', '-')
             competition = r.get('competition', '-')
             comp_desc = r.get('competition_desc', '')
-            total_prods = r.get('total_products', 'N/A')
             
             # Determine competition class for styling
             comp_class = "competition-medium"
@@ -3755,13 +3753,7 @@ def render_bulk_results(results, total):
             html += f'''
                     <tr>
                         <td><span class="{score_class}">{score}/10</span></td>
-                        <td>
-                            {r.get('keyword', 'Unknown')}
-                            <br>
-                            <span style="font-size: 11px; color: #666;">
-                                📊 {total_prods:,} total products on Amazon
-                            </span>
-                        </td>
+                        <td>{r.get('keyword', 'Unknown')}</td>
                         <td>{volume}</td>
                         <td>
                             <span class="{comp_class}">{competition}</span>
