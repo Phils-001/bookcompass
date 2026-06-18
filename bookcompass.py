@@ -717,7 +717,7 @@ def dashboard():
             alert('Referral link copied! Share it with your friends.');
         }}
         
-    async function researchKeywords() {
+async function researchKeywords() {
     // ====== GET KEYWORDS ======
     const keywords = document.getElementById('keywords').value.split('\\n').filter(k => k.trim());
     if(keywords.length === 0) {{ 
