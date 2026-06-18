@@ -695,30 +695,18 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-    <h3 style="display: flex; justify-content: space-between; align-items: center;">
-        Results (Best Opportunities First)
-        <div>
-            <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-            <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
-        </div>
-    </h3>
-    
-    <!-- ====== COPY AND EXPORT BUTTONS ====== -->
-    <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-        <button onclick="copyAllToClipboard()" style="background: #2196F3; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
-            📋 Copy All Results
-        </button>
-        <button onclick="exportToCSV()" style="background: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
-            📥 Export CSV
-        </button>
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    Results (Best Opportunities First)
+    <div>
+        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
     </div>
-    <!-- ====== END COPY AND EXPORT BUTTONS ====== -->
-    
-    <table id="resultsTable">
-        <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
-        <tbody id="resultsBody"></tbody>
-    </table>
-</div>
+                </h3>
+                <table id="resultsTable">
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
         </div>
         
         <script>
@@ -865,103 +853,6 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
-                 // ====== COPY ALL RESULTS TO CLIPBOARD ======
-        function copyAllToClipboard() {
-            var rows = document.querySelectorAll('#resultsTable tbody tr');
-            
-            if (rows.length === 0) {
-                alert('No results to copy!');
-                return;
-            }
-            
-            var text = '';
-            for (var i = 0; i < rows.length; i++) {
-                var cells = rows[i].cells;
-                if (cells.length < 4) continue;
-                
-                var keyword = cells[1].innerText || 'N/A';
-                var score = cells[0].innerText || 'N/A';
-                var volume = cells[2].innerText || 'N/A';
-                var competition = cells[3].innerText || 'N/A';
-                
-                text += 'Keyword: ' + keyword + '\n';
-                text += 'Score: ' + score + '\n';
-                text += 'Volume: ' + volume + '\n';
-                text += 'Competition: ' + competition + '\n';
-                text += '------------------------\n';
-            }
-            
-            if (text === '') {
-                alert('No valid results to copy!');
-                return;
-            }
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(text)
-                .then(function() {
-                    alert('✅ Copied all results to clipboard!');
-                })
-                .catch(function() {
-                    // Fallback for older browsers
-                    var textarea = document.createElement('textarea');
-                    textarea.value = text;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    alert('✅ Copied all results to clipboard!');
-                });
-        }
-        
-        // ====== EXPORT RESULTS TO CSV ======
-        function exportToCSV() {
-            var rows = document.querySelectorAll('#resultsTable tbody tr');
-            
-            if (rows.length === 0) {
-                alert('No results to export!');
-                return;
-            }
-            
-            // Build CSV content
-            var csv = 'Niche Score,Keyword,Search Volume,Competition\n';
-            
-            for (var i = 0; i < rows.length; i++) {
-                var cells = rows[i].cells;
-                if (cells.length < 4) continue;
-                
-                var score = (cells[0].innerText || '').replace(/"/g, '""');
-                var keyword = (cells[1].innerText || '').replace(/"/g, '""');
-                var volume = (cells[2].innerText || '').replace(/"/g, '""');
-                var competition = (cells[3].innerText || '').replace(/"/g, '""');
-                
-                csv += '"' + score + '","' + keyword + '","' + volume + '","' + competition + '"\n';
-            }
-            
-            // Create and download the file
-            try {
-                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                var link = document.createElement('a');
-                var url = URL.createObjectURL(blob);
-                
-                link.href = url;
-                var now = new Date();
-                var dateStr = now.getFullYear() + '-' + 
-                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                    String(now.getDate()).padStart(2, '0') + '_' +
-                    String(now.getHours()).padStart(2, '0') + '-' +
-                    String(now.getMinutes()).padStart(2, '0');
-                link.download = 'bookcompass-results-' + dateStr + '.csv';
-                
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                alert('✅ CSV exported successfully!');
-            } catch (error) {
-                alert('❌ Error exporting CSV: ' + error.message);
-            }
-        }
         </script>
     </body>
     </html>
