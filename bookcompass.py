@@ -695,18 +695,30 @@ def dashboard():
             </div>
             
             <div id="results" style="display:none;" class="card">
-                <h3 style="display: flex; justify-content: space-between; align-items: center;">
-    Results (Best Opportunities First)
-    <div>
-        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
-        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    <h3 style="display: flex; justify-content: space-between; align-items: center;">
+        Results (Best Opportunities First)
+        <div>
+            <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+            <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+        </div>
+    </h3>
+    
+    <!-- ====== COPY AND EXPORT BUTTONS ====== -->
+    <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <button onclick="copyAllToClipboard()" style="background: #2196F3; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+            📋 Copy All Results
+        </button>
+        <button onclick="exportToCSV()" style="background: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
+            📥 Export CSV
+        </button>
     </div>
-                </h3>
-                <table id="resultsTable">
-                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
-                    <tbody id="resultsBody"></tbody>
-                </table>
-            </div>
+    <!-- ====== END COPY AND EXPORT BUTTONS ====== -->
+    
+    <table id="resultsTable">
+        <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+        <tbody id="resultsBody"></tbody>
+    </table>
+</div>
         </div>
         
         <script>
@@ -765,127 +777,51 @@ def dashboard():
                 }}
             }}
             
-            
-            // Show partial results if any
-            if (results.length > 0) {
+                        // Show partial results if any
+            if (results.length > 0) {{
+                results.sort((a,b) => b.score - a.score);
                 const tbody = document.getElementById('resultsBody');
                 tbody.innerHTML = '';
-                
-                // ====== THIS IS THE CORRECTLY INDENTED BLOCK ======
-                results.forEach(r => {
-                    // DETERMINE SCORE CLASS
-                    let scoreClass = 'bad';
-                    if (r.score >= 7) scoreClass = 'good';
-                    else if (r.score >= 5) scoreClass = 'medium';
-                    
-                    // DETERMINE COMPETITION CLASS
-                    let compClass = 'bad';
-                    let compEmoji = '🔴';
-                    let compDesc = '';
-                    if (r.competition === 'LOW') {
-                        compClass = 'good';
-                        compEmoji = '🟢';
-                        compDesc = '🟢 Excellent opportunity! Low competition.';
-                    } else if (r.competition === 'MEDIUM') {
-                        compClass = 'medium';
-                        compEmoji = '🟡';
-                        compDesc = '🟡 Moderate competition. Good opportunity.';
-                    } else if (r.competition === 'HIGH') {
-                        compClass = 'bad';
-                        compEmoji = '🔴';
-                        compDesc = '🔴 Very competitive. Find a sub-niche.';
-                    } else {
-                        compDesc = r.competition || 'Unknown competition';
-                    }
-                    
-                    // DETERMINE VOLUME COLOR
-                    let volumeColor = '#f44336';
-                    if (r.volume && r.volume.includes('HIGH')) volumeColor = '#4CAF50';
-                    else if (r.volume && r.volume.includes('MEDIUM')) volumeColor = '#FF9800';
-                    
-                    // CREATE ROW
+                results.forEach(r => {{
                     const row = tbody.insertRow();
-                    row.style.background = 'white';
-                    row.style.borderRadius = '10px';
-                    row.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-                    row.style.marginBottom = '10px';
-                    row.style.transition = 'transform 0.2s, box-shadow 0.2s';
+                    let cls = 'bad';
+                    if(r.score >= 7) cls = 'good';
+                    else if(r.score >= 5) cls = 'medium';
+                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
+                    row.insertCell(1).innerHTML = r.keyword;
+                    row.insertCell(2).innerHTML = r.volume;
+                    row.insertCell(3).innerHTML = r.competition;
                     
-                    // SCORE CELL
-                    let scoreCell = row.insertCell(0);
-                    scoreCell.innerHTML = `<span class="${scoreClass}" style="font-size: 18px; padding: 6px 15px;">${r.score}/10</span>`;
-                    scoreCell.style.padding = '15px';
-                    scoreCell.style.background = 'white';
-                    scoreCell.style.borderRadius = '10px 0 0 10px';
-                    
-                    // KEYWORD CELL
-                    let keywordCell = row.insertCell(1);
-                    keywordCell.innerHTML = `<strong style="font-size: 16px; color: #232f3e;">${r.keyword}</strong>`;
-                    keywordCell.style.padding = '15px';
-                    keywordCell.style.background = 'white';
-                    
-                    // VOLUME CELL
-                    let volumeCell = row.insertCell(2);
-                    volumeCell.innerHTML = `<span style="color: ${volumeColor}; font-weight: bold;">${r.volume}</span>`;
-                    volumeCell.style.padding = '15px';
-                    volumeCell.style.background = 'white';
-                    
-                    // COMPETITION CELL
-                    let compCell = row.insertCell(3);
-                    compCell.innerHTML = `
-                        <div>
-                            <span class="${compClass}" style="font-size: 14px; padding: 4px 12px;">${compEmoji} ${r.competition}</span>
-                            <br>
-                            <span style="font-size: 12px; color: #666; display: block; margin-top: 4px;">${compDesc}</span>
-                        </div>
-                    `;
-                    compCell.style.padding = '15px';
-                    compCell.style.background = 'white';
-                    compCell.style.borderRadius = '0 10px 10px 0';
-                    
-                    // COMPETITORS CELL
-                    if (r.competitors && r.competitors.length > 0) {
-                        let compHtml = '<div style="font-size: 12px; max-height: 120px; overflow-y: auto;">';
-                        r.competitors.forEach((comp, idx) => {
-                            let rankColor = '#ff9900';
-                            if (idx === 0) rankColor = '#4CAF50';
-                            else if (idx === 1) rankColor = '#2196F3';
-                            else if (idx === 2) rankColor = '#FF9800';
-                            
-                            let titleDisplay = comp.title || 'Unknown Title';
-                            if (titleDisplay.length > 50) titleDisplay = titleDisplay.substring(0, 50) + '...';
-                            
-                            compHtml += `<div style="background: #f8f9fa; padding: 6px 10px; margin-bottom: 4px; border-radius: 5px; border-left: 3px solid ${rankColor}; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">`;
-                            compHtml += `<strong>#${idx+1}</strong> ${titleDisplay}<br>`;
-                            compHtml += `<span style="color: #888; font-size: 11px;">📊 Rank: ${comp.bsr}</span>`;
+                    // Add competitors column
+                    if (r.competitors && r.competitors.length > 0) {{
+                        let compHtml = '<div style="font-size: 12px;">';
+                        r.competitors.forEach((comp, idx) => {{
+                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
+                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
+                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
                             compHtml += `</div>`;
-                        });
+                        }});
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
-                    } else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {
-                        row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
-                    } else {
-                        row.insertCell(4).innerHTML = '<span style="color: #999; font-size: 13px;">🔒 Upgrade to see competitors</span>';
-                    }
-                    
-                    // RELATED KEYWORDS CELL
-                    let relatedHtml = '';
-                    if (r.related_keywords && r.related_keywords.length > 0) {
-                        relatedHtml = '<div style="display: flex; flex-wrap: wrap; gap: 5px;">';
-                        r.related_keywords.forEach(kw => {
-                            relatedHtml += `<span style="background: #e3f2fd; color: #1565C0; padding: 2px 10px; border-radius: 12px; font-size: 11px; border: 1px solid #90CAF9;">🔗 ${kw}</span>`;
-                        });
-                        relatedHtml += '</div>';
-                    } else {
-                        relatedHtml = '<span style="color: #999; font-size: 13px;">No related keywords</span>';
-                    }
+                        // Add Related Keywords column
+                    let relatedHtml = '<div style="font-size: 12px;">';
+                    if (r.related_keywords && r.related_keywords.length > 0) {{
+                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
+                            let kw = r.related_keywords[idx];
+                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
+                        }}
+                    }} else {{
+                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
+                    }}
                     row.insertCell(5).innerHTML = relatedHtml;
-                });
-                // ====== END OF RESULTS.FOREACH ======
-                
+                    }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
+                        row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
+                    }} else {{
+                        row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
+                    }}
+                }});
                 document.getElementById('results').style.display = 'block';
-            }
-            
+            }}
             
             // Show error summary if any keywords failed
             if (errors.length > 0) {{
@@ -929,6 +865,104 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
+                // ====== COPY ALL RESULTS TO CLIPBOARD ======
+        function copyAllToClipboard() {
+            const rows = document.querySelectorAll('#resultsTable tbody tr');
+            
+            if (rows.length === 0) {
+                alert('No results to copy!');
+                return;
+            }
+            
+            let text = '';
+            for (let row of rows) {
+                const cells = row.cells;
+                if (cells.length < 4) continue;
+                
+                const keyword = cells[1].innerText || 'N/A';
+                const score = cells[0].innerText || 'N/A';
+                const volume = cells[2].innerText || 'N/A';
+                const competition = cells[3].innerText || 'N/A';
+                
+                text += 'Keyword: ' + keyword + '\n';
+                text += 'Score: ' + score + '\n';
+                text += 'Volume: ' + volume + '\n';
+                text += 'Competition: ' + competition + '\n';
+                text += '------------------------\n';
+            }
+            
+            if (text === '') {
+                alert('No valid results to copy!');
+                return;
+            }
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(text)
+                .then(function() {
+                    alert('✅ Copied all results to clipboard!');
+                })
+                .catch(function() {
+                    // Fallback for older browsers
+                    var textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('✅ Copied all results to clipboard!');
+                });
+        }
+        
+        // ====== EXPORT RESULTS TO CSV ======
+        function exportToCSV() {
+            const rows = document.querySelectorAll('#resultsTable tbody tr');
+            
+            if (rows.length === 0) {
+                alert('No results to export!');
+                return;
+            }
+            
+            // Build CSV content
+            var csv = 'Niche Score,Keyword,Search Volume,Competition\n';
+            
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var cells = row.cells;
+                if (cells.length < 4) continue;
+                
+                var score = (cells[0].innerText || '').replace(/"/g, '""');
+                var keyword = (cells[1].innerText || '').replace(/"/g, '""');
+                var volume = (cells[2].innerText || '').replace(/"/g, '""');
+                var competition = (cells[3].innerText || '').replace(/"/g, '""');
+                
+                csv += '"' + score + '","' + keyword + '","' + volume + '","' + competition + '"\n';
+            }
+            
+            // Create and download the file
+            try {
+                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                var link = document.createElement('a');
+                var url = URL.createObjectURL(blob);
+                
+                link.href = url;
+                var now = new Date();
+                var dateStr = now.getFullYear() + '-' + 
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(now.getDate()).padStart(2, '0') + '_' +
+                    String(now.getHours()).padStart(2, '0') + '-' +
+                    String(now.getMinutes()).padStart(2, '0');
+                link.download = 'bookcompass-results-' + dateStr + '.csv';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                alert('✅ CSV exported successfully!');
+            } catch (error) {
+                alert('❌ Error exporting CSV: ' + error.message);
+            }
+        }
         </script>
     </body>
     </html>
@@ -1221,10 +1255,6 @@ def api_research():
         
         print(f"📊 Competition: {competition}, Score: {score}")
         print(f"🔑 FINAL related_keywords for PAID user: {related_keywords}")
-
-        # Sort results by score (highest first) before returning
-        # This is done server-side to avoid JavaScript f-string issues
-        # The dashboard will display results in this order
         
         return jsonify({
             'keyword': keyword,
