@@ -717,42 +717,42 @@ def dashboard():
             alert('Referral link copied! Share it with your friends.');
         }}
         
-        async function researchKeywords() {
+    async function researchKeywords() {
     // ====== GET KEYWORDS ======
-    const keywords = document.getElementById('keywords').value.split('\n').filter(k => k.trim());
-    if(keywords.length === 0) { 
+    const keywords = document.getElementById('keywords').value.split('\\n').filter(k => k.trim());
+    if(keywords.length === 0) {{ 
         alert('Enter keywords'); 
         return; 
-    }
+    }}
     
     // ====== REMOVE DUPLICATES ======
     const uniqueKeywords = [];
     const seen = new Set();
-    for (const kw of keywords) {
+    for (const kw of keywords) {{
         const trimmed = kw.trim();
         const lower = trimmed.toLowerCase();
-        if (!seen.has(lower) && trimmed) {
+        if (!seen.has(lower) && trimmed) {{
             seen.add(lower);
             uniqueKeywords.push(trimmed);
-        }
-    }
+        }}
+    }}
     
     // ====== SHOW WARNING IF DUPLICATES FOUND ======
     const duplicateCount = keywords.length - uniqueKeywords.length;
-    if (duplicateCount > 0) {
+    if (duplicateCount > 0) {{
         alert(`⚠️ Found ${duplicateCount} duplicate keyword(s). They will be skipped.`);
-    }
+    }}
     
-    if (uniqueKeywords.length === 0) { 
+    if (uniqueKeywords.length === 0) {{ 
         alert('No valid keywords to research'); 
         return; 
-    }
+    }}
     
     // ====== USE UNIQUE KEYWORDS FOR THE REST ======
     const remaining = {remaining};
-    if(uniqueKeywords.length > remaining && remaining >= 0) {
-        if(!confirm(`You have ${{remaining}} searches left today. Researching ${{uniqueKeywords.length}} keywords will use them all. Continue?`)) return;
-    }
+    if(uniqueKeywords.length > remaining && remaining >= 0) {{
+        if(!confirm(`You have ${remaining} searches left today. Researching ${uniqueKeywords.length} keywords will use them all. Continue?`)) return;
+    }}
     
     document.getElementById('loading').style.display = 'block';
     document.getElementById('results').style.display = 'none';
@@ -760,149 +760,128 @@ def dashboard():
     const results = [];
     const errors = [];
     
-    // ====== LOOP THROUGH UNIQUE KEYWORDS ======
-    for(let i = 0; i < uniqueKeywords.length; i++) {
-        const keyword = uniqueKeywords[i];  // ← Use uniqueKeywords
+    for(let i = 0; i < uniqueKeywords.length; i++) {{
+        const keyword = uniqueKeywords[i];
         if(!keyword) continue;
         
-        // ... THE REST OF THE FUNCTION STAYS THE SAME ...
+        // Update progress text
+        document.getElementById('loadingText').innerHTML = `Researching ${i+1}/${uniqueKeywords.length}: ${keyword}...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>`;
+        
+        try {{
+            const keywordTimeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error(`Keyword "${keyword}" timed out`)), 30000)
+            );
             
-            const remaining = {remaining};
-            if(keywords.length > remaining && remaining >= 0) {{
-                if(!confirm(`You have ${{remaining}} searches left today. Researching ${{keywords.length}} keywords will use them all. Continue?`)) return;
+            const fetchPromise = fetch('/api/research', {{
+                method: 'POST',
+                headers: {{'Content-Type': 'application/json'}},
+                body: JSON.stringify({{keyword: keyword}})
+            }});
+            
+            const response = await Promise.race([fetchPromise, keywordTimeout]);
+            const data = await response.json();
+            
+            if(data.error) {{ 
+                errors.push({{keyword: keyword, error: data.error}});
+            }} else {{
+                results.push(data);
             }}
-            
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-            
-            const results = [];
-            const errors = [];
-            
-            for(let i = 0; i < keywords.length; i++) {{
-                const keyword = keywords[i].trim();
-                if(!keyword) continue;
-                
-                // Update progress text
-                document.getElementById('loadingText').innerHTML = `Researching ${{i+1}}/${{keywords.length}}: ${{keyword}}...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>`;
-                
-                try {{
-                    // Create a timeout for each individual keyword (30 seconds)
-                    const keywordTimeout = new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error(`Keyword "${{keyword}}" timed out`)), 30000)
-                    );
-                    
-                    const fetchPromise = fetch('/api/research', {{
-                        method: 'POST',
-                        headers: {{'Content-Type': 'application/json'}},
-                        body: JSON.stringify({{keyword: keyword}})
-                    }});
-                    
-                    const response = await Promise.race([fetchPromise, keywordTimeout]);
-                    const data = await response.json();
-                    
-                    if(data.error) {{ 
-                        errors.push({{keyword: keyword, error: data.error}});
-                    }} else {{
-                        results.push(data);
-                    }}
-                }} catch(error) {{
-                    console.error(`Error researching "${{keyword}}":`, error);
-                    errors.push({{keyword: keyword, error: error.message || 'Request failed'}});
-                }}
-            }}
-            
-                        // Show partial results if any
-            if (results.length > 0) {{
-                results.sort((a,b) => b.score - a.score);
-                const tbody = document.getElementById('resultsBody');
-                tbody.innerHTML = '';
-                results.forEach(r => {{
-                    const row = tbody.insertRow();
-                    let cls = 'bad';
-                    if(r.score >= 7) cls = 'good';
-                    else if(r.score >= 5) cls = 'medium';
-                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
-                    row.insertCell(1).innerHTML = r.keyword;
-                    row.insertCell(2).innerHTML = r.volume;
-                    row.insertCell(3).innerHTML = r.competition;
-                    
-                    // Add competitors column
-                    if (r.competitors && r.competitors.length > 0) {{
-                        let compHtml = '<div style="font-size: 12px;">';
-                        r.competitors.forEach((comp, idx) => {{
-                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
-                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
-                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
-                            compHtml += `</div>`;
-                        }});
-                        compHtml += '</div>';
-                        row.insertCell(4).innerHTML = compHtml;
-                        // Add Related Keywords column
-                    let relatedHtml = '<div style="font-size: 12px;">';
-                    if (r.related_keywords && r.related_keywords.length > 0) {{
-                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
-                            let kw = r.related_keywords[idx];
-                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
-                        }}
-                    }} else {{
-                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
-                    }}
-                    row.insertCell(5).innerHTML = relatedHtml;
-                    }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
-                        row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
-                    }} else {{
-                        row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
-                    }}
-                }});
-                document.getElementById('results').style.display = 'block';
-            }}
-            
-            // Show error summary if any keywords failed
-            if (errors.length > 0) {{
-                let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
-                errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
-                errors.forEach(e => {{
-                    errorHtml += `<li><strong>${{e.keyword}}</strong>: ${{e.error}}</li>`;
-                }});
-                errorHtml += '</ul></div>';
-                
-                const existingError = document.querySelector('.error-summary');
-                if (existingError) existingError.remove();
-                
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-summary';
-                errorDiv.innerHTML = errorHtml;
-                document.getElementById('results').appendChild(errorDiv);
-            }}
-            
-            document.getElementById('loading').style.display = 'none';
-            
-            // Show completion message
-            const existingMsg = document.querySelector('.completion-message');
-            if (existingMsg) existingMsg.remove();
-            
-            if (results.length > 0 || errors.length > 0) {{
-                const msg = document.createElement('div');
-                msg.className = 'completion-message';
-                msg.style.background = '#e3f2fd';
-                msg.style.padding = '10px';
-                msg.style.borderRadius = '5px';
-                msg.style.marginTop = '10px';
-                msg.style.textAlign = 'center';
-                
-                let messageText = `✅ Research complete! ${{results.length}} keywords processed successfully.`;
-                if (errors.length > 0) {{
-                    messageText += ` ${{errors.length}} keywords failed.`;
-                }}
-                messageText += ` <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.`;
-                msg.innerHTML = messageText;
-                document.getElementById('results').appendChild(msg);
-            }}
+        }} catch(error) {{
+            console.error(`Error researching "${keyword}":`, error);
+            errors.push({{keyword: keyword, error: error.message || 'Request failed'}});
         }}
-        </script>
+    }}
+    
+    if (results.length > 0) {{
+        results.sort((a,b) => b.score - a.score);
+        const tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = '';
+        results.forEach(r => {{
+            const row = tbody.insertRow();
+            let cls = 'bad';
+            if(r.score >= 7) cls = 'good';
+            else if(r.score >= 5) cls = 'medium';
+            row.insertCell(0).innerHTML = `<span class="${cls}">${r.score}/10</span>`;
+            row.insertCell(1).innerHTML = r.keyword;
+            row.insertCell(2).innerHTML = r.volume;
+            row.insertCell(3).innerHTML = r.competition;
+            
+            if (r.competitors && r.competitors.length > 0) {{
+                let compHtml = '<div style="font-size: 12px;">';
+                r.competitors.forEach((comp, idx) => {{
+                    compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
+                    compHtml += `<strong>${idx+1}.</strong> ${comp.title}<br>`;
+                    compHtml += `<span style="color: #666;">Rank: ${comp.bsr}</span>`;
+                    compHtml += `</div>`;
+                }});
+                compHtml += '</div>';
+                row.insertCell(4).innerHTML = compHtml;
+                
+                let relatedHtml = '<div style="font-size: 12px;">';
+                if (r.related_keywords && r.related_keywords.length > 0) {{
+                    for (let idx = 0; idx < r.related_keywords.length; idx++) {{
+                        let kw = r.related_keywords[idx];
+                        relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
+                    }}
+                }} else {{
+                    relatedHtml = '<span style="color: #999;">No related keywords</span>';
+                }}
+                row.insertCell(5).innerHTML = relatedHtml;
+            }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
+                row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
+            }} else {{
+                row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
+            }}
+        }});
+        document.getElementById('results').style.display = 'block';
+    }}
+    
+    if (errors.length > 0) {{
+        let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
+        errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
+        errors.forEach(e => {{
+            errorHtml += `<li><strong>${e.keyword}</strong>: ${e.error}</li>`;
+        }});
+        errorHtml += '</ul></div>';
+        
+        const existingError = document.querySelector('.error-summary');
+        if (existingError) existingError.remove();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-summary';
+        errorDiv.innerHTML = errorHtml;
+        document.getElementById('results').appendChild(errorDiv);
+    }}
+    
+    document.getElementById('loading').style.display = 'none';
+    
+    const existingMsg = document.querySelector('.completion-message');
+    if (existingMsg) existingMsg.remove();
+    
+    if (results.length > 0 || errors.length > 0) {{
+        const msg = document.createElement('div');
+        msg.className = 'completion-message';
+        msg.style.background = '#e3f2fd';
+        msg.style.padding = '10px';
+        msg.style.borderRadius = '5px';
+        msg.style.marginTop = '10px';
+        msg.style.textAlign = 'center';
+        
+        let messageText = `✅ Research complete! ${results.length} keywords processed successfully.`;
+        if (errors.length > 0) {{
+            messageText += ` ${errors.length} keywords failed.`;
+        }}
+        messageText += ` <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.`;
+        msg.innerHTML = messageText;
+        document.getElementById('results').appendChild(msg);
+    }}
+}}
+</script>
     </body>
     </html>
     '''
+    
+    return html
 
 # ============================================
 # API RESEARCH ENDPOINT
