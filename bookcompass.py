@@ -138,51 +138,139 @@ DASHBOARD_TEMPLATE = '''
             alert('Referral link copied! Share it with your friends.');
         }
         
-        async function researchKeywords() {
-            var keywords = document.getElementById('keywords').value.split('\n').filter(function(k) { return k.trim(); });
-            if(keywords.length === 0) { alert('Enter keywords'); return; }
+ async function researchKeywords() {
+    // ====== TEST: See if function is called ======
+    alert('Research button clicked!');
+    
+    var keywords = document.getElementById('keywords').value.split('\n').filter(function(k) { return k.trim(); });
+    if(keywords.length === 0) { alert('Enter keywords'); return; }
+    
+    var remaining = parseInt({{ remaining }});
+    if(keywords.length > remaining && remaining >= 0) {
+        if(!confirm('You have ' + remaining + ' searches left today. Researching ' + keywords.length + ' keywords will use them all. Continue?')) return;
+    }
+    
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    
+    var results = [];
+    var errors = [];
+    
+    for(var i = 0; i < keywords.length; i++) {
+        var keyword = keywords[i].trim();
+        if(!keyword) continue;
+        
+        document.getElementById('loadingText').innerHTML = 'Researching ' + (i+1) + '/' + keywords.length + ': ' + keyword + '...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>';
+        
+        try {
+            var keywordTimeout = new Promise(function(_, reject) { 
+                setTimeout(function() { reject(new Error('Keyword "' + keyword + '" timed out')); }, 30000);
+            });
             
-            var remaining = parseInt({{ remaining }});
-            if(keywords.length > remaining && remaining >= 0) {
-                if(!confirm('You have ' + remaining + ' searches left today. Researching ' + keywords.length + ' keywords will use them all. Continue?')) return;
+            var fetchPromise = fetch('/api/research', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({keyword: keyword})
+            });
+            
+            var response = await Promise.race([fetchPromise, keywordTimeout]);
+            var data = await response.json();
+            
+            if(data.error) { 
+                errors.push({keyword: keyword, error: data.error});
+            } else {
+                results.push(data);
             }
+        } catch(error) {
+            console.error('Error researching "' + keyword + '":', error);
+            errors.push({keyword: keyword, error: error.message || 'Request failed'});
+        }
+    }
+    
+    if (results.length > 0) {
+        results.sort(function(a, b) { return b.score - a.score; });
+        var tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = '';
+        results.forEach(function(r) {
+            var row = tbody.insertRow();
+            var cls = 'bad';
+            if(r.score >= 7) cls = 'good';
+            else if(r.score >= 5) cls = 'medium';
+            row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
+            row.insertCell(1).innerHTML = r.keyword;
+            row.insertCell(2).innerHTML = r.volume;
+            row.insertCell(3).innerHTML = r.competition;
             
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('results').style.display = 'none';
-            
-            var results = [];
-            var errors = [];
-            
-            for(var i = 0; i < keywords.length; i++) {
-                var keyword = keywords[i].trim();
-                if(!keyword) continue;
+            if (r.competitors && r.competitors.length > 0) {
+                var compHtml = '<div style="font-size: 12px;">';
+                r.competitors.forEach(function(comp, idx) {
+                    compHtml += '<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">';
+                    compHtml += '<strong>' + (idx+1) + '.</strong> ' + comp.title + '<br>';
+                    compHtml += '<span style="color: #666;">Rank: ' + comp.bsr + '</span>';
+                    compHtml += '</div>';
+                });
+                compHtml += '</div>';
+                row.insertCell(4).innerHTML = compHtml;
                 
-                document.getElementById('loadingText').innerHTML = 'Researching ' + (i+1) + '/' + keywords.length + ': ' + keyword + '...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>';
-                
-                try {
-                    var keywordTimeout = new Promise(function(_, reject) { 
-                        setTimeout(function() { reject(new Error('Keyword "' + keyword + '" timed out')); }, 30000);
-                    });
-                    
-                    var fetchPromise = fetch('/api/research', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({keyword: keyword})
-                    });
-                    
-                    var response = await Promise.race([fetchPromise, keywordTimeout]);
-                    var data = await response.json();
-                    
-                    if(data.error) { 
-                        errors.push({keyword: keyword, error: data.error});
-                    } else {
-                        results.push(data);
+                var relatedHtml = '<div style="font-size: 12px;">';
+                if (r.related_keywords && r.related_keywords.length > 0) {
+                    for (var idx = 0; idx < r.related_keywords.length; idx++) {
+                        var kw = r.related_keywords[idx];
+                        relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
                     }
-                } catch(error) {
-                    console.error('Error researching "' + keyword + '":', error);
-                    errors.push({keyword: keyword, error: error.message || 'Request failed'});
+                } else {
+                    relatedHtml = '<span style="color: #999;">No related keywords</span>';
                 }
+                row.insertCell(5).innerHTML = relatedHtml;
+            } else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {
+                row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
+            } else {
+                row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
             }
+        });
+        document.getElementById('results').style.display = 'block';
+    }
+    
+    if (errors.length > 0) {
+        var errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
+        errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
+        errors.forEach(function(e) {
+            errorHtml += '<li><strong>' + e.keyword + '</strong>: ' + e.error + '</li>';
+        });
+        errorHtml += '</ul></div>';
+        
+        var existingError = document.querySelector('.error-summary');
+        if (existingError) existingError.remove();
+        
+        var errorDiv = document.createElement('div');
+        errorDiv.className = 'error-summary';
+        errorDiv.innerHTML = errorHtml;
+        document.getElementById('results').appendChild(errorDiv);
+    }
+    
+    document.getElementById('loading').style.display = 'none';
+    
+    var existingMsg = document.querySelector('.completion-message');
+    if (existingMsg) existingMsg.remove();
+    
+    if (results.length > 0 || errors.length > 0) {
+        var msg = document.createElement('div');
+        msg.className = 'completion-message';
+        msg.style.background = '#e3f2fd';
+        msg.style.padding = '10px';
+        msg.style.borderRadius = '5px';
+        msg.style.marginTop = '10px';
+        msg.style.textAlign = 'center';
+        
+        var messageText = '✅ Research complete! ' + results.length + ' keywords processed successfully.';
+        if (errors.length > 0) {
+            messageText += ' ' + errors.length + ' keywords failed.';
+        }
+        messageText += ' <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.';
+        msg.innerHTML = messageText;
+        document.getElementById('results').appendChild(msg);
+    }
+}
             
             if (results.length > 0) {
                 results.sort(function(a, b) { return b.score - a.score; });
