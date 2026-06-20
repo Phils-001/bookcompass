@@ -112,7 +112,6 @@ DASHBOARD_TEMPLATE = '''
                 </div>
             </h3>
             
-            <!-- ====== COPY AND EXPORT BUTTONS ====== -->
             <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="copyAllToClipboard()" style="background: #2196F3; color: white; padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">
                     📋 Copy All Results
@@ -121,7 +120,6 @@ DASHBOARD_TEMPLATE = '''
                     📥 Export CSV
                 </button>
             </div>
-            <!-- ====== END COPY AND EXPORT BUTTONS ====== -->
             
             <table id="resultsTable">
                 <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
@@ -138,140 +136,56 @@ DASHBOARD_TEMPLATE = '''
             alert('Referral link copied! Share it with your friends.');
         }
         
- async function researchKeywords() {
-    // ====== TEST: See if function is called ======
-    alert('Research button clicked!');
-    
-    var keywords = document.getElementById('keywords').value.split('\n').filter(function(k) { return k.trim(); });
-    if(keywords.length === 0) { alert('Enter keywords'); return; }
-    
-    var remaining = parseInt({{ remaining }});
-    if(keywords.length > remaining && remaining >= 0) {
-        if(!confirm('You have ' + remaining + ' searches left today. Researching ' + keywords.length + ' keywords will use them all. Continue?')) return;
-    }
-    
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('results').style.display = 'none';
-    
-    var results = [];
-    var errors = [];
-    
-    for(var i = 0; i < keywords.length; i++) {
-        var keyword = keywords[i].trim();
-        if(!keyword) continue;
-        
-        document.getElementById('loadingText').innerHTML = 'Researching ' + (i+1) + '/' + keywords.length + ': ' + keyword + '...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>';
-        
-        try {
-            var keywordTimeout = new Promise(function(_, reject) { 
-                setTimeout(function() { reject(new Error('Keyword "' + keyword + '" timed out')); }, 30000);
-            });
+        function researchKeywords() {
+            var keywords = document.getElementById('keywords').value.split('\n').filter(function(k) { return k.trim(); });
+            if(keywords.length === 0) { alert('Enter keywords'); return; }
             
-            var fetchPromise = fetch('/api/research', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({keyword: keyword})
-            });
-            
-            var response = await Promise.race([fetchPromise, keywordTimeout]);
-            var data = await response.json();
-            
-            if(data.error) { 
-                errors.push({keyword: keyword, error: data.error});
-            } else {
-                results.push(data);
+            var remaining = parseInt({{ remaining }});
+            if(keywords.length > remaining && remaining >= 0) {
+                if(!confirm('You have ' + remaining + ' searches left today. Researching ' + keywords.length + ' keywords will use them all. Continue?')) return;
             }
-        } catch(error) {
-            console.error('Error researching "' + keyword + '":', error);
-            errors.push({keyword: keyword, error: error.message || 'Request failed'});
-        }
-    }
-    
-    if (results.length > 0) {
-        results.sort(function(a, b) { return b.score - a.score; });
-        var tbody = document.getElementById('resultsBody');
-        tbody.innerHTML = '';
-        results.forEach(function(r) {
-            var row = tbody.insertRow();
-            var cls = 'bad';
-            if(r.score >= 7) cls = 'good';
-            else if(r.score >= 5) cls = 'medium';
-            row.insertCell(0).innerHTML = '<span class="' + cls + '">' + r.score + '/10</span>';
-            row.insertCell(1).innerHTML = r.keyword;
-            row.insertCell(2).innerHTML = r.volume;
-            row.insertCell(3).innerHTML = r.competition;
             
-            if (r.competitors && r.competitors.length > 0) {
-                var compHtml = '<div style="font-size: 12px;">';
-                r.competitors.forEach(function(comp, idx) {
-                    compHtml += '<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">';
-                    compHtml += '<strong>' + (idx+1) + '.</strong> ' + comp.title + '<br>';
-                    compHtml += '<span style="color: #666;">Rank: ' + comp.bsr + '</span>';
-                    compHtml += '</div>';
-                });
-                compHtml += '</div>';
-                row.insertCell(4).innerHTML = compHtml;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            var results = [];
+            var errors = [];
+            var processed = 0;
+            
+            for(var i = 0; i < keywords.length; i++) {
+                var keyword = keywords[i].trim();
+                if(!keyword) continue;
                 
-                var relatedHtml = '<div style="font-size: 12px;">';
-                if (r.related_keywords && r.related_keywords.length > 0) {
-                    for (var idx = 0; idx < r.related_keywords.length; idx++) {
-                        var kw = r.related_keywords[idx];
-                        relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
-                    }
-                } else {
-                    relatedHtml = '<span style="color: #999;">No related keywords</span>';
-                }
-                row.insertCell(5).innerHTML = relatedHtml;
-            } else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {
-                row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
-            } else {
-                row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
+                (function(index, kw) {
+                    fetch('/api/research', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({keyword: kw})
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if(data.error) { 
+                            errors.push({keyword: kw, error: data.error});
+                        } else {
+                            results.push(data);
+                        }
+                        processed++;
+                        if(processed === keywords.length) {
+                            displayResults(results, errors);
+                        }
+                    })
+                    .catch(function(error) {
+                        errors.push({keyword: kw, error: error.message || 'Request failed'});
+                        processed++;
+                        if(processed === keywords.length) {
+                            displayResults(results, errors);
+                        }
+                    });
+                })(i, keyword);
             }
-        });
-        document.getElementById('results').style.display = 'block';
-    }
-    
-    if (errors.length > 0) {
-        var errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
-        errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
-        errors.forEach(function(e) {
-            errorHtml += '<li><strong>' + e.keyword + '</strong>: ' + e.error + '</li>';
-        });
-        errorHtml += '</ul></div>';
-        
-        var existingError = document.querySelector('.error-summary');
-        if (existingError) existingError.remove();
-        
-        var errorDiv = document.createElement('div');
-        errorDiv.className = 'error-summary';
-        errorDiv.innerHTML = errorHtml;
-        document.getElementById('results').appendChild(errorDiv);
-    }
-    
-    document.getElementById('loading').style.display = 'none';
-    
-    var existingMsg = document.querySelector('.completion-message');
-    if (existingMsg) existingMsg.remove();
-    
-    if (results.length > 0 || errors.length > 0) {
-        var msg = document.createElement('div');
-        msg.className = 'completion-message';
-        msg.style.background = '#e3f2fd';
-        msg.style.padding = '10px';
-        msg.style.borderRadius = '5px';
-        msg.style.marginTop = '10px';
-        msg.style.textAlign = 'center';
-        
-        var messageText = '✅ Research complete! ' + results.length + ' keywords processed successfully.';
-        if (errors.length > 0) {
-            messageText += ' ' + errors.length + ' keywords failed.';
         }
-        messageText += ' <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.';
-        msg.innerHTML = messageText;
-        document.getElementById('results').appendChild(msg);
-    }
-}
-            
+        
+        function displayResults(results, errors) {
             if (results.length > 0) {
                 results.sort(function(a, b) { return b.score - a.score; });
                 var tbody = document.getElementById('resultsBody');
@@ -359,38 +273,30 @@ DASHBOARD_TEMPLATE = '''
         
         function copyAllToClipboard() {
             var rows = document.querySelectorAll('#resultsTable tbody tr');
-            
             if (rows.length === 0) {
                 alert('No results to copy!');
                 return;
             }
-            
             var text = '';
             for (var i = 0; i < rows.length; i++) {
                 var cells = rows[i].cells;
                 if (cells.length < 4) continue;
-                
                 var keyword = cells[1].innerText || 'N/A';
                 var score = cells[0].innerText || 'N/A';
                 var volume = cells[2].innerText || 'N/A';
                 var competition = cells[3].innerText || 'N/A';
-                
                 text += 'Keyword: ' + keyword + '\n';
                 text += 'Score: ' + score + '\n';
                 text += 'Volume: ' + volume + '\n';
                 text += 'Competition: ' + competition + '\n';
                 text += '------------------------\n';
             }
-            
             if (text === '') {
                 alert('No valid results to copy!');
                 return;
             }
-            
             navigator.clipboard.writeText(text)
-                .then(function() {
-                    alert('✅ Copied all results to clipboard!');
-                })
+                .then(function() { alert('✅ Copied all results to clipboard!'); })
                 .catch(function() {
                     var textarea = document.createElement('textarea');
                     textarea.value = text;
@@ -404,31 +310,24 @@ DASHBOARD_TEMPLATE = '''
         
         function exportToCSV() {
             var rows = document.querySelectorAll('#resultsTable tbody tr');
-            
             if (rows.length === 0) {
                 alert('No results to export!');
                 return;
             }
-            
             var csv = 'Niche Score,Keyword,Search Volume,Competition\n';
-            
             for (var i = 0; i < rows.length; i++) {
                 var cells = rows[i].cells;
                 if (cells.length < 4) continue;
-                
                 var score = (cells[0].innerText || '').replace(/"/g, '""');
                 var keyword = (cells[1].innerText || '').replace(/"/g, '""');
                 var volume = (cells[2].innerText || '').replace(/"/g, '""');
                 var competition = (cells[3].innerText || '').replace(/"/g, '""');
-                
                 csv += '"' + score + '","' + keyword + '","' + volume + '","' + competition + '"\n';
             }
-            
             try {
                 var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 var link = document.createElement('a');
                 var url = URL.createObjectURL(blob);
-                
                 link.href = url;
                 var now = new Date();
                 var dateStr = now.getFullYear() + '-' + 
@@ -437,12 +336,10 @@ DASHBOARD_TEMPLATE = '''
                     String(now.getHours()).padStart(2, '0') + '-' +
                     String(now.getMinutes()).padStart(2, '0');
                 link.download = 'bookcompass-results-' + dateStr + '.csv';
-                
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
-                
                 alert('✅ CSV exported successfully!');
             } catch (error) {
                 alert('❌ Error exporting CSV: ' + error.message);
