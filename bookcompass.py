@@ -139,10 +139,10 @@ DASHBOARD_TEMPLATE = '''
         }
         
         async function researchKeywords() {
-            var keywords = document.getElementById('keywords').value.split('\\n').filter(function(k) { return k.trim(); });
+            var keywords = document.getElementById('keywords').value.split('\n').filter(function(k) { return k.trim(); });
             if(keywords.length === 0) { alert('Enter keywords'); return; }
             
-            var remaining = {{ remaining }};
+            var remaining = parseInt({{ remaining }});
             if(keywords.length > remaining && remaining >= 0) {
                 if(!confirm('You have ' + remaining + ' searches left today. Researching ' + keywords.length + ' keywords will use them all. Continue?')) return;
             }
@@ -184,7 +184,6 @@ DASHBOARD_TEMPLATE = '''
                 }
             }
             
-            // Show partial results if any
             if (results.length > 0) {
                 results.sort(function(a, b) { return b.score - a.score; });
                 var tbody = document.getElementById('resultsBody');
@@ -209,6 +208,7 @@ DASHBOARD_TEMPLATE = '''
                         });
                         compHtml += '</div>';
                         row.insertCell(4).innerHTML = compHtml;
+                        
                         var relatedHtml = '<div style="font-size: 12px;">';
                         if (r.related_keywords && r.related_keywords.length > 0) {
                             for (var idx = 0; idx < r.related_keywords.length; idx++) {
@@ -228,7 +228,6 @@ DASHBOARD_TEMPLATE = '''
                 document.getElementById('results').style.display = 'block';
             }
             
-            // Show error summary if any keywords failed
             if (errors.length > 0) {
                 var errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
                 errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
@@ -248,7 +247,6 @@ DASHBOARD_TEMPLATE = '''
             
             document.getElementById('loading').style.display = 'none';
             
-            // Show completion message
             var existingMsg = document.querySelector('.completion-message');
             if (existingMsg) existingMsg.remove();
             
@@ -271,7 +269,6 @@ DASHBOARD_TEMPLATE = '''
             }
         }
         
-        // ====== COPY ALL RESULTS TO CLIPBOARD ======
         function copyAllToClipboard() {
             var rows = document.querySelectorAll('#resultsTable tbody tr');
             
@@ -317,7 +314,6 @@ DASHBOARD_TEMPLATE = '''
                 });
         }
         
-        // ====== EXPORT RESULTS TO CSV ======
         function exportToCSV() {
             var rows = document.querySelectorAll('#resultsTable tbody tr');
             
