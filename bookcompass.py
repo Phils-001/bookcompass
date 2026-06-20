@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, session, render_template_string, render_template
+from flask import Flask, request, jsonify, session, render_template_string
 import requests
 import time
 from datetime import date, datetime, timedelta
@@ -611,16 +611,252 @@ def dashboard():
     used = usage_tracker[email][today]
     remaining = limit - used
     
-    return render_template('dashboard.html',
-        plan=plan,
-        used=used,
-        limit=limit,
-        remaining=remaining,
-        username=user.get('username', email),
-        email=email,
-        referral_count=user.get('referral_count', 0),
-        referral_credit=user.get('referral_credit', 0)
-    )
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
+        <title>Dashboard - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }}
+            .header {{ background: #232f3e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; }}
+            .logo {{ font-size: 24px; }}
+            .logo span {{ color: #ff9900; }}
+            .nav a {{ color: white; margin-left: 20px; text-decoration: none; }}
+            .container {{ max-width: 1200px; margin: 0 auto; padding: 30px; }}
+            .card {{ background: white; border-radius: 10px; padding: 25px; margin-bottom: 20px; }}
+            button {{ background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; }}
+            input, textarea {{ width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
+            th {{ background: #232f3e; color: white; }}
+            .good {{ background: #4CAF50; color: white; padding: 3px 10px; border-radius: 20px; }}
+            .medium {{ background: #ff9800; color: white; padding: 3px 10px; border-radius: 20px; }}
+            .bad {{ background: #f44336; color: white; padding: 3px 10px; border-radius: 20px; }}
+            .spinner {{ border: 4px solid #f3f3f3; border-top: 4px solid #ff9900; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }}
+            @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+            .usage-bar {{ background: #e0e0e0; border-radius: 10px; height: 10px; margin: 10px 0; }}
+            .usage-fill {{ background: #ff9900; border-radius: 10px; height: 100%; width: {used/limit*100 if limit>0 else 0}%; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">
+    <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
+    Book<span>Compass</span>
+            </div>
+            <div class="nav">
+                <span>Hi, {user.get('username', email)}</span>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/how-it-works">How It Works</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h2>Dashboard</h2>
+                <p>Plan: <strong>{plan.upper()}</strong> | {used}/{limit} searches today</p>
+                <div class="usage-bar"><div class="usage-fill"></div></div>
+                <p>Remaining searches: <strong id="remainingCount">{remaining}</strong></p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button onclick="location.reload()" style="background: #666; padding: 5px 15px; font-size: 12px;">🔄 Refresh Status</button>
+    {f'<a href="/upgrade"><button style="background: #ff9900; padding: 5px 15px; font-size: 12px;">⬆️ Upgrade Plan</button></a>' if session["email"] == "bookcompass.app@gmail.com" else '<button style="background: #666; padding: 5px 15px; font-size: 12px; cursor: not-allowed;" disabled>🔒 Beta Access Only</button>'}
+                </div>
+                {f'''
+<div id="upgradeWarning" style="background: #ffebee; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center;">
+    <p style="color: #c62828; margin: 0 0 10px 0;">WARNING: You have reached your daily limit of {limit} searches.</p>
+</div>
+''' if remaining <= 0 else '<div id="upgradeWarning"></div>'}
+            </div>
+            
+            <div class="card">
+                <h3>👥 Referral Program</h3>
+                <p>Share your unique link and earn 10% off when friends sign up!</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="referralLink" readonly value="https://bookcompass.app/signup?ref={user.get('username', email)}" style="flex: 1; background: #f5f5f5;">
+                    <button onclick="copyReferralLink()">📋 Copy</button>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                    ✅ You've referred <strong id="referralCount">{user.get('referral_count', 0)}</strong> friends
+                    {f'<br>🎁 You have <strong>{user.get("referral_credit", 0)}</strong> months of 10% off credit!' if user.get('referral_credit', 0) > 0 else ''}
+                </p>
+            </div>
+            
+            <div class="card">
+                <h3>📝 Enter Keywords (one per line)</h3>
+                <textarea id="keywords" rows="8" placeholder="christian prayer journal for women&#10;christian gratitude journal women&#10;bible study journal for women"></textarea>
+                <br><br>
+                <button onclick="researchKeywords()">🔍 Research Keywords</button>
+            </div>
+            
+            <div id="loading" style="display:none; text-align:center;">
+                <div class="spinner"></div>
+                <p id="loadingText">Researching...</p>
+            </div>
+            
+            <div id="results" style="display:none;" class="card">
+                <h3 style="display: flex; justify-content: space-between; align-items: center;">
+    Results (Best Opportunities First)
+    <div>
+        <a href="/how-it-works" target="_blank" style="background: none; color: #ff9900; text-decoration: none; font-size: 12px; margin-right: 10px;">❓ How to read results</a>
+        <button onclick="location.reload()" style="background: #666; padding: 5px 10px; font-size: 11px;">🔄</button>
+    </div>
+                </h3>
+                <table id="resultsTable">
+                    <thead><tr><th>Niche Score</th><th>Keyword</th><th>Search Volume</th><th>Competition</th><th>Top Competitors</th><th>Related Keywords</th></tr></thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <script>
+        function copyReferralLink() {{
+            const link = document.getElementById('referralLink');
+            link.select();
+            document.execCommand('copy');
+            alert('Referral link copied! Share it with your friends.');
+        }}
+        
+        async function researchKeywords() {{
+            const keywords = document.getElementById('keywords').value.split('\\n').filter(k => k.trim());
+            if(keywords.length === 0) {{ alert('Enter keywords'); return; }}
+            
+            const remaining = {remaining};
+            if(keywords.length > remaining && remaining >= 0) {{
+                if(!confirm(`You have ${{remaining}} searches left today. Researching ${{keywords.length}} keywords will use them all. Continue?`)) return;
+            }}
+            
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            const results = [];
+            const errors = [];
+            
+            for(let i = 0; i < keywords.length; i++) {{
+                const keyword = keywords[i].trim();
+                if(!keyword) continue;
+                
+                // Update progress text
+                document.getElementById('loadingText').innerHTML = `Researching ${{i+1}}/${{keywords.length}}: ${{keyword}}...<br><small style="color: #666;">This may take 2-3 seconds per keyword</small>`;
+                
+                try {{
+                    // Create a timeout for each individual keyword (30 seconds)
+                    const keywordTimeout = new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error(`Keyword "${{keyword}}" timed out`)), 30000)
+                    );
+                    
+                    const fetchPromise = fetch('/api/research', {{
+                        method: 'POST',
+                        headers: {{'Content-Type': 'application/json'}},
+                        body: JSON.stringify({{keyword: keyword}})
+                    }});
+                    
+                    const response = await Promise.race([fetchPromise, keywordTimeout]);
+                    const data = await response.json();
+                    
+                    if(data.error) {{ 
+                        errors.push({{keyword: keyword, error: data.error}});
+                    }} else {{
+                        results.push(data);
+                    }}
+                }} catch(error) {{
+                    console.error(`Error researching "${{keyword}}":`, error);
+                    errors.push({{keyword: keyword, error: error.message || 'Request failed'}});
+                }}
+            }}
+            
+                        // Show partial results if any
+            if (results.length > 0) {{
+                results.sort((a,b) => b.score - a.score);
+                const tbody = document.getElementById('resultsBody');
+                tbody.innerHTML = '';
+                results.forEach(r => {{
+                    const row = tbody.insertRow();
+                    let cls = 'bad';
+                    if(r.score >= 7) cls = 'good';
+                    else if(r.score >= 5) cls = 'medium';
+                    row.insertCell(0).innerHTML = `<span class="${{cls}}">${{r.score}}/10</span>`;
+                    row.insertCell(1).innerHTML = r.keyword;
+                    row.insertCell(2).innerHTML = r.volume;
+                    row.insertCell(3).innerHTML = r.competition;
+                    
+                    // Add competitors column
+                    if (r.competitors && r.competitors.length > 0) {{
+                        let compHtml = '<div style="font-size: 12px;">';
+                        r.competitors.forEach((comp, idx) => {{
+                            compHtml += `<div style="background: #f8f9fa; padding: 6px; margin-bottom: 5px; border-radius: 4px;">`;
+                            compHtml += `<strong>${{idx+1}}.</strong> ${{comp.title}}<br>`;
+                            compHtml += `<span style="color: #666;">Rank: ${{comp.bsr}}</span>`;
+                            compHtml += `</div>`;
+                        }});
+                        compHtml += '</div>';
+                        row.insertCell(4).innerHTML = compHtml;
+                        // Add Related Keywords column
+                    let relatedHtml = '<div style="font-size: 12px;">';
+                    if (r.related_keywords && r.related_keywords.length > 0) {{
+                        for (let idx = 0; idx < r.related_keywords.length; idx++) {{
+                            let kw = r.related_keywords[idx];
+                            relatedHtml += '<div style="padding: 4px 0; border-bottom: 1px dotted #eee;">🔗 ' + kw + '</div>';
+                        }}
+                    }} else {{
+                        relatedHtml = '<span style="color: #999;">No related keywords</span>';
+                    }}
+                    row.insertCell(5).innerHTML = relatedHtml;
+                    }} else if (r.competition && (r.competition.includes('Currently Unavailable') || r.competition.includes('Slow Response'))) {{
+                        row.insertCell(4).innerHTML = '<span style="color: #ff9800;">⏳ Data temporarily unavailable</span>';
+                    }} else {{
+                        row.insertCell(4).innerHTML = '<span style="color: #999;">🔒 Upgrade to see competitors</span>';
+                    }}
+                }});
+                document.getElementById('results').style.display = 'block';
+            }}
+            
+            // Show error summary if any keywords failed
+            if (errors.length > 0) {{
+                let errorHtml = '<div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba;">';
+                errorHtml += '<strong>⚠️ Some keywords could not be processed:</strong><ul style="margin: 10px 0 0 20px;">';
+                errors.forEach(e => {{
+                    errorHtml += `<li><strong>${{e.keyword}}</strong>: ${{e.error}}</li>`;
+                }});
+                errorHtml += '</ul></div>';
+                
+                const existingError = document.querySelector('.error-summary');
+                if (existingError) existingError.remove();
+                
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-summary';
+                errorDiv.innerHTML = errorHtml;
+                document.getElementById('results').appendChild(errorDiv);
+            }}
+            
+            document.getElementById('loading').style.display = 'none';
+            
+            // Show completion message
+            const existingMsg = document.querySelector('.completion-message');
+            if (existingMsg) existingMsg.remove();
+            
+            if (results.length > 0 || errors.length > 0) {{
+                const msg = document.createElement('div');
+                msg.className = 'completion-message';
+                msg.style.background = '#e3f2fd';
+                msg.style.padding = '10px';
+                msg.style.borderRadius = '5px';
+                msg.style.marginTop = '10px';
+                msg.style.textAlign = 'center';
+                
+                let messageText = `✅ Research complete! ${{results.length}} keywords processed successfully.`;
+                if (errors.length > 0) {{
+                    messageText += ` ${{errors.length}} keywords failed.`;
+                }}
+                messageText += ` <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.`;
+                msg.innerHTML = messageText;
+                document.getElementById('results').appendChild(msg);
+            }}
+        }}
+        </script>
+    </body>
+    </html>
+    '''
 
 # ============================================
 # API RESEARCH ENDPOINT
