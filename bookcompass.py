@@ -4045,7 +4045,7 @@ class AmazonDataCollector:
         """Make API data more accurate"""
         keyword_lower = keyword.lower()
         
-        # Known huge categories with accurate numbers
+        # Known huge categories with accurate numbers (only for exact matches)
         known_categories = {
             'coloring book': 82239,
             'adult coloring book': 5000,
@@ -4059,17 +4059,15 @@ class AmazonDataCollector:
             'cookbook': 35000,
         }
         
-        # If keyword is a known category, use accurate number
+        # ONLY use known categories for EXACT matches
         for category, real_total in known_categories.items():
-            if category in keyword_lower:
+            if category == keyword_lower:
                 return real_total
         
-        # If API shows many pages, real count is higher
+        # For keywords NOT in known categories, use the API estimate directly
+        # This gives the same result as the original working version (pages × 48)
         total_pages = api_total // 48
-        if total_pages >= 7:
-            return total_pages * 200
-        
-        return api_total
+        return total_pages * 48
     
     def smart_estimate(self, keyword):
         """Intelligent guess when no data available"""
