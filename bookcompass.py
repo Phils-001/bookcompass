@@ -635,7 +635,7 @@ def dashboard():
             .bad {{ background: #f44336; color: white; padding: 3px 10px; border-radius: 20px; }}
                         /* ====== COMPETITION STYLES ====== */
             .competition-high {
-                background: #f44336;
+                
                 color: white;
                 padding: 3px 10px;
                 border-radius: 20px;
