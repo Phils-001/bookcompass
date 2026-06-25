@@ -630,40 +630,14 @@ def dashboard():
             table {{ width: 100%; border-collapse: collapse; }}
             th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
             th {{ background: #232f3e; color: white; }}
-            .good {{ background: #4CAF50; color: white; padding: 3px 10px; border-radius: 20px; }}
-            .medium {{ background: #ff9800; color: white; padding: 3px 10px; border-radius: 20px; }}
-            .bad {{ background: #f44336; color: white; padding: 3px 10px; border-radius: 20px; }}
-                        /* ====== COMPETITION STYLES ====== */
-            .competition-high {
-                
-                color: white;
-                padding: 3px 10px;
-                border-radius: 20px;
-                display: inline-block;
-                font-weight: bold;
-            }
-            .competition-medium {
-                background: #ff9800;
-                color: white;
-                padding: 3px 10px;
-                border-radius: 20px;
-                display: inline-block;
-                font-weight: bold;
-            }
-            .competition-low {
-                background: #4CAF50;
-                color: white;
-                padding: 3px 10px;
-                border-radius: 20px;
-                display: inline-block;
-                font-weight: bold;
-            }
-            
-            /* ====== TABLE STYLES ====== */
-            #resultsTable tbody td {
-                padding: 12px;
-                vertical-align: middle;
-            }
+            .good {{ background: #4CAF50; color: white; padding: 3px 10px; border-radius: 20px; display: inline-block; }}
+            .medium {{ background: #ff9800; color: white; padding: 3px 10px; border-radius: 20px; display: inline-block; }}
+            .bad {{ background: #f44336; color: white; padding: 3px 10px; border-radius: 20px; display: inline-block; }}
+            .competition-high {{ background: #f44336; color: white; padding: 3px 10px; border-radius: 20px; display: inline-block; font-weight: bold; }}
+            .competition-medium {{ background: #ff9800; color: white; padding: 3px 10px; border-radius: 20px; display: inline-block; font-weight: bold; }}
+            .competition-low {{ background: #4CAF50; color: white; padding: 3px 10px; border-radius: 20px; display: inline-block; font-weight: bold; }}
+            #resultsTable tbody td {{ padding: 12px; vertical-align: middle; }}
+            #resultsTable tbody tr:hover {{ background: #f5f5f5; }}
             .spinner {{ border: 4px solid #f3f3f3; border-top: 4px solid #ff9900; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }}
             @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
             .usage-bar {{ background: #e0e0e0; border-radius: 10px; height: 10px; margin: 10px 0; }}
