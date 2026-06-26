@@ -2138,6 +2138,186 @@ def record_payment(email, amount, plan, payment_method='monnify'):
 # ============================================
 # ADMIN PANEL WITH USER MANAGEMENT 
 # ============================================
+@app.route('/admin/send-beta-invites')
+def admin_send_beta_invites():
+    # Check admin password
+    admin_password = request.args.get('password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return '<div style="text-align:center; margin-top:50px;"><h2>Unauthorized</h2><a href="/admin">Back</a></div>'
+    
+    # Get all free users (non-admin)
+    free_users = []
+    for email, user_data in users.items():
+        if user_data.get('plan') == 'free' and email != 'bookcompass.app@gmail.com':
+            free_users.append({
+                'email': email,
+                'username': user_data.get('username', email)
+            })
+    
+    if not free_users:
+        return '''
+        <div style="text-align:center; margin-top:50px; font-family: Arial;">
+            <div style="background: white; max-width: 600px; margin: 0 auto; padding: 40px; border-radius: 10px;">
+                <h2 style="color: #ff9900;">📭 No Free Users Found</h2>
+                <p>All users are already on paid plans or there are no users.</p>
+                <a href="/admin?password=BookCompassAdmin@@2026!" style="background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">← Back to Admin</a>
+            </div>
+        </div>
+        '''
+    
+    # ====== SEND EMAILS ======
+    success_count = 0
+    fail_count = 0
+    failed_emails = []
+    
+    # Email content
+    subject = "🎉 Join BookCompass Beta Testing - Free Starter Plan Upgrade!"
+    
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f0f0;">
+        <div style="background: #232f3e; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: #ff9900; margin: 0; font-size: 28px;">BookCompass</h1>
+            <p style="color: white; margin: 5px 0 0 0; font-size: 14px;">Your KDP Keyword Navigator</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h2 style="color: #232f3e; margin-top: 0;">🎉 You're Invited to Beta Test BookCompass!</h2>
+            
+            <p style="font-size: 16px; line-height: 1.6; color: #333;">Dear BookCompass User,</p>
+            
+            <p style="font-size: 16px; line-height: 1.6; color: #333;">
+                We're excited to invite you to be part of our <strong style="color: #ff9900;">exclusive Beta Testing group</strong> 
+                for BookCompass!
+            </p>
+            
+            <div style="background: #fff8f0; padding: 20px; border-radius: 10px; border-left: 4px solid #ff9900; margin: 20px 0;">
+                <h3 style="color: #232f3e; margin-top: 0;">🚀 As a Beta Tester, You'll Get:</h3>
+                <ul style="font-size: 16px; line-height: 1.8; color: #333; padding-left: 20px;">
+                    <li>✅ <strong>Free Starter Plan</strong> (20 searches/day)</li>
+                    <li>✅ <strong>Bulk keyword research</strong> (up to 30 keywords)</li>
+                    <li>✅ <strong>Early access</strong> to new features</li>
+                    <li>✅ <strong>Direct influence</strong> on product development</li>
+                </ul>
+            </div>
+            
+            <div style="background: #e3f2fd; padding: 25px; border-radius: 10px; text-align: center; margin: 25px 0;">
+                <p style="font-size: 18px; font-weight: bold; margin: 0 0 10px 0; color: #1565C0;">
+                    📱 Join Our Beta Testers Group
+                </p>
+                <p style="font-size: 14px; color: #555; margin: 0 0 15px 0;">
+                    Share your feedback, suggestions, and bug reports
+                </p>
+                <a href="https://t.me/+Z8uYTC7UIbQxYzVk" 
+                   style="background: #0088cc; color: white; padding: 15px 35px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+                    👉 Join Telegram Group
+                </a>
+                <p style="font-size: 12px; color: #999; margin-top: 15px;">
+                    🔑 Your account will be upgraded once you join the group
+                </p>
+            </div>
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0; font-size: 14px; color: #2e7d32;">
+                    🎁 This is completely <strong>FREE</strong> during our beta testing phase. No payment required!
+                </p>
+            </div>
+            
+            <hr style="border: 1px solid #ddd; margin: 25px 0;">
+            
+            <p style="font-size: 14px; color: #666; text-align: center; line-height: 1.6;">
+                If you have any questions, reply to this email or visit our <a href="https://bookcompass.app/contact" style="color: #ff9900;">Contact Page</a>.
+                <br><br>
+                See you in the group! 🚀
+                <br><br>
+                <strong style="color: #232f3e;">The BookCompass Team</strong>
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Send emails
+    for user in free_users:
+        email = user['email']
+        username = user['username']
+        
+        try:
+            # Personalize the email with the username
+            personalized_html = html_content.replace("Dear BookCompass User,", f"Dear {username},")
+            
+            params = {
+                "from": "BookCompass <noreply@bookcompass.app>",
+                "to": [email],
+                "subject": subject,
+                "html": personalized_html
+            }
+            
+            resend.Emails.send(params)
+            success_count += 1
+            
+        except Exception as e:
+            fail_count += 1
+            failed_emails.append({'email': email, 'error': str(e)})
+    
+    # ====== BUILD RESPONSE PAGE ======
+    response_html = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
+        <title>Beta Invites Sent - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+            h1 {{ color: #232f3e; }}
+            .success {{ color: #4CAF50; font-weight: bold; }}
+            .error {{ color: #f44336; font-weight: bold; }}
+            .summary {{ background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; }}
+            .back-link {{ display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📧 Beta Invites Sent!</h1>
+            
+            <div class="summary">
+                <p><span class="success">✅ Successfully sent: <strong>{success_count}</strong></span></p>
+                <p><span class="error">❌ Failed: <strong>{fail_count}</strong></span></p>
+                <p>📊 Total free users: <strong>{len(free_users)}</strong></p>
+            </div>
+            
+            {f'''
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #ffeeba;">
+                <strong>⚠️ Failed to send to these users:</strong>
+                <ul>
+                    {''.join([f'<li><strong>{e["email"]}</strong>: {e["error"]}</li>' for e in failed_emails])}
+                </ul>
+            </div>
+            ''' if failed_emails else ''}
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #4CAF50;">
+                <strong>📋 Next Steps:</strong>
+                <ol style="margin: 10px 0 0 20px;">
+                    <li>Monitor the Telegram group for new members</li>
+                    <li>Ask each member to share their BookCompass email</li>
+                    <li>Use the admin panel to upgrade them to Starter plan</li>
+                    <li>Welcome them and ask for feedback!</li>
+                </ol>
+            </div>
+            
+            <a href="/admin?password=BookCompassAdmin@@2026!" class="back-link">← Back to Admin</a>
+        </div>
+    </body>
+    </html>
+    '''
+    
+    return response_html
 
 @app.route('/admin')
 def admin_panel():
