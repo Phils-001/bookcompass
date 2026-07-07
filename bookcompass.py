@@ -4262,6 +4262,14 @@ class AmazonDataCollector:
             return 800
         else:  # Broad
             return 2000
+    
+# ============================================
+# GOOGLE VERIFICATION FILE
+# ============================================
+
+@app.route('/google7abf0e1039bfba95.html')
+def google_verification():
+    return '''google-site-verification: google7abf0e1039bfba95.html''', 200, {'Content-Type': 'text/html'}
 # ============================================
 # RUN THE APP
 # ============================================
