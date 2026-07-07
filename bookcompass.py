@@ -4270,6 +4270,41 @@ class AmazonDataCollector:
 @app.route('/google7abf0e1039bfba95.html')
 def google_verification():
     return '''google-site-verification: google7abf0e1039bfba95.html''', 200, {'Content-Type': 'text/html'}
+
+# ============================================
+# SITEMAP.XML - Helps Google find your pages
+# ============================================
+
+@app.route('/sitemap.xml')
+def sitemap():
+    from datetime import datetime
+    
+    pages = [
+        {'url': 'https://bookcompass.app/', 'priority': '1.0', 'changefreq': 'weekly'},
+        {'url': 'https://bookcompass.app/dashboard', 'priority': '0.8', 'changefreq': 'daily'},
+        {'url': 'https://bookcompass.app/how-it-works', 'priority': '0.6', 'changefreq': 'monthly'},
+        {'url': 'https://bookcompass.app/login', 'priority': '0.4', 'changefreq': 'monthly'},
+        {'url': 'https://bookcompass.app/signup', 'priority': '0.4', 'changefreq': 'monthly'},
+        {'url': 'https://bookcompass.app/contact', 'priority': '0.3', 'changefreq': 'monthly'},
+        {'url': 'https://bookcompass.app/terms', 'priority': '0.3', 'changefreq': 'monthly'},
+        {'url': 'https://bookcompass.app/privacy', 'priority': '0.3', 'changefreq': 'monthly'},
+    ]
+    
+    sitemap_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    sitemap_xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    
+    for page in pages:
+        sitemap_xml += f'''
+    <url>
+        <loc>{page['url']}</loc>
+        <lastmod>{datetime.now().strftime('%Y-%m-%d')}</lastmod>
+        <changefreq>{page['changefreq']}</changefreq>
+        <priority>{page['priority']}</priority>
+    </url>
+    '''
+    
+    sitemap_xml += '</urlset>'
+    return sitemap_xml, 200, {'Content-Type': 'application/xml'}
 # ============================================
 # RUN THE APP
 # ============================================
