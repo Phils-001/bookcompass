@@ -4321,6 +4321,131 @@ Disallow: /api/
 Sitemap: https://bookcompass.app/sitemap.xml
 '''
     return content, 200, {'Content-Type': 'text/plain'}
+
+# ============================================
+# RESOURCES PAGE - Helps with SEO
+# ============================================
+
+@app.route('/resources')
+def resources():
+    html = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
+        <title>KDP Keyword Research Guide - BookCompass</title>
+        <style>
+            body { font-family: Arial; margin: 0; padding: 0; background: #f0f0f0; }
+            .header { background: #232f3e; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+            .logo { font-size: 24px; font-weight: bold; }
+            .logo span { color: #ff9900; }
+            .nav a { color: white; margin-left: 20px; text-decoration: none; }
+            .container { max-width: 900px; margin: 0 auto; padding: 30px; }
+            .card { background: white; border-radius: 10px; padding: 30px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+            h1 { color: #232f3e; }
+            h2 { color: #232f3e; border-bottom: 2px solid #ff9900; padding-bottom: 10px; }
+            h3 { color: #ff9900; }
+            ul, ol { line-height: 1.8; }
+            .back-link { display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="logo">
+                <img src="/static/logo.png" alt="BookCompass" style="height: 45px; width: auto; vertical-align: middle; margin-right: 10px;">
+                Book<span>Compass</span>
+            </div>
+            <div class="nav">
+                <a href="/">Home</a>
+                <a href="/how-it-works">How It Works</a>
+                <a href="/resources">Resources</a>
+                <a href="/login">Login</a>
+                <a href="/signup">Sign Up</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <h1>📚 KDP Keyword Research Resources</h1>
+                <p>Learn how to find profitable keywords for your KDP books.</p>
+            </div>
+            
+            <div class="card">
+                <h2>🔍 What is Keyword Research?</h2>
+                <p>Keyword research is the process of finding words and phrases that people type into Amazon when looking for books. By targeting the right keywords, your book appears in front of readers who are actively searching for what you offer.</p>
+            </div>
+            
+            <div class="card">
+                <h2>🎯 How to Find Low-Competition Keywords</h2>
+                <ol>
+                    <li><strong>Start with a broad topic</strong> - Example: "journal" or "coloring book"</li>
+                    <li><strong>Use BookCompass</strong> - Enter your keywords and get competition scores</li>
+                    <li><strong>Look for HIGH volume + LOW competition</strong> - These are your golden opportunities</li>
+                    <li><strong>Target long-tail keywords</strong> - "christian gratitude journal women" beats "journal"</li>
+                    <li><strong>Check the competition</strong> - Look at how many reviews top books have</li>
+                </ol>
+                <p style="margin-top: 15px;"><strong>💡 Example:</strong> "mushroom growing for complete beginners" has HIGH volume (5,000/mo) and LOW competition → 9/10 score!</p>
+            </div>
+            
+            <div class="card">
+                <h2>📊 Understanding Your Results</h2>
+                <h3>Niche Score (1-10)</h3>
+                <ul>
+                    <li><strong>7-10</strong> 🟢 Excellent opportunity - Target these!</li>
+                    <li><strong>5-6</strong> 🟡 Decent - Consider if volume is high</li>
+                    <li><strong>1-4</strong> 🔴 Avoid - Too competitive</li>
+                </ul>
+                
+                <h3>Search Volume</h3>
+                <ul>
+                    <li><strong>HIGH</strong> (1,000-5,000+) - Lots of people searching</li>
+                    <li><strong>MEDIUM</strong> (500-1,000) - Moderate demand</li>
+                    <li><strong>LOW</strong> (100-500) - Niche demand</li>
+                    <li><strong>VERY LOW</strong> (Under 100) - Very small audience</li>
+                </ul>
+                
+                <h3>Competition Level</h3>
+                <ul>
+                    <li><strong>LOW</strong> 🟢 - Easy to rank! Great opportunity</li>
+                    <li><strong>MEDIUM</strong> 🟡 - Some competition, but doable</li>
+                    <li><strong>HIGH</strong> 🔴 - Very competitive, avoid unless you're experienced</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>💡 Pro Tips for KDP Success</h2>
+                <ul>
+                    <li><strong>✅ Use BookCompass daily</strong> - Find new keywords every day</li>
+                    <li><strong>✅ Target 3-5 keywords per book</strong> - One main, two secondary</li>
+                    <li><strong>✅ Put keywords in your title</strong> - Amazon's algorithm loves this</li>
+                    <li><strong>✅ Check competition monthly</strong> - Markets change over time</li>
+                    <li><strong>✅ Build a series</strong> - One successful book leads to more</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>📖 Recommended Keywords to Research</h2>
+                <ul>
+                    <li>🔹 "christian prayer journal for women"</li>
+                    <li>🔹 "gratitude journal for women"</li>
+                    <li>🔹 "bible study journal for women"</li>
+                    <li>🔹 "adult coloring book flowers"</li>
+                    <li>🔹 "mushroom growing for complete beginners"</li>
+                    <li>🔹 "prayer journal for anxiety"</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>🚀 Start Finding Keywords Now</h2>
+                <p>Sign up for BookCompass and start finding profitable keywords today!</p>
+                <a href="/signup" style="background: #ff9900; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">🔍 Get Started Free</a>
+            </div>
+            
+            <a href="/" class="back-link">← Back to Home</a>
+        </div>
+    </body>
+    </html>
+    '''
+    return html
 # ============================================
 # RUN THE APP
 # ============================================
