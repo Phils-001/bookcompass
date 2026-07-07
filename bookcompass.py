@@ -242,6 +242,7 @@ def home():
         <div class="nav">
                 <a href="/">Home</a>
                 <a href="/how-it-works">How It Works</a>
+                <a href="/resources">Resources</a>
                 <a href="/login">Login</a>
                 <a href="/signup">Sign Up</a>
             </div>
