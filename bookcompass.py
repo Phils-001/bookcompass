@@ -4305,6 +4305,22 @@ def sitemap():
     
     sitemap_xml += '</urlset>'
     return sitemap_xml, 200, {'Content-Type': 'application/xml'}
+
+# ============================================
+# ROBOTS.TXT - Tells search engines what to crawl
+# ============================================
+
+@app.route('/robots.txt')
+def robots():
+    content = '''User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+Sitemap: https://bookcompass.app/sitemap.xml
+'''
+    return content, 200, {'Content-Type': 'text/plain'}
 # ============================================
 # RUN THE APP
 # ============================================
