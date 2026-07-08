@@ -771,8 +771,9 @@ def dashboard():
             </div>
         </div>
         <div style="margin-top: 10px;">
-            <a href="/upgrade" style="background: #ff9900; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block;">
-                🚀 Claim Offer
+            <a href="mailto:bookcompass.app@gmail.com?subject=I%20want%20the%20Starter%20Plan%20Offer&body=Hi%2C%20I%27d%20like%20to%20claim%20the%20Starter%20Plan%20offer%20for%20%245%20%2F%20%E2%82%A65%2C000.%0A%0AMy%20BookCompass%20username%20is%3A%20%0A%0AThank%20you%21" 
+   style="background: #ff9900; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block;">
+    📧 Claim Offer via Email
             </a>
         </div>
     </div>
