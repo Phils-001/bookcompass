@@ -752,33 +752,37 @@ def dashboard():
         </div>
         <div class="container">
     
-    <!-- ====== OFFER BANNER FOR FREE USERS ====== -->
-    {f'''
-    <div style="background: linear-gradient(135deg, #fff8f0, #fff3e0); border: 2px solid #ff9900; border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 2px 10px rgba(255, 153, 0, 0.15);">
-        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-            <div style="font-size: 32px;">🎁</div>
-            <div>
-                <div style="font-weight: bold; font-size: 16px; color: #232f3e;">
-                    🚀 Upgrade to Starter Plan – Special Offer!
-                </div>
-                <div style="font-size: 14px; color: #555;">
-                    Get <strong>20 searches/day</strong> for just <strong style="color: #ff9900;">$5 / ₦5,000</strong> 
-                    (regular <span style="text-decoration: line-through; color: #999;">$12</span>/month)
-                </div>
-                <div style="font-size: 12px; color: #999; margin-top: 4px;">
-                    📅 Offer valid until July 31, 2026
-                </div>
+ <!-- ====== OFFER BANNER FOR FREE USERS ====== -->
+{f'''
+<div style="background: linear-gradient(135deg, #fff8f0, #fff3e0); border: 2px solid #ff9900; border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 2px 10px rgba(255, 153, 0, 0.15);">
+    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <div style="font-size: 32px;">🎁</div>
+        <div>
+            <div style="font-weight: bold; font-size: 16px; color: #232f3e;">
+                🚀 Upgrade to Starter Plan – Special Offer!
+            </div>
+            <div style="font-size: 14px; color: #555;">
+                Get <strong>20 searches/day</strong> for just <strong style="color: #ff9900;">$5 / ₦5,000</strong> 
+                (regular <span style="text-decoration: line-through; color: #999;">$12</span>/month)
+            </div>
+            <div style="font-size: 12px; color: #999; margin-top: 4px;">
+                📅 Offer valid until July 31, 2026
             </div>
         </div>
-        <div style="margin-top: 10px;">
-            <a href="mailto:bookcompass.app@gmail.com?subject=I%20want%20the%20Starter%20Plan%20Offer&body=Hi%2C%20I%27d%20like%20to%20claim%20the%20Starter%20Plan%20offer%20for%20%245%20%2F%20%E2%82%A65%2C000.%0A%0AMy%20BookCompass%20username%20is%3A%20%0A%0AThank%20you%21" 
-   style="background: #ff9900; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block;">
-    📧 Claim Offer via Email
-            </a>
-        </div>
     </div>
-    ''' if plan == 'free' else ''}
-    <!-- ====== END OFFER BANNER ====== -->
+    <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="mailto:bookcompass.app@gmail.com?subject=I%20want%20the%20Starter%20Plan%20Offer&body=Hi%2C%20I%27d%20like%20to%20claim%20the%20Starter%20Plan%20offer%20for%20%245%20%2F%20%E2%82%A65%2C000.%0A%0AMy%20BookCompass%20username%20is%3A%20%0A%0AThank%20you%21" 
+           style="background: #2196F3; color: white; padding: 10px 18px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 14px;">
+            📧 Email Us
+        </a>
+        <a href="https://t.me/+Z8uYTC7UIbQxYzVk" target="_blank" 
+           style="background: #0088cc; color: white; padding: 10px 18px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 14px;">
+            💬 Join Telegram
+        </a>
+    </div>
+</div>
+''' if plan == 'free' else ''}
+<!-- ====== END OFFER BANNER ====== -->
             <div class="card">
                 <h2>Dashboard</h2>
                 <p>Plan: <strong>{plan.upper()}</strong> | {used}/{limit} searches today</p>
