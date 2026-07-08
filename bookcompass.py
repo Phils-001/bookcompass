@@ -428,6 +428,98 @@ def signup():
               
         # Save to database
         save_user_to_db(email, users[email])
+
+        
+        # ====== SEND WELCOME EMAIL ======
+        try:
+            welcome_html = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: #232f3e; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                    <h1 style="color: #ff9900; margin: 0;">BookCompass</h1>
+                    <p style="color: white; margin: 5px 0 0 0;">Your KDP Keyword Navigator</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+                    <h2 style="color: #232f3e;">Welcome to BookCompass! 🎉</h2>
+                    
+                    <p style="font-size: 16px; line-height: 1.6;">Hi {username},</p>
+                    
+                    <p style="font-size: 16px; line-height: 1.6;">
+                        Welcome to BookCompass! We're excited to have you on board. 🎉
+                    </p>
+                    
+                    <p style="font-size: 16px; line-height: 1.6;">
+                        We built BookCompass to help KDP authors like you find low-competition, 
+                        high-opportunity keywords in seconds. No more guessing – just real data from Amazon.
+                    </p>
+                    
+                    <div style="background: #fff8f0; padding: 20px; border-radius: 10px; border-left: 4px solid #ff9900; margin: 20px 0;">
+                        <h3 style="color: #232f3e; margin-top: 0;">🎁 SPECIAL OFFER FOR NEW USERS!</h3>
+                        <p style="font-size: 16px;">
+                            <strong>Starter Plan: $5 / ₦5,000</strong> (regular $12/month)
+                        </p>
+                        <ul style="font-size: 16px; line-height: 1.8;">
+                            <li>✅ 20 searches per day</li>
+                            <li>✅ Bulk keyword research (up to 30 keywords)</li>
+                            <li>✅ Full competition analysis</li>
+                            <li>✅ Search volume data</li>
+                            <li>✅ Niche Score (1-10)</li>
+                            <li>✅ Priority support</li>
+                        </ul>
+                        <p style="font-size: 14px; color: #666;">
+                            📅 Offer valid until July 31, 2026
+                        </p>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 16px;">
+                            <strong>🔹 How to Claim:</strong><br>
+                            Simply reply to this email with your BookCompass username and I'll upgrade your account to the Starter Plan within 24 hours.
+                        </p>
+                    </div>
+                    
+                    <h3 style="color: #232f3e;">🔍 What You Can Do with BookCompass:</h3>
+                    <ul style="font-size: 16px; line-height: 1.8;">
+                        <li>Enter keywords and get instant analysis</li>
+                        <li>See Niche Scores (1-10) to find the best opportunities</li>
+                        <li>Check search volume and competition levels</li>
+                        <li>View top competitors and their rankings</li>
+                        <li>Discover related keywords you hadn't thought of</li>
+                    </ul>
+                    
+                    <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                        <p style="margin: 0; font-size: 16px;">
+                            <strong>🚀 Ready to Get Started?</strong><br>
+                            Log in here: <a href="https://bookcompass.app/dashboard" style="color: #ff9900;">https://bookcompass.app/dashboard</a>
+                        </p>
+                    </div>
+                    
+                    <hr style="border: 1px solid #ddd; margin: 20px 0;">
+                    
+                    <p style="font-size: 14px; color: #666; text-align: center; line-height: 1.6;">
+                        If you have any questions, feel free to reply to this email. I'm happy to help!
+                        <br><br>
+                        Happy keyword hunting! 🧭
+                        <br><br>
+                        <strong>The BookCompass Team</strong>
+                    </p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            params = {
+                "from": "BookCompass <noreply@bookcompass.app>",
+                "to": [email],
+                "subject": "🎉 Welcome to BookCompass – Special Offer Inside!",
+                "html": welcome_html
+            }
+            resend.Emails.send(params)
+            print(f"✅ Welcome email sent to {email}")
+            
+        except Exception as e:
+            print(f"❌ Failed to send welcome email to {email}: {e}")
         
         # Generate verification code
         import random
