@@ -4447,6 +4447,194 @@ def resources():
     </html>
     '''
     return html
+
+@app.route('/admin/send-welcome-to-free-users')
+def admin_send_welcome_to_free_users():
+    # Check admin password
+    admin_password = request.args.get('password', '')
+    if admin_password != 'BookCompassAdmin@@2026!':
+        return '<div style="text-align:center; margin-top:50px;"><h2>Unauthorized</h2><a href="/admin">Back</a></div>'
+    
+    # Get all free users (non-admin)
+    free_users = []
+    for email, user_data in users.items():
+        if user_data.get('plan') == 'free' and email != 'bookcompass.app@gmail.com':
+            free_users.append({
+                'email': email,
+                'username': user_data.get('username', email)
+            })
+    
+    if not free_users:
+        return '''
+        <div style="text-align:center; margin-top:50px; font-family: Arial;">
+            <div style="background: white; max-width: 600px; margin: 0 auto; padding: 40px; border-radius: 10px;">
+                <h2 style="color: #ff9900;">📭 No Free Users Found</h2>
+                <p>All users are already on paid plans or there are no users.</p>
+                <a href="/admin?password=BookCompassAdmin@@2026!" style="background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">← Back to Admin</a>
+            </div>
+        </div>
+        '''
+    
+    # ====== SEND EMAILS ======
+    success_count = 0
+    fail_count = 0
+    failed_emails = []
+    
+    # Email content
+    subject = "🎉 Welcome to BookCompass – Special Offer Inside!"
+    
+    html_content = """
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #232f3e; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: #ff9900; margin: 0;">BookCompass</h1>
+            <p style="color: white; margin: 5px 0 0 0;">Your KDP Keyword Navigator</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #232f3e;">Welcome to BookCompass! 🎉</h2>
+            
+            <p style="font-size: 16px; line-height: 1.6;">Hi {username},</p>
+            
+            <p style="font-size: 16px; line-height: 1.6;">
+                Welcome to BookCompass! We're excited to have you on board. 🎉
+            </p>
+            
+            <p style="font-size: 16px; line-height: 1.6;">
+                We built BookCompass to help KDP authors like you find low-competition, 
+                high-opportunity keywords in seconds. No more guessing – just real data from Amazon.
+            </p>
+            
+            <div style="background: #fff8f0; padding: 20px; border-radius: 10px; border-left: 4px solid #ff9900; margin: 20px 0;">
+                <h3 style="color: #232f3e; margin-top: 0;">🎁 SPECIAL OFFER FOR NEW USERS!</h3>
+                <p style="font-size: 16px;">
+                    <strong>Starter Plan: $5 / ₦5,000</strong> (regular $12/month)
+                </p>
+                <ul style="font-size: 16px; line-height: 1.8;">
+                    <li>✅ 20 searches per day</li>
+                    <li>✅ Bulk keyword research (up to 30 keywords)</li>
+                    <li>✅ Full competition analysis</li>
+                    <li>✅ Search volume data</li>
+                    <li>✅ Niche Score (1-10)</li>
+                    <li>✅ Priority support</li>
+                </ul>
+                <p style="font-size: 14px; color: #666;">
+                    📅 Offer valid until July 31, 2026
+                </p>
+            </div>
+            
+            <div style="background: #e3f2fd; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 16px;">
+                    <strong>🔹 How to Claim:</strong><br>
+                    Simply reply to this email with your BookCompass username and I'll upgrade your account to the Starter Plan within 24 hours.
+                </p>
+            </div>
+            
+            <h3 style="color: #232f3e;">🔍 What You Can Do with BookCompass:</h3>
+            <ul style="font-size: 16px; line-height: 1.8;">
+                <li>Enter keywords and get instant analysis</li>
+                <li>See Niche Scores (1-10) to find the best opportunities</li>
+                <li>Check search volume and competition levels</li>
+                <li>View top competitors and their rankings</li>
+                <li>Discover related keywords you hadn't thought of</li>
+            </ul>
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center;">
+                <p style="margin: 0; font-size: 16px;">
+                    <strong>🚀 Ready to Get Started?</strong><br>
+                    Log in here: <a href="https://bookcompass.app/dashboard" style="color: #ff9900;">https://bookcompass.app/dashboard</a>
+                </p>
+            </div>
+            
+            <hr style="border: 1px solid #ddd; margin: 20px 0;">
+            
+            <p style="font-size: 14px; color: #666; text-align: center; line-height: 1.6;">
+                If you have any questions, feel free to reply to this email. I'm happy to help!
+                <br><br>
+                Happy keyword hunting! 🧭
+                <br><br>
+                <strong>The BookCompass Team</strong>
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Send emails
+    for user in free_users:
+        email = user['email']
+        username = user['username']
+        
+        try:
+            # Personalize the email with the username
+            personalized_html = html_content.replace("{username}", username)
+            
+            params = {
+                "from": "BookCompass <noreply@bookcompass.app>",
+                "to": [email],
+                "subject": subject,
+                "html": personalized_html
+            }
+            
+            resend.Emails.send(params)
+            success_count += 1
+            
+        except Exception as e:
+            fail_count += 1
+            failed_emails.append({'email': email, 'error': str(e)})
+    
+    # ====== BUILD RESPONSE PAGE ======
+    response_html = f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="icon" type="image/png" href="/static/favicon.png">
+        <title>Welcome Emails Sent - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; }}
+            .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+            h1 {{ color: #232f3e; }}
+            .success {{ color: #4CAF50; font-weight: bold; }}
+            .error {{ color: #f44336; font-weight: bold; }}
+            .summary {{ background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; }}
+            .back-link {{ display: inline-block; margin-top: 20px; background: #ff9900; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📧 Welcome Emails Sent!</h1>
+            
+            <div class="summary">
+                <p><span class="success">✅ Successfully sent: <strong>{success_count}</strong></span></p>
+                <p><span class="error">❌ Failed: <strong>{fail_count}</strong></span></p>
+                <p>📊 Total free users: <strong>{len(free_users)}</strong></p>
+            </div>
+            
+            {f'''
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #ffeeba;">
+                <strong>⚠️ Failed to send to these users:</strong>
+                <ul>
+                    {''.join([f'<li><strong>{e["email"]}</strong>: {e["error"]}</li>' for e in failed_emails])}
+                </ul>
+            </div>
+            ''' if failed_emails else ''}
+            
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #4CAF50;">
+                <strong>📋 Next Steps:</strong>
+                <ol style="margin: 10px 0 0 20px;">
+                    <li>Reply to users who respond to claim their offer</li>
+                    <li>Upgrade them to Starter Plan via Admin Panel</li>
+                    <li>Welcome them to BookCompass!</li>
+                </ol>
+            </div>
+            
+            <a href="/admin?password=BookCompassAdmin@@2026!" class="back-link">← Back to Admin</a>
+        </div>
+    </body>
+    </html>
+    '''
+    
+    return response_html
 # ============================================
 # RUN THE APP
 # ============================================
