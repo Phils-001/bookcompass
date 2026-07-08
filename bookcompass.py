@@ -751,6 +751,33 @@ def dashboard():
             </div>
         </div>
         <div class="container">
+    
+    <!-- ====== OFFER BANNER FOR FREE USERS ====== -->
+    {f'''
+    <div style="background: linear-gradient(135deg, #fff8f0, #fff3e0); border: 2px solid #ff9900; border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; box-shadow: 0 2px 10px rgba(255, 153, 0, 0.15);">
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="font-size: 32px;">🎁</div>
+            <div>
+                <div style="font-weight: bold; font-size: 16px; color: #232f3e;">
+                    🚀 Upgrade to Starter Plan – Special Offer!
+                </div>
+                <div style="font-size: 14px; color: #555;">
+                    Get <strong>20 searches/day</strong> for just <strong style="color: #ff9900;">$5 / ₦5,000</strong> 
+                    (regular <span style="text-decoration: line-through; color: #999;">$12</span>/month)
+                </div>
+                <div style="font-size: 12px; color: #999; margin-top: 4px;">
+                    📅 Offer valid until July 31, 2026
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 10px;">
+            <a href="/upgrade" style="background: #ff9900; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block;">
+                🚀 Claim Offer
+            </a>
+        </div>
+    </div>
+    ''' if plan == 'free' else ''}
+    <!-- ====== END OFFER BANNER ====== -->
             <div class="card">
                 <h2>Dashboard</h2>
                 <p>Plan: <strong>{plan.upper()}</strong> | {used}/{limit} searches today</p>
