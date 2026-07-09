@@ -4830,6 +4830,155 @@ def admin_send_welcome_to_free_users():
     '''
     
     return response_html
+
+# ============================================
+# CATEGORY RESEARCH API
+# ============================================
+
+@app.route('/api/category-research', methods=['POST'])
+def category_research():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'})
+    
+    data = request.json
+    keyword = data.get('keyword', '').strip()
+    
+    if not keyword:
+        return jsonify({'error': 'Keyword is required'})
+    
+    if not ASINSPOTLIGHT_API_KEY:
+        return jsonify({'error': 'API key not configured'})
+    
+    try:
+        # Search for products using ASINSpotlight
+        url = "https://api.asinspotlight.com/v1/search"
+        headers = {"x-api-key": ASINSPOTLIGHT_API_KEY}
+        params = {"keyword": keyword, "marketplace": "us", "number_of_products": 50}
+        
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        
+        if response.status_code != 200:
+            return jsonify({'error': f'API error: Status {response.status_code}'})
+        
+        result = response.json()
+        
+        # Get products
+        products = result.get('data', {}).get('shallow_parts', [])
+        
+        if not products:
+            return jsonify({'error': 'No products found for this keyword'})
+        
+        # Extract categories from products
+        category_map = {}
+        for product in products:
+            category = product.get('category', 'Unknown')
+            if category and category != 'Unknown':
+                if category not in category_map:
+                    category_map[category] = []
+                category_map[category].append(product)
+        
+        # Analyze each category
+        categories = []
+        for category_name, products_in_category in category_map.items():
+            # Get BSRs
+            bsrs = []
+            reviews = []
+            indie_count = 0
+            total_count = len(products_in_category)
+            
+            for prod in products_in_category:
+                bsr = prod.get('bsr', 0)
+                if bsr and bsr > 0:
+                    bsrs.append(bsr)
+                reviews_count = prod.get('reviews', 0)
+                if reviews_count:
+                    reviews.append(reviews_count)
+                
+                # Check if indie
+                brand = prod.get('brand', '')
+                major_publishers = ['Penguin', 'HarperCollins', 'Simon & Schuster', 'Hachette', 'Macmillan']
+                is_major = any(pub in brand for pub in major_publishers)
+                if not is_major:
+                    indie_count += 1
+            
+            # Calculate metrics
+            avg_bsr = sum(bsrs) // len(bsrs) if bsrs else 0
+            avg_reviews = sum(reviews) // len(reviews) if reviews else 0
+            indie_percent = (indie_count / total_count * 100) if total_count > 0 else 0
+            trad_percent = 100 - indie_percent
+            
+            # Determine competition level
+            competition = "LOW"
+            if avg_reviews > 1000:
+                competition = "VERY HIGH"
+            elif avg_reviews > 500:
+                competition = "HIGH"
+            elif avg_reviews > 100:
+                competition = "MEDIUM"
+            
+            # Calculate opportunity score (0-100)
+            score = 50
+            if indie_percent > 60:
+                score += 20
+            elif indie_percent > 40:
+                score += 10
+            else:
+                score -= 10
+            
+            if competition == "LOW":
+                score += 15
+            elif competition == "MEDIUM":
+                score += 5
+            elif competition == "HIGH":
+                score -= 10
+            else:
+                score -= 20
+            
+            if avg_bsr > 0:
+                if avg_bsr < 10000:
+                    score += 10
+                elif avg_bsr < 50000:
+                    score += 5
+                else:
+                    score -= 5
+            
+            score = max(0, min(100, score))
+            
+            # Extract themes
+            themes = []
+            for prod in products_in_category[:5]:
+                title = prod.get('title', '')
+                if title:
+                    words = title.split()[:3]
+                    themes.append(' '.join(words))
+            themes = ', '.join(themes[:3]) if themes else 'N/A'
+            
+            categories.append({
+                'name': category_name,
+                'id': products_in_category[0].get('category_id', 'N/A'),
+                'score': score,
+                'top_bsr': avg_bsr,
+                'indie_percent': round(indie_percent, 1),
+                'trad_percent': round(trad_percent, 1),
+                'competition': competition,
+                'themes': themes,
+                'total_products': total_count,
+                'avg_reviews': avg_reviews
+            })
+        
+        # Sort by score
+        categories.sort(key=lambda x: x['score'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'categories': categories,
+            'total_categories': len(categories)
+        })
+        
+    except Exception as e:
+        print(f"❌ Category research error: {e}")
+        return jsonify({'error': str(e)})
 # ============================================
 # RUN THE APP
 # ============================================
