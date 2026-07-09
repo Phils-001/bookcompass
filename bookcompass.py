@@ -816,7 +816,8 @@ def dashboard():
                 <h3>📝 Enter Keywords (one per line)</h3>
                 <textarea id="keywords" rows="8" placeholder="christian prayer journal for women&#10;christian gratitude journal women&#10;bible study journal for women"></textarea>
                 <br><br>
-                <button onclick="researchKeywords()">🔍 Research Keywords</button>
+                <button onclick="researchKeywords()" style="margin-right: 10px;">🔍 Research Keywords</button>
+<button onclick="showCategoryResearch()" style="background: #ff6f00; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer;">📂 Category Research</button>
             </div>
             
             <div id="loading" style="display:none; text-align:center;">
@@ -1037,7 +1038,188 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
+        // ====== CATEGORY RESEARCH FUNCTIONS ======
+
+function showCategoryResearch() {
+    document.getElementById('categoryResearchModal').style.display = 'block';
+    document.getElementById('categoryKeyword').value = '';
+    document.getElementById('categoryResults').style.display = 'none';
+    document.getElementById('categoryLoading').style.display = 'none';
+    document.getElementById('categorySummary').style.display = 'none';
+}
+
+function closeCategoryResearch() {
+    document.getElementById('categoryResearchModal').style.display = 'none';
+}
+
+function findCategories() {
+    var keyword = document.getElementById('categoryKeyword').value.trim();
+    if (!keyword) {
+        alert('Please enter a keyword');
+        return;
+    }
+    
+    document.getElementById('categoryLoading').style.display = 'block';
+    document.getElementById('categoryResults').style.display = 'none';
+    document.getElementById('categorySummary').style.display = 'none';
+    
+    fetch('/api/category-research', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({keyword: keyword})
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        document.getElementById('categoryLoading').style.display = 'none';
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+        
+        if (data.categories && data.categories.length > 0) {
+            displayCategoryResults(data.categories);
+            displayCategorySummary(data.categories);
+        } else {
+            document.getElementById('categoryResults').innerHTML = '<p style="color:#f44336;">No categories found for this keyword.</p>';
+            document.getElementById('categoryResults').style.display = 'block';
+        }
+    })
+    .catch(function(error) {
+        document.getElementById('categoryLoading').style.display = 'none';
+        alert('Error: ' + error.message);
+    });
+}
+
+function displayCategoryResults(categories) {
+    var container = document.getElementById('categoryResults');
+    container.innerHTML = '';
+    container.style.display = 'block';
+    
+    // Sort by score (highest first)
+    categories.sort(function(a, b) { return b.score - a.score; });
+    
+    for (var i = 0; i < categories.length; i++) {
+        var cat = categories[i];
+        var score = cat.score || 0;
+        
+        // Determine grade and color
+        var grade = 'F';
+        var color = '#f44336';
+        var emoji = '⛔';
+        var recommendation = 'AVOID';
+        if (score >= 80) { grade = 'A'; color = '#4CAF50'; emoji = '🏆'; recommendation = '⭐ TARGET THIS CATEGORY'; }
+        else if (score >= 60) { grade = 'B'; color = '#8BC34A'; emoji = '🥈'; recommendation = '✅ Consider this category'; }
+        else if (score >= 40) { grade = 'C'; color = '#ff9800'; emoji = '🥉'; recommendation = '🟡 Only if strong differentiator'; }
+        else { grade = 'D'; color = '#f44336'; emoji = '❌'; recommendation = '⚠️ Avoid this category'; }
+        
+        var card = document.createElement('div');
+        card.style.cssText = 'background: white; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid ' + color + ';';
+        
+        card.innerHTML = 
+            '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">' +
+                '<div>' +
+                    '<div style="font-size:24px; font-weight:bold; color:' + color + ';">' + emoji + ' ' + grade + ' (Score: ' + score + '/100)</div>' +
+                    '<div style="font-size:16px; color:#232f3e; margin:5px 0;"><strong>📁 ' + (cat.name || 'Unknown Category') + '</strong></div>' +
+                    '<div style="font-size:13px; color:#666;">Category ID: ' + (cat.id || 'N/A') + '</div>' +
+                '</div>' +
+                '<div style="margin-top:10px;">' +
+                    '<span style="background:' + color + '; color:white; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:bold;">' + grade + '</span>' +
+                '</div>' +
+            '</div>' +
+            '<div style="margin-top:10px; font-size:14px; color:#555;">' +
+                '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">' +
+                    '<div>📈 #1 BSR: ' + (cat.top_bsr || 'N/A') + '</div>' +
+                    '<div>📚 Indie: ' + (cat.indie_percent || '0') + '% / Trad: ' + (cat.trad_percent || '0') + '%</div>' +
+                    '<div>🎯 Competition: ' + (cat.competition || 'N/A') + '</div>' +
+                    '<div>💡 Recommendation: ' + recommendation + '</div>' +
+                '</div>' +
+                '<div style="margin-top:8px; font-size:12px; color:#888;">' +
+                    '🔑 Themes: ' + (cat.themes || 'N/A') +
+                '</div>' +
+            '</div>' +
+            '<div style="margin-top:12px;">' +
+                '<button onclick="copyCategoryPath(\'' + (cat.name || '') + '\')" style="background:#2196F3; color:white; border:none; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:12px; margin-right:8px;">📋 Copy Path</button>' +
+                '<button onclick="viewCategoryBooks(\'' + (cat.id || '') + '\')" style="background:#ff9900; color:white; border:none; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:12px;">🔍 View Books</button>' +
+            '</div>';
+        
+        container.appendChild(card);
+    }
+}
+
+function displayCategorySummary(categories) {
+    var container = document.getElementById('categorySummary');
+    container.style.display = 'block';
+    
+    var best = categories[0];
+    var worst = categories[categories.length - 1];
+    
+    container.innerHTML = 
+        '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;">' +
+            '<div style="background:#e8f5e9; padding:15px; border-radius:8px; text-align:center;">' +
+                '<div style="font-size:28px;">🏆</div>' +
+                '<div style="font-weight:bold;">Best Category</div>' +
+                '<div style="font-size:13px; color:#555;">' + (best ? best.name : 'N/A') + '</div>' +
+                '<div style="font-size:20px; color:#4CAF50; font-weight:bold;">' + (best ? best.score : '0') + '/100</div>' +
+            '</div>' +
+            '<div style="background:#fff3e0; padding:15px; border-radius:8px; text-align:center;">' +
+                '<div style="font-size:28px;">📊</div>' +
+                '<div style="font-weight:bold;">Categories Found</div>' +
+                '<div style="font-size:24px; color:#ff9800; font-weight:bold;">' + categories.length + '</div>' +
+            '</div>' +
+            '<div style="background:#ffebee; padding:15px; border-radius:8px; text-align:center;">' +
+                '<div style="font-size:28px;">⚠️</div>' +
+                '<div style="font-weight:bold;">Category to Avoid</div>' +
+                '<div style="font-size:13px; color:#555;">' + (worst ? worst.name : 'N/A') + '</div>' +
+                '<div style="font-size:20px; color:#f44336; font-weight:bold;">' + (worst ? worst.score : '0') + '/100</div>' +
+            '</div>' +
+        '</div>';
+}
+
+function copyCategoryPath(name) {
+    navigator.clipboard.writeText(name)
+        .then(function() { alert('✅ Category path copied to clipboard!'); })
+        .catch(function() { alert('❌ Failed to copy. Please copy manually.'); });
+}
+
+function viewCategoryBooks(categoryId) {
+    if (categoryId) {
+        window.open('https://www.amazon.com/s?rh=n%3A' + categoryId, '_blank');
+    } else {
+        alert('No category ID available');
+    }
+}
         </script>
+        <!-- ====== CATEGORY RESEARCH MODAL ====== -->
+<div id="categoryResearchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow-y:auto; padding:20px;">
+    <div style="max-width:800px; margin:50px auto; background:white; border-radius:15px; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.3); position:relative;">
+        
+        <!-- Close Button -->
+        <button onclick="closeCategoryResearch()" style="position:absolute; top:15px; right:20px; font-size:28px; background:none; border:none; cursor:pointer; color:#999;">&times;</button>
+        
+        <h2 style="color:#232f3e; margin-top:0;">📂 Category Research</h2>
+        <p style="color:#666; margin-bottom:20px;">Find the best Amazon categories for your book.</p>
+        
+        <!-- Input Section -->
+        <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+            <input type="text" id="categoryKeyword" placeholder="Enter your book's main keyword..." style="flex:1; padding:12px; border:1px solid #ddd; border-radius:5px; font-size:16px; min-width:200px;">
+            <button onclick="findCategories()" style="background:#ff9900; color:white; padding:12px 25px; border:none; border-radius:5px; cursor:pointer; font-size:16px;">🔍 Find Categories</button>
+        </div>
+        
+        <!-- Loading -->
+        <div id="categoryLoading" style="display:none; text-align:center; padding:30px;">
+            <div class="spinner"></div>
+            <p style="color:#666;">Searching for categories...</p>
+        </div>
+        
+        <!-- Results -->
+        <div id="categoryResults" style="display:none;"></div>
+        
+        <!-- Summary -->
+        <div id="categorySummary" style="display:none; background:#f8f9fa; padding:15px; border-radius:10px; margin-top:20px;"></div>
+    </div>
+</div>
+<!-- ====== END CATEGORY RESEARCH MODAL ====== -->
     </body>
     </html>
     '''
@@ -4759,6 +4941,159 @@ def admin_send_welcome_to_free_users():
     '''
     
     return response_html
+
+# ============================================
+# CATEGORY RESEARCH API
+# ============================================
+
+@app.route('/api/category-research', methods=['POST'])
+def category_research():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'})
+    
+    data = request.json
+    keyword = data.get('keyword', '').strip()
+    
+    if not keyword:
+        return jsonify({'error': 'Keyword is required'})
+    
+    if not ASINSPOTLIGHT_API_KEY:
+        return jsonify({'error': 'API key not configured'})
+    
+    try:
+        # Search for products using ASINSpotlight
+        url = "https://api.asinspotlight.com/v1/search"
+        headers = {"x-api-key": ASINSPOTLIGHT_API_KEY}
+        params = {"keyword": keyword, "marketplace": "us", "number_of_products": 50}
+        
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        
+        if response.status_code != 200:
+            return jsonify({'error': f'API error: Status {response.status_code}'})
+        
+        result = response.json()
+        
+        # Get products
+        products = result.get('data', {}).get('shallow_parts', [])
+        
+        if not products:
+            return jsonify({'error': 'No products found for this keyword'})
+        
+        # Extract categories from products
+        category_map = {}
+        for product in products:
+            category = product.get('category', 'Unknown')
+            if category and category != 'Unknown':
+                if category not in category_map:
+                    category_map[category] = []
+                category_map[category].append(product)
+        
+        # Analyze each category
+        categories = []
+        for category_name, products_in_category in category_map.items():
+            # Get BSRs
+            bsrs = []
+            reviews = []
+            indie_count = 0
+            total_count = len(products_in_category)
+            
+            for prod in products_in_category:
+                bsr = prod.get('bsr', 0)
+                if bsr and bsr > 0:
+                    bsrs.append(bsr)
+                reviews_count = prod.get('reviews', 0)
+                if reviews_count:
+                    reviews.append(reviews_count)
+                
+                # Check if indie (simplified: check if brand is not a major publisher)
+                brand = prod.get('brand', '')
+                major_publishers = ['Penguin', 'HarperCollins', 'Simon & Schuster', 'Hachette', 'Macmillan']
+                is_major = any(pub in brand for pub in major_publishers)
+                if not is_major:
+                    indie_count += 1
+            
+            # Calculate metrics
+            avg_bsr = sum(bsrs) // len(bsrs) if bsrs else 0
+            avg_reviews = sum(reviews) // len(reviews) if reviews else 0
+            indie_percent = (indie_count / total_count * 100) if total_count > 0 else 0
+            trad_percent = 100 - indie_percent
+            
+            # Determine competition level
+            competition = "LOW"
+            if avg_reviews > 1000:
+                competition = "VERY HIGH"
+            elif avg_reviews > 500:
+                competition = "HIGH"
+            elif avg_reviews > 100:
+                competition = "MEDIUM"
+            
+            # Calculate opportunity score (0-100)
+            score = 50  # base
+            # Indie friendly
+            if indie_percent > 60:
+                score += 20
+            elif indie_percent > 40:
+                score += 10
+            else:
+                score -= 10
+            
+            # Competition adjustment
+            if competition == "LOW":
+                score += 15
+            elif competition == "MEDIUM":
+                score += 5
+            elif competition == "HIGH":
+                score -= 10
+            else:
+                score -= 20
+            
+            # BSR adjustment (lower BSR is better)
+            if avg_bsr > 0:
+                if avg_bsr < 10000:
+                    score += 10
+                elif avg_bsr < 50000:
+                    score += 5
+                else:
+                    score -= 5
+            
+            # Clamp score
+            score = max(0, min(100, score))
+            
+            # Extract themes from product titles
+            themes = []
+            for prod in products_in_category[:5]:
+                title = prod.get('title', '')
+                if title:
+                    words = title.split()[:3]
+                    themes.append(' '.join(words))
+            themes = ', '.join(themes[:3]) if themes else 'N/A'
+            
+            categories.append({
+                'name': category_name,
+                'id': products_in_category[0].get('category_id', 'N/A'),
+                'score': score,
+                'top_bsr': avg_bsr,
+                'indie_percent': round(indie_percent, 1),
+                'trad_percent': round(trad_percent, 1),
+                'competition': competition,
+                'themes': themes,
+                'total_products': total_count,
+                'avg_reviews': avg_reviews
+            })
+        
+        # Sort by score
+        categories.sort(key=lambda x: x['score'], reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'categories': categories,
+            'total_categories': len(categories)
+        })
+        
+    except Exception as e:
+        print(f"❌ Category research error: {e}")
+        return jsonify({'error': str(e)})
 # ============================================
 # RUN THE APP
 # ============================================
