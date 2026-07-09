@@ -1039,17 +1039,17 @@ def dashboard():
             }}
         }}
         // ====== CATEGORY RESEARCH FUNCTIONS (UI ONLY) ======
-        function showCategoryResearch() {
+        function showCategoryResearch() {{
             document.getElementById('categoryResearchModal').style.display = 'block';
             document.getElementById('categoryKeyword').value = '';
             document.getElementById('categoryResults').style.display = 'none';
             document.getElementById('categoryLoading').style.display = 'none';
             document.getElementById('categorySummary').style.display = 'none';
-        }
+        }}
 
-        function closeCategoryResearch() {
+        function closeCategoryResearch() {{
             document.getElementById('categoryResearchModal').style.display = 'none';
-        }
+        }}
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
 <div id="categoryResearchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow-y:auto; padding:20px;">
