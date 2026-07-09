@@ -1090,15 +1090,15 @@ def dashboard():
             }});
         }}
         // ====== DISPLAY CATEGORY RESULTS ======
-        function displayCategoryResults(categories) {{
+        function displayCategoryResults(categories) {
             var container = document.getElementById('categoryResults');
             container.innerHTML = '';
             container.style.display = 'block';
             
             // Sort by score (highest first)
-            categories.sort(function(a, b) {{ return b.score - a.score; }});
+            categories.sort(function(a, b) { return b.score - a.score; });
             
-            for (var i = 0; i < categories.length; i++) {{
+            for (var i = 0; i < categories.length; i++) {
                 var cat = categories[i];
                 var score = cat.score || 0;
                 
@@ -1107,10 +1107,10 @@ def dashboard():
                 var color = '#f44336';
                 var emoji = '⛔';
                 var recommendation = 'AVOID';
-                if (score >= 80) {{ grade = 'A'; color = '#4CAF50'; emoji = '🏆'; recommendation = '⭐ TARGET THIS CATEGORY'; }}
-                else if (score >= 60) {{ grade = 'B'; color = '#8BC34A'; emoji = '🥈'; recommendation = '✅ Consider this category'; }}
-                else if (score >= 40) {{ grade = 'C'; color = '#ff9800'; emoji = '🥉'; recommendation = '🟡 Only if strong differentiator'; }}
-                else {{ grade = 'D'; color = '#f44336'; emoji = '❌'; recommendation = '⚠️ Avoid this category'; }}
+                if (score >= 80) { grade = 'A'; color = '#4CAF50'; emoji = '🏆'; recommendation = '⭐ TARGET THIS CATEGORY'; }
+                else if (score >= 60) { grade = 'B'; color = '#8BC34A'; emoji = '🥈'; recommendation = '✅ Consider this category'; }
+                else if (score >= 40) { grade = 'C'; color = '#ff9800'; emoji = '🥉'; recommendation = '🟡 Only if strong differentiator'; }
+                else { grade = 'D'; color = '#f44336'; emoji = '❌'; recommendation = '⚠️ Avoid this category'; }
                 
                 var card = document.createElement('div');
                 card.style.cssText = 'background: white; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid ' + color + ';';
@@ -1143,11 +1143,11 @@ def dashboard():
                     '</div>';
                 
                 container.appendChild(card);
-            }}
-        }}
+            }
+        }
 
         // ====== DISPLAY CATEGORY SUMMARY ======
-        function displayCategorySummary(categories) {{
+        function displayCategorySummary(categories) {
             var container = document.getElementById('categorySummary');
             container.style.display = 'block';
             
@@ -1174,23 +1174,23 @@ def dashboard():
                         '<div style="font-size:20px; color:#f44336; font-weight:bold;">' + (worst ? worst.score : '0') + '/100</div>' +
                     '</div>' +
                 '</div>';
-        }}
+        }
 
         // ====== COPY CATEGORY PATH ======
-        function copyCategoryPath(name) {{
+        function copyCategoryPath(name) {
             navigator.clipboard.writeText(name)
-                .then(function() {{ alert('✅ Category path copied to clipboard!'); }})
-                .catch(function() {{ alert('❌ Failed to copy. Please copy manually.'); }});
-        }}
+                .then(function() { alert('✅ Category path copied to clipboard!'); })
+                .catch(function() { alert('❌ Failed to copy. Please copy manually.'); });
+        }
 
         // ====== VIEW BOOKS IN CATEGORY ======
-        function viewCategoryBooks(categoryId) {{
-            if (categoryId) {{
+        function viewCategoryBooks(categoryId) {
+            if (categoryId) {
                 window.open('https://www.amazon.com/s?rh=n%3A' + categoryId, '_blank');
-            }} else {{
+            } else {
                 alert('No category ID available');
-            }}
-        }}
+            }
+        }
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
 <div id="categoryResearchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow-y:auto; padding:20px;">
