@@ -4879,104 +4879,80 @@ def category_research():
         if not products:
             return jsonify({'error': 'No products found for this keyword'})
         
-        # Extract categories from products
-        category_map = {}
-        for product in products:
-            category = product.get('category', 'Unknown')
-            if category and category != 'Unknown':
-                if category not in category_map:
-                    category_map[category] = []
-                category_map[category].append(product)
-        
-        print(f"📂 Found {len(category_map)} categories")
-        
-        # Analyze each category
+        # ============================================
+        # NEW: Get categories from search metadata
+        # ============================================
         categories = []
-        for category_name, products_in_category in category_map.items():
-            # Get BSRs
-            bsrs = []
-            reviews = []
-            indie_count = 0
-            total_count = len(products_in_category)
-            
-            for prod in products_in_category:
-                bsr = prod.get('bsr', 0)
-                if bsr and bsr > 0:
-                    bsrs.append(bsr)
-                reviews_count = prod.get('reviews', 0)
-                if reviews_count:
-                    reviews.append(reviews_count)
+        
+        # Try to get categories from the search response
+        departments = result.get('data', {}).get('departments', [])
+        print(f"📂 Found {len(departments)} departments")
+        
+        if departments:
+            # Use departments as categories
+            for dept in departments:
+                categories.append({
+                    'name': dept.get('name', 'Unknown'),
+                    'id': dept.get('link', '').split('n%3A')[1].split('&')[0] if 'n%3A' in dept.get('link', '') else 'N/A',
+                    'score': 50,  # Default score
+                    'top_bsr': 0,
+                    'indie_percent': 0,
+                    'trad_percent': 0,
+                    'competition': 'MEDIUM',
+                    'themes': keyword,
+                    'total_products': len(products),
+                    'avg_reviews': 0
+                })
+        
+        # If no departments, try to get categories from product data
+        if not categories:
+            category_set = set()
+            for product in products:
+                # Try different fields that might contain category
+                category = product.get('category', '')
+                if category and category != 'Unknown':
+                    category_set.add(category)
                 
-                # Check if indie
-                brand = prod.get('brand', '')
-                major_publishers = ['Penguin', 'HarperCollins', 'Simon & Schuster', 'Hachette', 'Macmillan']
-                is_major = any(pub in brand for pub in major_publishers)
-                if not is_major:
-                    indie_count += 1
+                # Try to get from browse_node
+                browse_node = product.get('browse_node', '')
+                if browse_node:
+                    category_set.add(browse_node)
+                
+                # Try to get from department
+                department = product.get('department', '')
+                if department:
+                    category_set.add(department)
             
-            # Calculate metrics
-            avg_bsr = sum(bsrs) // len(bsrs) if bsrs else 0
-            avg_reviews = sum(reviews) // len(reviews) if reviews else 0
-            indie_percent = (indie_count / total_count * 100) if total_count > 0 else 0
-            trad_percent = 100 - indie_percent
+            print(f"📂 Found {len(category_set)} categories from products")
             
-            # Determine competition level
-            competition = "LOW"
-            if avg_reviews > 1000:
-                competition = "VERY HIGH"
-            elif avg_reviews > 500:
-                competition = "HIGH"
-            elif avg_reviews > 100:
-                competition = "MEDIUM"
-            
-            # Calculate opportunity score (0-100)
-            score = 50
-            if indie_percent > 60:
-                score += 20
-            elif indie_percent > 40:
-                score += 10
-            else:
-                score -= 10
-            
-            if competition == "LOW":
-                score += 15
-            elif competition == "MEDIUM":
-                score += 5
-            elif competition == "HIGH":
-                score -= 10
-            else:
-                score -= 20
-            
-            if avg_bsr > 0:
-                if avg_bsr < 10000:
-                    score += 10
-                elif avg_bsr < 50000:
-                    score += 5
-                else:
-                    score -= 5
-            
-            score = max(0, min(100, score))
-            
-            # Extract themes
-            themes = []
-            for prod in products_in_category[:5]:
-                title = prod.get('title', '')
-                if title:
-                    words = title.split()[:3]
-                    themes.append(' '.join(words))
-            themes = ', '.join(themes[:3]) if themes else 'N/A'
-            
+            for cat_name in category_set:
+                if cat_name and cat_name != 'Unknown':
+                    categories.append({
+                        'name': cat_name,
+                        'id': 'N/A',
+                        'score': 50,
+                        'top_bsr': 0,
+                        'indie_percent': 0,
+                        'trad_percent': 0,
+                        'competition': 'MEDIUM',
+                        'themes': keyword,
+                        'total_products': len(products),
+                        'avg_reviews': 0
+                    })
+        
+        # If still no categories, create a default one
+        if not categories:
             categories.append({
-                'name': category_name,
-                'id': products_in_category[0].get('category_id', 'N/A'),
-                'score': score,
-                'top_bsr': avg_bsr,
-                'indie_percent': round(indie_percent, 1),
-                'trad_percent': round(trad_percent, 1),
-                'competition': competition,
-                'themes': themes,
-                'total_products': total_count,
-                'avg_reviews': avg_reviews
+                'name': f'Books related to "{keyword}"',
+                'id': 'N/A',
+                'score': 50,
+                'top_bsr': 0,
+                'indie_percent': 0,
+                'trad_percent': 0,
+                'competition': 'MEDIUM',
+                'themes': keyword,
+                'total_products': len(products),
+                'avg_reviews': 0
             })
         
         # Sort by score
