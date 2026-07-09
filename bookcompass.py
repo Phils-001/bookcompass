@@ -4837,26 +4837,35 @@ def admin_send_welcome_to_free_users():
 
 @app.route('/api/category-research', methods=['POST'])
 def category_research():
-    # Check if user is logged in
+    print("🔍 Category research API called")
+    
     if 'user_id' not in session:
         return jsonify({'error': 'Not logged in'})
     
-    data = request.json
-    keyword = data.get('keyword', '').strip()
-    
-    if not keyword:
-        return jsonify({'error': 'Keyword is required'})
-    
-    if not ASINSPOTLIGHT_API_KEY:
-        return jsonify({'error': 'API key not configured'})
-    
     try:
+        data = request.get_json()
+        print(f"📦 Received data: {data}")
+        
+        if not data:
+            return jsonify({'error': 'No data received'})
+        
+        keyword = data.get('keyword', '').strip()
+        print(f"🔑 Keyword: '{keyword}'")
+        
+        if not keyword:
+            return jsonify({'error': 'Keyword is required'})
+        
+        if not ASINSPOTLIGHT_API_KEY:
+            return jsonify({'error': 'API key not configured'})
+        
         # Search for products using ASINSpotlight
         url = "https://api.asinspotlight.com/v1/search"
         headers = {"x-api-key": ASINSPOTLIGHT_API_KEY}
         params = {"keyword": keyword, "marketplace": "us", "number_of_products": 50}
         
+        print(f"📤 Calling ASINSpotlight API...")
         response = requests.get(url, headers=headers, params=params, timeout=30)
+        print(f"📥 ASINSpotlight response status: {response.status_code}")
         
         if response.status_code != 200:
             return jsonify({'error': f'API error: Status {response.status_code}'})
@@ -4865,6 +4874,7 @@ def category_research():
         
         # Get products
         products = result.get('data', {}).get('shallow_parts', [])
+        print(f"📦 Found {len(products)} products")
         
         if not products:
             return jsonify({'error': 'No products found for this keyword'})
@@ -4877,6 +4887,8 @@ def category_research():
                 if category not in category_map:
                     category_map[category] = []
                 category_map[category].append(product)
+        
+        print(f"📂 Found {len(category_map)} categories")
         
         # Analyze each category
         categories = []
@@ -4969,6 +4981,8 @@ def category_research():
         
         # Sort by score
         categories.sort(key=lambda x: x['score'], reverse=True)
+        
+        print(f"✅ Returning {len(categories)} categories")
         
         return jsonify({
             'success': True,
