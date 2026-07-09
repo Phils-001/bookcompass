@@ -4861,7 +4861,7 @@ def category_research():
         # Search for products using ASINSpotlight
         url = "https://api.asinspotlight.com/v1/search"
         headers = {"x-api-key": ASINSPOTLIGHT_API_KEY}
-        params = {"keyword": keyword, "marketplace": "us", "number_of_products": 50}
+        params = {"keyword": keyword, "marketplace": "us"}
         
         print(f"📤 Calling ASINSpotlight API...")
         response = requests.get(url, headers=headers, params=params, timeout=30)
