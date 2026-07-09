@@ -1050,6 +1050,45 @@ def dashboard():
         function closeCategoryResearch() {{
             document.getElementById('categoryResearchModal').style.display = 'none';
         }}
+        // ====== FIND CATEGORIES FUNCTION ======
+        function findCategories() {{
+            var keyword = document.getElementById('categoryKeyword').value.trim();
+            if (!keyword) {{
+                alert('Please enter a keyword');
+                return;
+            }}
+            
+            document.getElementById('categoryLoading').style.display = 'block';
+            document.getElementById('categoryResults').style.display = 'none';
+            document.getElementById('categorySummary').style.display = 'none';
+            
+            fetch('/api/category-research', {{
+                method: 'POST',
+                headers: {{'Content-Type': 'application/json'}},
+                body: JSON.stringify({{keyword: keyword}})
+            }})
+            .then(function(response) {{ return response.json(); }})
+            .then(function(data) {{
+                document.getElementById('categoryLoading').style.display = 'none';
+                
+                if (data.error) {{
+                    alert('Error: ' + data.error);
+                    return;
+                }}
+                
+                if (data.categories && data.categories.length > 0) {{
+                    displayCategoryResults(data.categories);
+                    displayCategorySummary(data.categories);
+                }} else {{
+                    document.getElementById('categoryResults').innerHTML = '<p style="color:#f44336;">No categories found for this keyword.</p>';
+                    document.getElementById('categoryResults').style.display = 'block';
+                }}
+            }})
+            .catch(function(error) {{
+                document.getElementById('categoryLoading').style.display = 'none';
+                alert('Error: ' + error.message);
+            }});
+        }}
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
 <div id="categoryResearchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow-y:auto; padding:20px;">
