@@ -1033,7 +1033,7 @@ def dashboard():
                 if (errors.length > 0) {{
                     messageText += ` ${{errors.length}} keywords failed.`;
                 }}
-                messageText += ` <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.`;
+                messageText += ' <a href="#" onclick="location.reload()">Click here to refresh</a> and see your updated search limits.';
                 msg.innerHTML = messageText;
                 document.getElementById('results').appendChild(msg);
             }}
