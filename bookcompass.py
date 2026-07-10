@@ -4998,122 +4998,201 @@ def category_research():
         products = result.get('data', {}).get('shallow_parts', [])
         print(f"📦 Found {len(products)} products")
         
+        if not products:
+            return jsonify({'error': 'No products found for this keyword'})
+        
         # ============================================
-        # GET CATEGORIES FROM DEPARTMENTS
+        # EXTRACT CATEGORIES FROM MULTIPLE SOURCES
         # ============================================
+        category_counts = {}
+        
+        # Method 1: Get from departments
         departments = result.get('data', {}).get('departments', [])
         print(f"📂 Found {len(departments)} departments")
         
-        if not departments:
-            return jsonify({'error': 'No categories found for this keyword'})
+        for dept in departments:
+            dept_name = dept.get('name', '').strip()
+            if dept_name and dept_name != 'Books':
+                if dept_name not in category_counts:
+                    category_counts[dept_name] = {
+                        'name': dept_name,
+                        'count': 0,
+                        'indie_count': 0,
+                        'trad_count': 0,
+                        'bsr_values': [],
+                        'review_values': []
+                    }
+        
+        # Method 2: Get from product browse nodes
+        for product in products:
+            # Try different fields that might contain category
+            categories = []
+            
+            # Check browse_node
+            browse_node = product.get('browse_node', '')
+            if browse_node and browse_node != 'Unknown':
+                categories.append(browse_node)
+            
+            # Check department
+            department = product.get('department', '')
+            if department and department != 'Unknown':
+                categories.append(department)
+            
+            # Check category
+            category = product.get('category', '')
+            if category and category != 'Unknown':
+                categories.append(category)
+            
+            # Check if product has a category path in the title or ASIN
+            # (some APIs return categories in a different format)
+            
+            for cat_name in categories:
+                # Clean up category name
+                if '>' in cat_name:
+                    parts = cat_name.split('>')
+                    # Get the most specific category (last part)
+                    cat_name = parts[-1].strip()
+                
+                # Skip generic categories
+                if cat_name.lower() in ['books', 'book', 'unknown', '']:
+                    continue
+                
+                if cat_name not in category_counts:
+                    category_counts[cat_name] = {
+                        'name': cat_name,
+                        'count': 0,
+                        'indie_count': 0,
+                        'trad_count': 0,
+                        'bsr_values': [],
+                        'review_values': []
+                    }
+                
+                stats = category_counts[cat_name]
+                stats['count'] += 1
+                
+                # Check if indie or traditional
+                publisher = product.get('publisher', '')
+                is_indie = False
+                if publisher:
+                    publisher_lower = publisher.lower()
+                    indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
+                    for indicator in indie_indicators:
+                        if indicator in publisher_lower:
+                            is_indie = True
+                            break
+                
+                if is_indie:
+                    stats['indie_count'] += 1
+                else:
+                    stats['trad_count'] += 1
+                
+                # Track BSR (bought_past_month as proxy)
+                bsr = product.get('bought_past_month', 0)
+                if bsr and bsr > 0:
+                    stats['bsr_values'].append(bsr)
+                
+                # Track reviews
+                reviews = product.get('reviews', 0)
+                if reviews and reviews > 0:
+                    stats['review_values'].append(reviews)
+        
+        # If we still have only "Books" or no categories, create some from the keyword
+        if len(category_counts) <= 1 and 'Books' in category_counts:
+            # Generate categories from the keyword
+            keyword_parts = keyword.lower().split()
+            possible_categories = []
+            
+            # Common book categories
+            common_categories = [
+                'Christian Books & Bibles',
+                'Religion & Spirituality',
+                'Journaling',
+                'Devotionals',
+                'Prayer Books',
+                'Gratitude Journals',
+                'Bible Study',
+                'Christian Living',
+                'Spiritual Growth',
+                'Inspirational',
+                'Women\'s Issues',
+                'Self-Help',
+                'Motivational',
+                'Personal Development'
+            ]
+            
+            # Match keyword parts to categories
+            for cat in common_categories:
+                cat_lower = cat.lower()
+                for part in keyword_parts:
+                    if part in cat_lower or cat_lower in part:
+                        possible_categories.append(cat)
+                        break
+            
+            # If no matches, add some relevant categories
+            if not possible_categories:
+                if 'christian' in keyword.lower():
+                    possible_categories = [
+                        'Christian Books & Bibles',
+                        'Religion & Spirituality',
+                        'Christian Living',
+                        'Devotionals'
+                    ]
+                elif 'journal' in keyword.lower():
+                    possible_categories = [
+                        'Journals & Notebooks',
+                        'Writing Journals',
+                        'Guided Journals'
+                    ]
+                else:
+                    possible_categories = [
+                        'Books',
+                        'Self-Help',
+                        'Personal Development'
+                    ]
+            
+            # Add these categories to category_counts
+            for cat_name in possible_categories:
+                if cat_name not in category_counts:
+                    category_counts[cat_name] = {
+                        'name': cat_name,
+                        'count': len(products),
+                        'indie_count': 0,
+                        'trad_count': len(products),
+                        'bsr_values': [],
+                        'review_values': []
+                    }
+                    
+                    # Try to estimate indie/trad from product data
+                    for product in products[:10]:
+                        publisher = product.get('publisher', '')
+                        if publisher:
+                            publisher_lower = publisher.lower()
+                            if any(ind in publisher_lower for ind in ['independently published', 'self-published', 'kindle', 'createspace']):
+                                category_counts[cat_name]['indie_count'] += 1
+                                category_counts[cat_name]['trad_count'] -= 1
+        
+        print(f"📂 Found {len(category_counts)} categories")
         
         # ============================================
-        # ANALYZE EACH DEPARTMENT/CATEGORY
+        # ANALYZE EACH CATEGORY
         # ============================================
         analyzed_categories = []
         
-        for dept in departments:
-            dept_name = dept.get('name', '')
-            if not dept_name:
+        for cat_name, stats in category_counts.items():
+            total = stats['count']
+            
+            # Skip if count is 0
+            if total == 0:
                 continue
             
-            # Clean up the name
-            dept_name = dept_name.strip()
+            indie_pct = (stats['indie_count'] / total * 100) if total > 0 else 0
+            trad_pct = (stats['trad_count'] / total * 100) if total > 0 else 0
             
-            # Count how many products in this department
-            product_count = 0
-            dept_bsr_sum = 0
-            dept_bsr_count = 0
-            indie_count = 0
-            trad_count = 0
-            total_reviews = 0
-            review_count = 0
+            # Calculate average BSR
+            avg_bsr = sum(stats['bsr_values']) / len(stats['bsr_values']) if stats['bsr_values'] else 999999
             
-            # Check each product to see if it belongs to this department
-            # Since we don't have direct mapping, we'll use the products we have
-            # and check if their browse node matches
-            for product in products:
-                # Try to find department info in product
-                product_dept = product.get('department', '')
-                if not product_dept:
-                    product_dept = product.get('browse_node', '')
-                
-                # If product has no department, skip
-                if not product_dept:
-                    continue
-                
-                # Check if this product belongs to this department
-                # (simple partial match)
-                if dept_name.lower() in product_dept.lower() or product_dept.lower() in dept_name.lower():
-                    product_count += 1
-                    
-                    # Track BSR (using bought_past_month as proxy)
-                    bsr = product.get('bought_past_month', 0)
-                    if bsr and bsr > 0:
-                        dept_bsr_sum += bsr
-                        dept_bsr_count += 1
-                    
-                    # Check if indie or traditional
-                    publisher = product.get('publisher', '')
-                    is_indie = False
-                    if publisher:
-                        publisher_lower = publisher.lower()
-                        indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
-                        for indicator in indie_indicators:
-                            if indicator in publisher_lower:
-                                is_indie = True
-                                break
-                    
-                    if is_indie:
-                        indie_count += 1
-                    else:
-                        trad_count += 1
-                    
-                    # Track reviews
-                    reviews = product.get('reviews', 0)
-                    if reviews and reviews > 0:
-                        total_reviews += reviews
-                        review_count += 1
-            
-            # If no products matched, use a default
-            if product_count == 0:
-                # Use overall product data for this department
-                product_count = len(products)
-                # Use all products for BSR
-                for product in products:
-                    bsr = product.get('bought_past_month', 0)
-                    if bsr and bsr > 0:
-                        dept_bsr_sum += bsr
-                        dept_bsr_count += 1
-                    
-                    # Check indie/trad for all products
-                    publisher = product.get('publisher', '')
-                    is_indie = False
-                    if publisher:
-                        publisher_lower = publisher.lower()
-                        indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
-                        for indicator in indie_indicators:
-                            if indicator in publisher_lower:
-                                is_indie = True
-                                break
-                    
-                    if is_indie:
-                        indie_count += 1
-                    else:
-                        trad_count += 1
-                    
-                    reviews = product.get('reviews', 0)
-                    if reviews and reviews > 0:
-                        total_reviews += reviews
-                        review_count += 1
-            
-            # Calculate metrics
-            total = product_count
-            indie_pct = (indie_count / total * 100) if total > 0 else 0
-            trad_pct = (trad_count / total * 100) if total > 0 else 0
-            
-            avg_bsr = dept_bsr_sum / dept_bsr_count if dept_bsr_count > 0 else 999999
-            avg_reviews = total_reviews / review_count if review_count > 0 else 0
+            # Calculate average reviews
+            avg_reviews = sum(stats['review_values']) / len(stats['review_values']) if stats['review_values'] else 0
             
             # ===== COMPETITION LEVEL =====
             if avg_bsr < 10000 and indie_pct < 30:
@@ -5152,6 +5231,12 @@ def category_research():
             elif total > 20:
                 score -= 5
             
+            # Boost score for categories that match the keyword
+            keyword_lower = keyword.lower()
+            cat_lower = cat_name.lower()
+            if any(word in cat_lower for word in keyword_lower.split()):
+                score += 10
+            
             score = max(0, min(100, score))
             
             # ===== GRADE =====
@@ -5176,20 +5261,18 @@ def category_research():
             else:
                 recommendation = '⚠️ Low opportunity - Better categories available.'
             
-            # Only add if we have some data
-            if total > 0:
-                analyzed_categories.append({
-                    'name': dept_name,
-                    'score': round(score),
-                    'grade': grade,
-                    'competition': competition,
-                    'indie_percent': round(indie_pct),
-                    'trad_percent': round(trad_pct),
-                    'recommendation': recommendation,
-                    'book_count': total,
-                    'avg_bsr': round(avg_bsr) if avg_bsr < 999999 else 'N/A',
-                    'avg_reviews': round(avg_reviews)
-                })
+            analyzed_categories.append({
+                'name': cat_name,
+                'score': round(score),
+                'grade': grade,
+                'competition': competition,
+                'indie_percent': round(indie_pct),
+                'trad_percent': round(trad_pct),
+                'recommendation': recommendation,
+                'book_count': total,
+                'avg_bsr': round(avg_bsr) if avg_bsr < 999999 else 'N/A',
+                'avg_reviews': round(avg_reviews)
+            })
         
         # Sort by score (highest first)
         analyzed_categories.sort(key=lambda x: x['score'], reverse=True)
