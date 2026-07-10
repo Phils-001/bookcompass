@@ -1038,7 +1038,11 @@ def dashboard():
                 document.getElementById('results').appendChild(msg);
             }}
         }}
-        // ====== CATEGORY RESEARCH FUNCTIONS (UI ONLY) ======
+        // ============================================
+        // CATEGORY RESEARCH FUNCTIONS
+        // ============================================
+        
+        // ===== OPEN MODAL =====
         function showCategoryResearch() {{
             document.getElementById('categoryResearchModal').style.display = 'block';
             document.getElementById('categoryKeyword').value = '';
@@ -1047,10 +1051,139 @@ def dashboard():
             document.getElementById('categorySummary').style.display = 'none';
         }}
 
+        // ===== CLOSE MODAL =====
         function closeCategoryResearch() {{
             document.getElementById('categoryResearchModal').style.display = 'none';
         }}
-        // ====== FIND CATEGORIES FUNCTION ======
+
+        // ============================================
+        // DISPLAY CATEGORY RESULTS
+        // ============================================
+        function displayCategoryResults(categories) {{
+            const container = document.getElementById('categoryResults');
+            
+            if (!categories || categories.length === 0) {{
+                container.innerHTML = '<p style="color: #666; padding: 20px; text-align: center;">No categories found. Try different keywords.</p>';
+                container.style.display = 'block';
+                return;
+            }}
+            
+            let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
+            
+            categories.forEach(function(cat) {{
+                const scoreColor = cat.score >= 70 ? '#27ae60' : (cat.score >= 40 ? '#f39c12' : '#e74c3c');
+                const gradeIcon = cat.grade === 'A' ? '🏆' : (cat.grade === 'B' ? '⭐' : (cat.grade === 'C' ? '📖' : '⚠️'));
+                
+                let compColor = '#d4edda';
+                let compText = 'LOW';
+                if (cat.competition === 'HIGH') {{
+                    compColor = '#f8d7da';
+                    compText = 'HIGH';
+                }} else if (cat.competition === 'MEDIUM') {{
+                    compColor = '#fff3cd';
+                    compText = 'MEDIUM';
+                }} else {{
+                    compColor = '#d4edda';
+                    compText = 'LOW';
+                }}
+                
+                html += `
+                    <div style="border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 20px; font-weight: 700; color: ${scoreColor};">${gradeIcon} ${cat.grade} (${cat.score}/100)</span>
+                            <span style="background: ${compColor}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                ${compText}
+                            </span>
+                        </div>
+                        <div style="font-weight: 600; color: #333; margin-bottom: 8px; font-size: 15px;">
+                            📁 ${cat.name}
+                        </div>
+                        <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                            📚 Indie: ${cat.indie_percent}% / Trad: ${cat.trad_percent}%
+                            ${cat.indie_percent > 60 ? ' ✅ INDIE FRIENDLY' : ''}
+                        </div>
+                        <div style="font-size: 13px; color: #333; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px;">
+                            💡 ${cat.recommendation}
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="copyCategoryPath('${cat.name.replace(/'/g, "\\'")}')" style="padding: 6px 14px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px;">
+                                📋 Copy Path
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }});
+            
+            html += '</div>';
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }}
+
+        // ============================================
+        // DISPLAY CATEGORY SUMMARY
+        // ============================================
+        function displayCategorySummary(categories) {{
+            const container = document.getElementById('categorySummary');
+            
+            if (!categories || categories.length === 0) {{
+                container.innerHTML = '';
+                container.style.display = 'none';
+                return;
+            }}
+            
+            let best = categories[0];
+            let worst = categories[0];
+            
+            categories.forEach(function(cat) {{
+                if (cat.score > best.score) best = cat;
+                if (cat.score < worst.score) worst = cat;
+            }});
+            
+            let html = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 20px; border-top: 2px solid #f0f0f0; padding-top: 20px;">
+                    <div style="background: #d4edda; border-radius: 12px; padding: 15px; text-align: center;">
+                        <div style="font-size: 14px; color: #155724;">🏆 BEST CATEGORY</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #155724;">${best.name}</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #155724;">${best.score}/100</div>
+                        <div style="font-size: 13px; color: #155724;">Grade: ${best.grade}</div>
+                    </div>
+                    <div style="background: #e8f4f8; border-radius: 12px; padding: 15px; text-align: center;">
+                        <div style="font-size: 14px; color: #0c5460;">📊 CATEGORIES FOUND</div>
+                        <div style="font-size: 28px; font-weight: 700; color: #0c5460;">${categories.length}</div>
+                    </div>
+                    <div style="background: #f8d7da; border-radius: 12px; padding: 15px; text-align: center;">
+                        <div style="font-size: 14px; color: #721c24;">⚠️ CATEGORY TO AVOID</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #721c24;">${worst.name}</div>
+                        <div style="font-size: 16px; font-weight: 600; color: #721c24;">${worst.score}/100</div>
+                        <div style="font-size: 13px; color: #721c24;">Grade: ${worst.grade}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }}
+
+        // ============================================
+        // COPY CATEGORY PATH
+        // ============================================
+        function copyCategoryPath(path) {{
+            navigator.clipboard.writeText(path).then(function() {{
+                alert('✅ Category path copied to clipboard!');
+            }}).catch(function() {{
+                const textArea = document.createElement('textarea');
+                textArea.value = path;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('✅ Category path copied to clipboard!');
+            }});
+        }}
+
+        // ============================================
+        // FIND CATEGORIES (Main Function)
+        // ============================================
         function findCategories() {{
             var keyword = document.getElementById('categoryKeyword').value.trim();
             if (!keyword) {{
