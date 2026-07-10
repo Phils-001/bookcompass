@@ -5008,7 +5008,7 @@ def category_research():
         print(f"🔍 Keyword lower: '{keyword_lower}'")
         
         # Category mapping with better keys (all lowercase)
-                category_mapping = {
+        category_mapping = {
             # ============================================
             # DOG TRAINING / PETS
             # ============================================
