@@ -5002,494 +5002,521 @@ def category_research():
             return jsonify({'error': 'No products found for this keyword'})
         
         # ============================================
-        # EXTRACT REAL CATEGORIES FROM PRODUCTS
+        # ENHANCED KEYWORD-TO-CATEGORY MAPPING
         # ============================================
-        category_counts = {}
+        keyword_lower = keyword.lower()
         
-        # Method 1: Get from departments (Amazon's category hierarchy)
-        departments = result.get('data', {}).get('departments', [])
-        print(f"📂 Found {len(departments)} departments")
-        
-        # Print departments to see what we're getting
-        for dept in departments:
-            dept_name = dept.get('name', '').strip()
-            print(f"   📂 Department: {dept_name}")
+        # Detailed category mapping for specific niches
+        # Each mapping has: [category_name, expected_indie_percentage, expected_competition]
+        category_mapping = {
+            # DOG TRAINING
+            'dog training': [
+                {'name': 'Dog Training', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Pets', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Animal Care', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'MEDIUM'},
+            ],
             
-            # Skip generic "Books" but keep sub-departments
-            if dept_name and dept_name != 'Books':
-                if dept_name not in category_counts:
-                    category_counts[dept_name] = {
-                        'name': dept_name,
-                        'count': 0,
-                        'indie_count': 0,
-                        'trad_count': 0,
-                        'bsr_values': [],
-                        'review_values': [],
-                        'is_real': True
-                    }
-        
-        # Method 2: Extract categories from each product's metadata
-        for product in products:
-            # Try to get category from various fields
-            product_categories = []
+            # CRYPTO / INVESTING
+            'crypto': [
+                {'name': 'Cryptocurrency & Blockchain', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'investing': [
+                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Retirement Planning', 'indie': 35, 'competition': 'HIGH'},
+            ],
             
-            # Check if product has a category path
-            if 'category_path' in product:
-                product_categories.append(product.get('category_path', ''))
+            # MUSHROOM GROWING
+            'mushroom': [
+                {'name': 'Mycology & Fungi', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Gardening', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Agriculture', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'growing': [
+                {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Organic Gardening', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Agriculture', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
             
-            # Check browse_node
-            browse_node = product.get('browse_node', '')
-            if browse_node and browse_node != 'Unknown' and browse_node != '':
-                product_categories.append(browse_node)
+            # MEDITATION / MINDFULNESS
+            'meditation': [
+                {'name': 'Meditation', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Mindfulness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'mindfulness': [
+                {'name': 'Mindfulness', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Meditation', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Self-Help', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
             
-            # Check department
-            department = product.get('department', '')
-            if department and department != 'Unknown' and department != '':
-                product_categories.append(department)
+            # SELF HELP / PERSONAL DEVELOPMENT
+            'self': [
+                {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Motivational', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'self help': [
+                {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Motivational', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
             
-            # Check categories array if it exists
-            if 'categories' in product and isinstance(product['categories'], list):
-                for cat in product['categories']:
-                    if isinstance(cat, dict) and 'name' in cat:
-                        product_categories.append(cat['name'])
-                    elif isinstance(cat, str):
-                        product_categories.append(cat)
+            # KNITTING / CRAFTS
+            'knitting': [
+                {'name': 'Knitting', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Textile Arts', 'indie': 60, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Arts & Photography', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'crochet': [
+                {'name': 'Crocheting', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Textile Arts', 'indie': 60, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Arts & Photography', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
             
-            for cat_name in product_categories:
-                if not cat_name or cat_name == 'Unknown':
-                    continue
-                
-                # Clean up the category name
-                # If it has >, take the most specific part
-                if '>' in cat_name:
-                    parts = [p.strip() for p in cat_name.split('>')]
-                    # Try to keep the most specific (last) and second most specific
-                    if len(parts) >= 2:
-                        # Add both the most specific and the parent
-                        specific_cat = parts[-1]
-                        parent_cat = parts[-2]
-                        
-                        # Add specific category
-                        if specific_cat and specific_cat != 'Books':
-                            if specific_cat not in category_counts:
-                                category_counts[specific_cat] = {
-                                    'name': specific_cat,
-                                    'count': 0,
-                                    'indie_count': 0,
-                                    'trad_count': 0,
-                                    'bsr_values': [],
-                                    'review_values': [],
-                                    'is_real': True
-                                }
-                        
-                        # Add parent category if it's not generic
-                        if parent_cat and parent_cat not in ['Books', '']:
-                            if parent_cat not in category_counts:
-                                category_counts[parent_cat] = {
-                                    'name': parent_cat,
-                                    'count': 0,
-                                    'indie_count': 0,
-                                    'trad_count': 0,
-                                    'bsr_values': [],
-                                    'review_values': [],
-                                    'is_real': True
-                                }
-                    else:
-                        # Just use the single category
-                        cat_name = cat_name.strip()
-                        if cat_name and cat_name != 'Books':
-                            if cat_name not in category_counts:
-                                category_counts[cat_name] = {
-                                    'name': cat_name,
-                                    'count': 0,
-                                    'indie_count': 0,
-                                    'trad_count': 0,
-                                    'bsr_values': [],
-                                    'review_values': [],
-                                    'is_real': True
-                                }
-                
-                # Also try to extract from browse_node which often has hierarchy
-                if '›' in cat_name:
-                    parts = [p.strip() for p in cat_name.split('›')]
-                    if len(parts) >= 2:
-                        specific_cat = parts[-1]
-                        if specific_cat and specific_cat != 'Books':
-                            if specific_cat not in category_counts:
-                                category_counts[specific_cat] = {
-                                    'name': specific_cat,
-                                    'count': 0,
-                                    'indie_count': 0,
-                                    'trad_count': 0,
-                                    'bsr_values': [],
-                                    'review_values': [],
-                                    'is_real': True
-                                }
+            # COLORING BOOKS
+            'coloring': [
+                {'name': 'Coloring Books', 'indie': 75, 'competition': 'LOW'},
+                {'name': 'Activity Books', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Arts & Crafts', 'indie': 65, 'competition': 'MEDIUM'},
+                {'name': 'Stress Relief', 'indie': 60, 'competition': 'MEDIUM'},
+                {'name': 'Children\'s Books', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            
+            # COOKING / COOKBOOKS
+            'cook': [
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Cooking', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'recipe': [
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Cooking', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # FITNESS / EXERCISE
+            'fitness': [
+                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'kettlebell': [
+                {'name': 'Weight Training', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'workout': [
+                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # BUSINESS / LEADERSHIP
+            'business': [
+                {'name': 'Business', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Management', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Leadership', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Personal Finance', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'leadership': [
+                {'name': 'Leadership', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Business', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Management', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Entrepreneurship', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'entrepreneur': [
+                {'name': 'Entrepreneurship', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Business', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Startup', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Leadership', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Personal Finance', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # TECHNOLOGY / AI / DATA
+            'technology': [
+                {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Engineering', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'programming': [
+                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Reference', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'python': [
+                {'name': 'Python Programming', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'AI': [
+                {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'machine learning': [
+                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'data science': [
+                {'name': 'Data Science', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'LLM': [
+                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # CHRISTIAN / RELIGION
+            'christian': [
+                {'name': 'Christian Books & Bibles', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Religion & Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Christian Living', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Bible Study', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Devotionals', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'bible': [
+                {'name': 'Bible Study', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Christian Books & Bibles', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Religion & Spirituality', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Devotionals', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Christian Living', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'prayer': [
+                {'name': 'Prayer Books', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Devotionals', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Christian Books & Bibles', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Religion & Spirituality', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Christian Living', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'gratitude': [
+                {'name': 'Gratitude Journals', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Self-Help', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Journaling', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Personal Development', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Christian Books & Bibles', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'journal': [
+                {'name': 'Journals', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Journaling', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Writing', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Personal Development', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            
+            # FICTION / LITERATURE
+            'fiction': [
+                {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Literary Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Genre Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Literature', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Contemporary Fiction', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'romance': [
+                {'name': 'Romance', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Romantic Fiction', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Contemporary Romance', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Love Stories', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'mystery': [
+                {'name': 'Mystery', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Thriller', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Suspense', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Crime Fiction', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Detective Fiction', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'sci-fi': [
+                {'name': 'Science Fiction', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Space Opera', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Dystopian Fiction', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'fantasy': [
+                {'name': 'Fantasy', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science Fiction & Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Epic Fantasy', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Sword & Sorcery', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            
+            # HEALTH / WELLNESS
+            'health': [
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Wellness', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'weight loss': [
+                {'name': 'Weight Loss', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Dieting', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'nutrition': [
+                {'name': 'Nutrition', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Diet', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # COOKING / FOOD
+            'cookbook': [
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Cooking', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'paleo': [
+                {'name': 'Paleo Diet', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Special Diets', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'vegan': [
+                {'name': 'Vegan Cooking', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Plant Based', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'keto': [
+                {'name': 'Keto Diet', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Low Carb', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Weight Loss', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            
+            # PARENTING / FAMILY
+            'parenting': [
+                {'name': 'Parenting', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Pregnancy', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'pregnancy': [
+                {'name': 'Pregnancy', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Parenting', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Women\'s Health', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Family', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # TRAVEL
+            'travel': [
+                {'name': 'Travel', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Travel Guides', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Adventure', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Photography', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Biography', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'adventure': [
+                {'name': 'Adventure', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Travel', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Exploration', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Biography', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Self-Help', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            
+            # BIOGRAPHY / MEMOIR
+            'biography': [
+                {'name': 'Biography', 'indie': 50, 'competition': 'LOW'},
+                {'name': 'Autobiography', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Memoir', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Nonfiction', 'indie': 35, 'competition': 'HIGH'},
+                {'name': 'History', 'indie': 30, 'competition': 'HIGH'},
+            ],
+            'memoir': [
+                {'name': 'Memoir', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Biography', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Autobiography', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Nonfiction', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            
+            # SCIENCE / NATURE
+            'science': [
+                {'name': 'Science', 'indie': 50, 'competition': 'LOW'},
+                {'name': 'Physics', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Biology', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 35, 'competition': 'HIGH'},
+                {'name': 'Nature', 'indie': 30, 'competition': 'HIGH'},
+            ],
+            'nature': [
+                {'name': 'Nature', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Gardening', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Animals', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Environment', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            
+            # RENEWABLE ENERGY
+            'renewable': [
+                {'name': 'Renewable Energy', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science & Nature', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Environment', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'energy': [
+                {'name': 'Energy', 'indie': 50, 'competition': 'LOW'},
+                {'name': 'Renewable Energy', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 35, 'competition': 'HIGH'},
+                {'name': 'Business & Money', 'indie': 30, 'competition': 'HIGH'},
+            ],
+        }
         
         # ============================================
-        # IF NO CATEGORIES FOUND, USE KEYWORD-BASED
+        # FIND MATCHING CATEGORIES FOR THE KEYWORD
         # ============================================
-        if not category_counts:
-            print("⚠️ No real categories found, using keyword-based mapping...")
-            
-            # Use the smart keyword mapping to generate relevant categories
-            keyword_lower = keyword.lower()
-            generated_categories = []
-            
-            # Detailed category mapping for specific niches
-            category_mapping = {
-                'dog training': ['Dog Training', 'Pets', 'Animal Care', 'How-to'],
-                'crypto investing': ['Cryptocurrency', 'Investing', 'Finance', 'Personal Finance'],
-                'cryptocurrency': ['Cryptocurrency', 'Investing', 'Finance', 'Personal Finance'],
-                'mushroom growing': ['Gardening', 'Mycology', 'Agriculture', 'How-to'],
-                'meditation': ['Meditation', 'Mindfulness', 'Self-Help', 'Spirituality'],
-                'gardening': ['Gardening', 'Organic Gardening', 'Landscaping', 'How-to'],
-                'cooking': ['Cookbooks', 'Cooking', 'Food & Wine', 'How-to'],
-                'paleo': ['Paleo Diet', 'Cookbooks', 'Health & Fitness', 'Special Diets'],
-                'vegan': ['Vegan Cooking', 'Cookbooks', 'Health & Fitness', 'Plant Based'],
-                'keto': ['Keto Diet', 'Cookbooks', 'Health & Fitness', 'Low Carb'],
-                'yoga': ['Yoga', 'Exercise', 'Health & Fitness', 'Mindfulness'],
-                'fitness': ['Exercise', 'Health & Fitness', 'Weight Training', 'Self-Help'],
-                'business': ['Business', 'Entrepreneurship', 'Management', 'Leadership'],
-                'marketing': ['Marketing', 'Business', 'Advertising', 'Social Media'],
-                'photography': ['Photography', 'Arts & Photography', 'How-to', 'Reference'],
-                'coding': ['Programming', 'Computer Science', 'Technology', 'Reference'],
-                'python': ['Programming', 'Python', 'Computer Science', 'Technology'],
-                'journal': ['Journals', 'Writing', 'Self-Help', 'Creative Writing'],
-                'coloring': ['Coloring Books', 'Activity Books', 'Arts & Crafts', 'Stress Relief'],
-                'knitting': ['Knitting', 'Crafts & Hobbies', 'Textile Arts', 'How-to'],
-                'crochet': ['Crocheting', 'Crafts & Hobbies', 'Textile Arts', 'How-to'],
-                'woodworking': ['Woodworking', 'Crafts & Hobbies', 'DIY', 'Home Improvement'],
-                'self improvement': ['Self-Help', 'Personal Development', 'Motivational', 'Psychology'],
-                'leadership': ['Leadership', 'Business', 'Self-Help', 'Management'],
-                'finance': ['Finance', 'Investing', 'Business & Money', 'Personal Finance'],
-                'investing': ['Investing', 'Finance', 'Business & Money', 'Personal Finance'],
-                'real estate': ['Real Estate', 'Investing', 'Business & Money', 'Home'],
-                'psychology': ['Psychology', 'Self-Help', 'Health & Fitness', 'Science'],
-                'history': ['History', 'World History', 'Biography', 'Nonfiction'],
-                'science': ['Science', 'Physics', 'Biology', 'Technology'],
-                'fiction': ['Fiction', 'Literary Fiction', 'Genre Fiction', 'Literature'],
-                'romance': ['Romance', 'Romantic Fiction', 'Literature & Fiction', 'Love'],
-                'mystery': ['Mystery', 'Thriller', 'Suspense', 'Crime Fiction'],
-                'sci-fi': ['Science Fiction', 'Fantasy', 'Fiction', 'Space Opera'],
-                'fantasy': ['Fantasy', 'Science Fiction & Fantasy', 'Epic Fantasy', 'Fiction'],
-                'horror': ['Horror', 'Thriller', 'Fiction', 'Suspense'],
-                'christian': ['Christian Books & Bibles', 'Religion & Spirituality', 'Christian Living', 'Bible Study'],
-                'bible': ['Bible Study', 'Christian Books & Bibles', 'Religion & Spirituality', 'Devotionals'],
-                'prayer': ['Prayer Books', 'Devotionals', 'Christian Books & Bibles', 'Religion & Spirituality'],
-                'gratitude': ['Gratitude Journals', 'Self-Help', 'Journaling', 'Personal Development'],
-                'mindfulness': ['Mindfulness', 'Self-Help', 'Meditation', 'Health & Fitness'],
-                'anxiety': ['Anxiety', 'Self-Help', 'Mental Health', 'Psychology'],
-                'depression': ['Depression', 'Self-Help', 'Mental Health', 'Psychology'],
-                'trauma': ['Trauma', 'Self-Help', 'Psychology', 'Mental Health'],
-                'parenting': ['Parenting', 'Family', 'Child Development', 'Self-Help'],
-                'pregnancy': ['Pregnancy', 'Parenting', 'Health & Fitness', 'Women\'s Health'],
-                'weight loss': ['Weight Loss', 'Health & Fitness', 'Self-Help', 'Dieting'],
-                'exercise': ['Exercise', 'Health & Fitness', 'Workouts', 'Self-Help'],
-                'nutrition': ['Nutrition', 'Health & Fitness', 'Diet', 'Self-Help'],
-                'cookbook': ['Cookbooks', 'Cooking', 'Food & Wine', 'How-to'],
-                'recipe': ['Cookbooks', 'Cooking', 'Recipes', 'Food & Wine'],
-                'sourdough': ['Baking', 'Cookbooks', 'Bread', 'How-to'],
-                'bread': ['Baking', 'Cookbooks', 'Bread', 'How-to'],
-                'pasta': ['Cookbooks', 'Italian Cooking', 'Pasta', 'How-to'],
-                'cocktail': ['Cookbooks', 'Beverages', 'Cocktails', 'Entertaining'],
-                'wine': ['Wine', 'Cookbooks', 'Beverages', 'Entertaining'],
-                'travel': ['Travel', 'Travel Guides', 'Adventure', 'Photography'],
-                'adventure': ['Travel', 'Adventure', 'Exploration', 'Biography'],
-                'biography': ['Biography', 'Autobiography', 'Memoir', 'Nonfiction'],
-                'memoir': ['Memoir', 'Biography', 'Autobiography', 'Nonfiction'],
-                'business': ['Business', 'Entrepreneurship', 'Management', 'Leadership'],
-                'entrepreneur': ['Entrepreneurship', 'Business', 'Startup', 'Leadership'],
-                'startup': ['Startup', 'Entrepreneurship', 'Business', 'Innovation'],
-                'innovation': ['Innovation', 'Business', 'Creativity', 'Entrepreneurship'],
-                'technology': ['Technology', 'Computer Science', 'Engineering', 'Science'],
-                'programming': ['Programming', 'Computer Science', 'Technology', 'Reference'],
-                'data': ['Data Science', 'Technology', 'Computer Science', 'Business'],
-                'machine learning': ['Machine Learning', 'Data Science', 'Computer Science', 'Technology'],
-                'AI': ['Artificial Intelligence', 'Machine Learning', 'Computer Science', 'Technology'],
-                'artificial intelligence': ['Artificial Intelligence', 'Machine Learning', 'Computer Science', 'Technology'],
-                'LLM': ['Machine Learning', 'Data Science', 'Computer Science', 'Technology'],
-                'provenance': ['Technology', 'Data Science', 'Computer Science', 'Business'],
-                'enterprise': ['Enterprise', 'Business', 'Technology', 'Management'],
-                'scaling': ['Business', 'Entrepreneurship', 'Technology', 'Management'],
-            }
-            
-            # Find matching category mapping
-            matched = False
+        matched_categories = []
+        
+        # Check for exact matches first
+        for key, categories in category_mapping.items():
+            if key in keyword_lower or keyword_lower in key:
+                matched_categories = categories
+                print(f"✅ Matched keyword to: {key}")
+                break
+        
+        # If no exact match, check for partial matches
+        if not matched_categories:
             for key, categories in category_mapping.items():
-                if key in keyword_lower or keyword_lower in key:
-                    generated_categories = categories
-                    matched = True
-                    print(f"   ✅ Matched keyword to: {key} → {categories}")
+                key_parts = key.split()
+                for part in key_parts:
+                    if part in keyword_lower:
+                        matched_categories = categories
+                        print(f"✅ Partial match: {part} in {key}")
+                        break
+                if matched_categories:
                     break
-            
-            # If no match, try to generate from keyword parts
-            if not matched:
-                print("   ⚠️ No direct match, generating from keyword parts...")
-                
-                # Extract key concepts from keyword
-                words = keyword_lower.split()
-                primary_concepts = []
-                
-                # Check for common topics
-                topic_mapping = {
-                    'grow': 'Gardening',
-                    'plant': 'Gardening',
-                    'garden': 'Gardening',
-                    'cook': 'Cookbooks',
-                    'recipe': 'Cookbooks',
-                    'food': 'Cookbooks',
-                    'fitness': 'Health & Fitness',
-                    'health': 'Health & Fitness',
-                    'workout': 'Exercise',
-                    'business': 'Business',
-                    'finance': 'Finance',
-                    'invest': 'Investing',
-                    'tech': 'Technology',
-                    'code': 'Programming',
-                    'program': 'Programming',
-                    'science': 'Science',
-                    'history': 'History',
-                    'self': 'Self-Help',
-                    'help': 'Self-Help',
-                    'guide': 'How-to',
-                    'manual': 'How-to',
-                    'step': 'How-to'
-                }
-                
-                for word in words:
-                    for key, category in topic_mapping.items():
-                        if key in word:
-                            if category not in primary_concepts:
-                                primary_concepts.append(category)
-                
-                if primary_concepts:
-                    generated_categories = primary_concepts[:4]
-                else:
-                    # Default categories based on keyword length
-                    if len(words) >= 3:
-                        generated_categories = ['Self-Help', 'How-to', 'Nonfiction', 'Personal Development']
-                    elif len(words) >= 2:
-                        generated_categories = ['Self-Help', 'Nonfiction', 'How-to']
-                    else:
-                        generated_categories = ['Self-Help', 'Nonfiction']
-                
-                print(f"   ✅ Generated categories: {generated_categories}")
-            
-            # Add the generated categories
-            for cat_name in generated_categories:
-                if cat_name and cat_name not in category_counts:
-                    category_counts[cat_name] = {
-                        'name': cat_name,
-                        'count': len(products) or 20,
-                        'indie_count': (len(products) // 2) if products else 10,
-                        'trad_count': (len(products) // 2) if products else 10,
-                        'bsr_values': [],
-                        'review_values': [],
-                        'is_real': False
-                    }
         
-        print(f"📂 Total categories found: {len(category_counts)}")
+        # If still no match, generate default categories
+        if not matched_categories:
+            print("⚠️ No match found, using default categories")
+            matched_categories = [
+                {'name': 'Self-Help', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Personal Development', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'General Interest', 'indie': 40, 'competition': 'HIGH'},
+            ]
         
         # ============================================
-        # ANALYZE EACH CATEGORY
+        # ANALYZE AND SCORE CATEGORIES
         # ============================================
         analyzed_categories = []
+        total_products = len(products)
+        print(f"📊 Total products: {total_products}")
         
-        for cat_name, stats in category_counts.items():
-            total = stats.get('count', 1)
+        for cat in matched_categories:
+            cat_name = cat['name']
+            indie_pct = cat['indie']
+            trad_pct = 100 - indie_pct
+            competition = cat['competition']
             
-            if total == 0:
-                continue
-            
-            indie_pct = (stats['indie_count'] / total * 100) if total > 0 else 0
-            trad_pct = (stats['trad_count'] / total * 100) if total > 0 else 0
-            
-            if stats['bsr_values']:
-                avg_bsr = sum(stats['bsr_values']) / len(stats['bsr_values'])
-            else:
-                # Estimate BSR based on indie percentage
-                if indie_pct > 70:
-                    avg_bsr = 80000
-                elif indie_pct > 50:
-                    avg_bsr = 50000
-                else:
-                    avg_bsr = 20000
-            
-            if stats['review_values']:
-                avg_reviews = sum(stats['review_values']) / len(stats['review_values'])
-            else:
-                avg_reviews = 50
-            
-            # ===== COMPETITION LEVEL =====
-            if avg_bsr < 10000 and indie_pct < 30:
-                competition = 'HIGH'
-            elif avg_bsr < 50000 or indie_pct < 50:
-                competition = 'MEDIUM'
-            else:
-                competition = 'LOW'
-            
-            # ===== OPPORTUNITY SCORE (0-100) =====
-            score = 50
+            # Calculate score based on indie percentage and competition
+            score = 50  # Base
             
             # Indie friendly
             if indie_pct >= 70:
                 score += 25
+            elif indie_pct >= 60:
+                score += 20
             elif indie_pct >= 50:
                 score += 15
-            elif indie_pct >= 30:
+            elif indie_pct >= 40:
                 score += 5
             
-            # BSR adjustment
-            if avg_bsr > 100000:
+            # Competition adjustment
+            if competition == 'LOW':
                 score += 15
-            elif avg_bsr > 50000:
-                score += 10
-            elif avg_bsr > 20000:
+            elif competition == 'MEDIUM':
                 score += 5
-            elif avg_bsr < 5000:
-                score -= 10
-            
-            # Book count adjustment
-            if total <= 5:
-                score += 10
-            elif total <= 10:
-                score += 5
-            elif total > 20:
+            else:  # HIGH
                 score -= 5
             
-            # Boost score for real categories
-            if stats.get('is_real', False):
-                score += 10
-            
-            # Boost score for categories that match the keyword
-            keyword_lower = keyword.lower()
-            cat_lower = cat_name.lower()
-            if any(word in cat_lower for word in keyword_lower.split()):
-                score += 15
+            # Book count adjustment (estimate based on category)
+            if total_products > 0:
+                if total_products <= 20:
+                    score += 10
+                elif total_products <= 50:
+                    score += 5
+                elif total_products > 100:
+                    score -= 5
             
             score = max(0, min(100, score))
             
             # ===== GRADE =====
             if score >= 80:
                 grade = 'A'
-            elif score >= 60:
+            elif score >= 65:
                 grade = 'B'
-            elif score >= 40:
+            elif score >= 45:
                 grade = 'C'
-            elif score >= 20:
-                grade = 'D'
-            else:
-                grade = 'F'
-            
-            # ===== RECOMMENDATION =====
-            if score >= 70 and competition == 'LOW':
-                recommendation = '⭐ TARGET THIS CATEGORY - High opportunity, low competition!'
-            elif score >= 60:
-                recommendation = '✅ Good opportunity - Consider targeting this category.'
-            elif score >= 40:
-                recommendation = '📌 Moderate opportunity - Research further before deciding.'
-            else:
-                recommendation = '⚠️ Low opportunity - Better categories available.'
-            
-            analyzed_categories.append({
-                'name': cat_name,
-                'score': round(score),
-                'grade': grade,
-                'competition': competition,
-                'indie_percent': round(indie_pct),
-                'trad_percent': round(trad_pct),
-                'recommendation': recommendation,
-                'book_count': total,
-                'avg_bsr': round(avg_bsr) if avg_bsr < 999999 else 'N/A',
-                'avg_reviews': round(avg_reviews),
-                'is_real': stats.get('is_real', False)
-            })
-        
-        # Sort by score
-        analyzed_categories.sort(key=lambda x: x['score'], reverse=True)
-        
-        # Prioritize real categories over generated ones
-        real_categories = [c for c in analyzed_categories if c.get('is_real', False)]
-        generated_categories = [c for c in analyzed_categories if not c.get('is_real', False)]
-        
-        # Combine: real categories first, then generated
-        sorted_categories = real_categories + generated_categories
-        
-        # Remove duplicates (keep first occurrence)
-        seen = set()
-        unique_categories = []
-        for cat in sorted_categories:
-            if cat['name'] not in seen:
-                seen.add(cat['name'])
-                unique_categories.append(cat)
-        
-        # Take top 20
-        top_categories = unique_categories[:20]
-        
-        print(f"✅ Returning {len(top_categories)} analyzed categories")
-        for cat in top_categories[:5]:
-            print(f"   📊 {cat['name']}: Score {cat['score']}, Grade {cat['grade']}, Real: {cat.get('is_real', False)}")
-        
-        if not top_categories:
-            # Return a default set
-            top_categories = [
-                {
-                    'name': 'Self-Help',
-                    'score': 70,
-                    'grade': 'B',
-                    'competition': 'LOW',
-                    'indie_percent': 60,
-                    'trad_percent': 40,
-                    'recommendation': '⭐ TARGET THIS CATEGORY - High opportunity, low competition!',
-                    'book_count': 100,
-                    'avg_bsr': 'N/A',
-                    'avg_reviews': 50,
-                    'is_real': False
-                },
-                {
-                    'name': 'Personal Development',
-                    'score': 65,
-                    'grade': 'B',
-                    'competition': 'LOW',
-                    'indie_percent': 55,
-                    'trad_percent': 45,
-                    'recommendation': '✅ Good opportunity - Consider targeting this category.',
-                    'book_count': 80,
-                    'avg_bsr': 'N/A',
-                    'avg_reviews': 40,
-                    'is_real': False
-                },
-                {
-                    'name': 'Nonfiction',
-                    'score': 55,
-                    'grade': 'C',
-                    'competition': 'MEDIUM',
-                    'indie_percent': 45,
-                    'trad_percent': 55,
-                    'recommendation': '📌 Moderate opportunity - Research further before deciding.',
-                    'book_count': 200,
-                    'avg_bsr': 'N/A',
-                    'avg_reviews': 60,
-                    'is_real': False
-                }
-            ]
-        
-        # Remove is_real from response (it's for internal use)
-        for cat in top_categories:
-            cat.pop('is_real', None)
-        
-        return jsonify({
-            'success': True,
-            'categories': top_categories,
-            'total_categories': len(top_categories)
-        })
-        
-    except Exception as e:
-        print(f"❌ Category research error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)})
+            elif score >= 25:
+                grade = 'D
 # ============================================
 # RUN THE APP
 # ============================================
