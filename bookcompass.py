@@ -5468,47 +5468,66 @@ def category_research():
         }
         
         # ============================================
-        # FIND MATCHING CATEGORIES - IMPROVED
+        # FIND MATCHING CATEGORIES - EXACT WORD MATCHING
         # ============================================
         matched_categories = []
         keyword_words = keyword_lower.split()
         print(f"📝 Keyword words: {keyword_words}")
         
-        # Try to find the best match
+        # Try to find the best match using EXACT word matching
         best_match = None
         best_match_score = 0
         best_match_key = None
         
         for key, categories in category_mapping.items():
             key_lower = key.lower()
-            # Check if the key is in the keyword or the keyword is in the key
-            if key_lower in keyword_lower:
-                # Exact key found in keyword
-                match_score = len(key_lower)  # Longer matches are better
-                if match_score > best_match_score:
-                    best_match_score = match_score
-                    best_match = categories
-                    best_match_key = key
-                    print(f"✅ Found key '{key}' in keyword")
+            key_words = key_lower.split()
+            
+            # Check if ALL key words are in the keyword words (for multi-word keys)
+            if len(key_words) > 1:
+                all_found = True
+                for kw in key_words:
+                    if kw not in keyword_words:
+                        all_found = False
+                        break
+                if all_found:
+                    match_score = len(key_words) * 10 + len(key_lower)
+                    if match_score > best_match_score:
+                        best_match_score = match_score
+                        best_match = categories
+                        best_match_key = key
+                        print(f"✅ Found all words of key '{key}' in keyword")
             else:
-                # Check individual words
-                key_parts = key_lower.split()
-                for part in key_parts:
-                    if part in keyword_lower:
-                        match_score = len(part)
-                        if match_score > best_match_score:
-                            best_match_score = match_score
-                            best_match = categories
-                            best_match_key = key
-                            print(f"✅ Found part '{part}' from key '{key}'")
+                # Single word key - check if it's in the keyword words
+                if key_lower in keyword_words:
+                    match_score = len(key_lower)
+                    if match_score > best_match_score:
+                        best_match_score = match_score
+                        best_match = categories
+                        best_match_key = key
+                        print(f"✅ Found exact key '{key}' in keyword")
+        
+        # If no exact match, try partial word matching (but more careful)
+        if not best_match:
+            for key, categories in category_mapping.items():
+                key_lower = key.lower()
+                key_words = key_lower.split()
+                
+                # Check if any key word is in the keyword words
+                for kw in key_words:
+                    if kw in keyword_words:
+                        # Skip short words to avoid false matches
+                        if len(kw) >= 3:
+                            match_score = len(kw)
+                            if match_score > best_match_score:
+                                best_match_score = match_score
+                                best_match = categories
+                                best_match_key = key
+                                print(f"✅ Found word '{kw}' from key '{key}' in keyword")
         
         if best_match:
             matched_categories = best_match
             print(f"✅ Using match from: {best_match_key}")
-        
-                # If still no match, generate default categories
-        if not matched_categories:
-            print("⚠️ No match found, using default categories")
             
             # ============================================
             # SMART KEYWORD ANALYSIS FOR FALLBACK
@@ -5542,11 +5561,48 @@ def category_research():
                     {'name': 'Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
                     {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
                 ],
+                'emotional intelligence': [
+                    {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                    {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Psychology', 'indie': 55, 'competition': 'MEDIUM'},
+                ],
+                'psychology of success': [
+                    {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                    {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Psychology', 'indie': 55, 'competition': 'MEDIUM'},
+                ],
+                'computer programming': [
+                    {'name': 'Computer Science', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Programming', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                ],
+                'data science': [
+                    {'name': 'Data Science', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                ],
+                'machine learning': [
+                    {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
+                ],
+                'artificial intelligence': [
+                    {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
+                ],
             }
             
-            # Check specific phrases first (exact match in keyword)
+            # Check specific phrases first (using exact word matching)
             for phrase, categories in specific_phrases.items():
-                if phrase in keyword_lower:
+                phrase_words = phrase.lower().split()
+                # Check if all words in the phrase are in the keyword
+                all_found = True
+                for pw in phrase_words:
+                    if pw not in keyword_words:
+                        all_found = False
+                        break
+                if all_found:
                     matched_categories = categories
                     print(f"✅ Specific phrase match: '{phrase}'")
                     break
@@ -5618,8 +5674,8 @@ def category_research():
                         {'name': 'Investing', 'indie': 40, 'competition': 'HIGH'},
                      ]),
                     
-                    # TECHNOLOGY (MUST BE BEFORE FICTION TO AVOID "SCIENCE" MISMATCH)
-                    (['artificial', 'intelligence', 'machine', 'learning', 'data', 'science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer', 'computer', 'engineering', 'cyber', 'security', 'analysis', 'tech', 'computing', 'programmer'],
+                    # TECHNOLOGY (using single words for exact matching)
+                    (['computer', 'science', 'programming', 'python', 'code', 'developer', 'software', 'algorithm', 'tech', 'engineering', 'cyber', 'security', 'computing', 'programmer', 'developer'],
                      [
                         {'name': 'Computer Science', 'indie': 60, 'competition': 'LOW'},
                         {'name': 'Technology', 'indie': 55, 'competition': 'MEDIUM'},
@@ -5627,8 +5683,8 @@ def category_research():
                         {'name': 'Programming', 'indie': 45, 'competition': 'HIGH'},
                      ]),
                     
-                    # FICTION - MOVED LOWER, WITH EXACT WORDS
-                    (['fiction', 'novel', 'romance', 'mystery', 'thriller', 'fantasy', 'horror', 'dystopian', 'suspense', 'crime', 'detective', 'story', 'love'],
+                    # FICTION - ONLY FOR CLEAR FICTION KEYWORDS
+                    (['fiction', 'novel', 'romance', 'mystery', 'thriller', 'fantasy', 'horror', 'dystopian', 'suspense', 'crime', 'detective', 'story'],
                      [
                         {'name': 'Fiction', 'indie': 50, 'competition': 'MEDIUM'},
                         {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
