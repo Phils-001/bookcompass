@@ -5537,22 +5537,26 @@ def category_research():
                     {'name': 'How-to', 'indie': 50, 'competition': 'MEDIUM'},
                     {'name': 'Nature', 'indie': 45, 'competition': 'HIGH'},
                 ],
+                'science fiction': [
+                    {'name': 'Science Fiction', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                ],
             }
             
-            # Check specific phrases first
+            # Check specific phrases first (exact match in keyword)
             for phrase, categories in specific_phrases.items():
                 if phrase in keyword_lower:
                     matched_categories = categories
                     print(f"✅ Specific phrase match: '{phrase}'")
                     break
             
-            # If no specific phrase match, use pattern analysis
+            # If no specific phrase match, use pattern analysis with EXACT word matching
             if not matched_categories:
-                # ===== PATTERN ANALYSIS =====
-                                # Define keyword patterns (ordered by priority)
+                # Define keyword patterns (ordered by priority)
                 pattern_mapping = [
                     # SELF HELP / PSYCHOLOGY
-                    (['self', 'help', 'improvement', 'personal development', 'motivation', 'mindset', 'psychology', 'mental health', 'anxiety', 'depression', 'therapy', 'success', 'emotional intelligence', 'habits', 'discipline', 'focus', 'productivity', 'gratitude', 'confidence', 'self esteem', 'positive thinking', 'happiness', 'fulfillment'],
+                    (['self', 'help', 'improvement', 'personal', 'development', 'motivation', 'mindset', 'psychology', 'mental', 'health', 'anxiety', 'depression', 'therapy', 'success', 'emotional', 'intelligence', 'habits', 'discipline', 'focus', 'productivity', 'gratitude', 'confidence', 'esteem', 'positive', 'thinking', 'happiness', 'fulfillment'],
                      [
                         {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
                         {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
@@ -5561,7 +5565,7 @@ def category_research():
                      ]),
                     
                     # MEDITATION / MINDFULNESS
-                    (['meditation', 'mindfulness', 'zen', 'buddhism', 'breathing', 'calm', 'stress relief', 'relaxation'],
+                    (['meditation', 'mindfulness', 'zen', 'buddhism', 'breathing', 'calm', 'stress', 'relief', 'relaxation'],
                      [
                         {'name': 'Meditation', 'indie': 65, 'competition': 'LOW'},
                         {'name': 'Mindfulness', 'indie': 60, 'competition': 'LOW'},
@@ -5597,7 +5601,7 @@ def category_research():
                      ]),
                     
                     # HEALTH / NUTRITION / COOKING
-                    (['health', 'wellness', 'nutrition', 'diet', 'weight loss', 'meal prep', 'cooking', 'recipes', 'food', 'vitamins', 'supplements', 'cookbook', 'meal', 'kitchen'],
+                    (['health', 'wellness', 'nutrition', 'diet', 'weight', 'loss', 'meal', 'prep', 'cooking', 'recipes', 'food', 'vitamins', 'supplements', 'cookbook', 'kitchen'],
                      [
                         {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
                         {'name': 'Nutrition', 'indie': 55, 'competition': 'MEDIUM'},
@@ -5614,8 +5618,8 @@ def category_research():
                         {'name': 'Investing', 'indie': 40, 'competition': 'HIGH'},
                      ]),
                     
-                    # TECHNOLOGY (only if keywords are clearly tech-related)
-                    (['artificial intelligence', 'machine learning', 'data science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer', 'computer science', 'engineering', 'cyber', 'security', 'algorithm', 'data analysis', 'tech', 'computer', 'science', 'computing'],
+                    # TECHNOLOGY (MUST BE BEFORE FICTION TO AVOID "SCIENCE" MISMATCH)
+                    (['artificial', 'intelligence', 'machine', 'learning', 'data', 'science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer', 'computer', 'engineering', 'cyber', 'security', 'analysis', 'tech', 'computing', 'programmer'],
                      [
                         {'name': 'Computer Science', 'indie': 60, 'competition': 'LOW'},
                         {'name': 'Technology', 'indie': 55, 'competition': 'MEDIUM'},
@@ -5623,17 +5627,16 @@ def category_research():
                         {'name': 'Programming', 'indie': 45, 'competition': 'HIGH'},
                      ]),
                     
-                    # FICTION (Moved LOWER - only if clearly fiction)
-                    (['fiction novel', 'romance novel', 'fantasy novel', 'thriller novel', 'mystery novel', 'love story', 'historical fiction', 'young adult fiction', 'science fiction book', 'fantasy book'],
+                    # FICTION - MOVED LOWER, WITH EXACT WORDS
+                    (['fiction', 'novel', 'romance', 'mystery', 'thriller', 'fantasy', 'horror', 'dystopian', 'suspense', 'crime', 'detective', 'story', 'love'],
                      [
-                        {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
-                        {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
-                        {'name': 'Literary Fiction', 'indie': 45, 'competition': 'MEDIUM'},
-                        {'name': 'Genre Fiction', 'indie': 40, 'competition': 'HIGH'},
+                        {'name': 'Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+                        {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                        {'name': 'Literary Fiction', 'indie': 40, 'competition': 'HIGH'},
                      ]),
                     
                     # CRAFTS / KNITTING / COLORING
-                    (['knitting', 'crochet', 'craft', 'sewing', 'quilting', 'embroidery', 'needlework', 'textile', 'yarn', 'scrapbooking', 'coloring', 'color', 'adult coloring', 'activity book', 'puzzle', 'maze', 'diy', 'homemade'],
+                    (['knitting', 'crochet', 'craft', 'sewing', 'quilting', 'embroidery', 'needlework', 'textile', 'yarn', 'scrapbooking', 'coloring', 'color', 'adult', 'activity', 'book', 'puzzle', 'maze', 'diy', 'homemade'],
                      [
                         {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
                         {'name': 'Knitting', 'indie': 60, 'competition': 'LOW'},
@@ -5658,52 +5661,25 @@ def category_research():
                         {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
                         {'name': 'Pregnancy', 'indie': 45, 'competition': 'MEDIUM'},
                      ]),
-                    
-                    # FICTION - SECONDARY (generic fiction words, but only as last resort)
-                    (['fiction', 'novel', 'story', 'romance', 'mystery', 'thriller', 'fantasy', 'horror', 'dystopian', 'suspense', 'crime', 'detective'],
-                     [
-                        {'name': 'Fiction', 'indie': 50, 'competition': 'MEDIUM'},
-                        {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
-                        {'name': 'Literary Fiction', 'indie': 40, 'competition': 'HIGH'},
-                     ]),
-                    
-                    # GENERAL HOW-TO
-                    (['guide', 'how to', 'beginner', 'complete', 'step by step', 'easy', 'simple', 'learn', 'basic', 'introduction', 'essential', 'foundation'],
-                     [
-                        {'name': 'How-to', 'indie': 60, 'competition': 'LOW'},
-                        {'name': 'Nonfiction', 'indie': 55, 'competition': 'MEDIUM'},
-                        {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
-                        {'name': 'Reference', 'indie': 45, 'competition': 'HIGH'},
-                     ]),
                 ]
                 
-                # Check each pattern against the keyword
+                # Check each pattern against the keyword - using EXACT word matching
                 for patterns, categories in pattern_mapping:
                     matched = False
                     for pattern in patterns:
-                        if pattern in keyword_lower:
+                        # Check if the pattern word appears in the keyword words
+                        if pattern in keyword_words:
                             generated_categories = categories
                             matched = True
-                            print(f"✅ Fallback: Found pattern '{pattern}' in keyword")
-                            break
-                        # Also check individual word matches
-                        for word in keyword_words:
-                            if word in pattern or pattern in word:
-                                generated_categories = categories
-                                matched = True
-                                print(f"✅ Fallback: Found word '{word}' matches pattern '{pattern}'")
-                                break
-                        if matched:
+                            print(f"✅ Fallback: Found exact word '{pattern}' in keyword")
                             break
                     if matched:
                         break
                 
                 # If still no categories, use a smart default
                 if not generated_categories:
-                    # Use the keyword itself to create categories
                     word_count = len(keyword_words)
                     if word_count >= 3:
-                        # Longer keywords often mean more specific niches
                         generated_categories = [
                             {'name': 'Nonfiction', 'indie': 55, 'competition': 'LOW'},
                             {'name': 'How-to', 'indie': 50, 'competition': 'MEDIUM'},
