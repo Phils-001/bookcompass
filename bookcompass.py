@@ -5006,398 +5006,142 @@ def category_research():
         # ============================================
         keyword_lower = keyword.lower()
         
-        # Detailed category mapping for specific niches
+        # Category mapping
         category_mapping = {
-            # DOG TRAINING
             'dog training': [
                 {'name': 'Dog Training', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Pets', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Animal Care', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'MEDIUM'},
             ],
-            'pets': [
-                {'name': 'Pets', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Dog Training', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Animal Care', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'MEDIUM'},
-            ],
-            
-            # CRYPTO / INVESTING
             'crypto': [
-                {'name': 'Cryptocurrency & Blockchain', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Cryptocurrency', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
             ],
             'investing': [
                 {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Retirement Planning', 'indie': 35, 'competition': 'HIGH'},
             ],
-            'finance': [
-                {'name': 'Finance', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Investing', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Economics', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            
-            # MUSHROOM GROWING
             'mushroom': [
-                {'name': 'Mycology & Fungi', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Mycology', 'indie': 70, 'competition': 'LOW'},
                 {'name': 'Gardening', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Agriculture', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
             ],
             'gardening': [
                 {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Organic Gardening', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Agriculture', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'How-to', 'indie': 55, 'competition': 'MEDIUM'},
             ],
-            
-            # MEDITATION / MINDFULNESS
             'meditation': [
                 {'name': 'Meditation', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Mindfulness', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
             ],
-            'mindfulness': [
-                {'name': 'Mindfulness', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Meditation', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Self-Help', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            
-            # SELF HELP / PERSONAL DEVELOPMENT
             'self help': [
                 {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Motivational', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
             ],
-            'self improvement': [
-                {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Motivational', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            
-            # KNITTING / CRAFTS
             'knitting': [
                 {'name': 'Knitting', 'indie': 70, 'competition': 'LOW'},
                 {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Textile Arts', 'indie': 60, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Arts & Photography', 'indie': 45, 'competition': 'MEDIUM'},
             ],
-            'crochet': [
-                {'name': 'Crocheting', 'indie': 70, 'competition': 'LOW'},
-                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Textile Arts', 'indie': 60, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Arts & Photography', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            'crafts': [
-                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Arts & Photography', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Textile Arts', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Knitting', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            
-            # COLORING BOOKS
             'coloring': [
                 {'name': 'Coloring Books', 'indie': 75, 'competition': 'LOW'},
                 {'name': 'Activity Books', 'indie': 70, 'competition': 'LOW'},
                 {'name': 'Arts & Crafts', 'indie': 65, 'competition': 'MEDIUM'},
-                {'name': 'Stress Relief', 'indie': 60, 'competition': 'MEDIUM'},
-                {'name': "Children's Books", 'indie': 55, 'competition': 'MEDIUM'},
             ],
-            
-            # COOKING / COOKBOOKS
             'cookbook': [
                 {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Cooking', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
             ],
-            'cooking': [
-                {'name': 'Cooking', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Cookbooks', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            
-            # FITNESS / EXERCISE
             'fitness': [
                 {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
             ],
-            'exercise': [
-                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'kettlebell': [
-                {'name': 'Weight Training', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            
-            # BUSINESS / LEADERSHIP
             'business': [
                 {'name': 'Business', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Management', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Leadership', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Personal Finance', 'indie': 35, 'competition': 'HIGH'},
             ],
             'leadership': [
                 {'name': 'Leadership', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Business', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Management', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 40, 'competition': 'MEDIUM'},
-                {'name': 'Entrepreneurship', 'indie': 35, 'competition': 'HIGH'},
             ],
-            'entrepreneur': [
-                {'name': 'Entrepreneurship', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Business', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Startup', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Leadership', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Personal Finance', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            
-            # TECHNOLOGY / AI / DATA
             'technology': [
                 {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Engineering', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            'programming': [
-                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Reference', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'python': [
-                {'name': 'Python Programming', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
             ],
             'ai': [
                 {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
             ],
-            'machine learning': [
-                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'data science': [
-                {'name': 'Data Science', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'llm': [
-                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            
-            # CHRISTIAN / RELIGION
             'christian': [
                 {'name': 'Christian Books & Bibles', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Religion & Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Christian Living', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Bible Study', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Devotionals', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'bible': [
-                {'name': 'Bible Study', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Christian Books & Bibles', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Religion & Spirituality', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Devotionals', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Christian Living', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'prayer': [
-                {'name': 'Prayer Books', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Devotionals', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Christian Books & Bibles', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Religion & Spirituality', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Christian Living', 'indie': 40, 'competition': 'HIGH'},
             ],
             'gratitude': [
                 {'name': 'Gratitude Journals', 'indie': 70, 'competition': 'LOW'},
                 {'name': 'Self-Help', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Journaling', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Personal Development', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Christian Books & Bibles', 'indie': 45, 'competition': 'MEDIUM'},
             ],
             'journal': [
                 {'name': 'Journals', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Journaling', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Writing', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Personal Development', 'indie': 45, 'competition': 'MEDIUM'},
             ],
-            
-            # FICTION / LITERATURE
             'fiction': [
                 {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Literary Fiction', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Genre Fiction', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Literature', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Contemporary Fiction', 'indie': 35, 'competition': 'HIGH'},
             ],
             'romance': [
                 {'name': 'Romance', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Romantic Fiction', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Contemporary Romance', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Love Stories', 'indie': 40, 'competition': 'HIGH'},
             ],
-            'mystery': [
-                {'name': 'Mystery', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Thriller', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Suspense', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Crime Fiction', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Detective Fiction', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            'sci-fi': [
-                {'name': 'Science Fiction', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Space Opera', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Dystopian Fiction', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            'fantasy': [
-                {'name': 'Fantasy', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Science Fiction & Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Epic Fantasy', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Literature & Fiction', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Sword & Sorcery', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            
-            # HEALTH / WELLNESS
             'health': [
                 {'name': 'Health & Fitness', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Wellness', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 40, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 35, 'competition': 'HIGH'},
             ],
-            'weight loss': [
-                {'name': 'Weight Loss', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Dieting', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            
-            # PARENTING / FAMILY
             'parenting': [
                 {'name': 'Parenting', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Pregnancy', 'indie': 40, 'competition': 'HIGH'},
             ],
-            
-            # TRAVEL
             'travel': [
                 {'name': 'Travel', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Travel Guides', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Adventure', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Photography', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Biography', 'indie': 35, 'competition': 'HIGH'},
             ],
-            
-            # SCIENCE
             'science': [
                 {'name': 'Science', 'indie': 50, 'competition': 'LOW'},
                 {'name': 'Physics', 'indie': 45, 'competition': 'MEDIUM'},
                 {'name': 'Biology', 'indie': 40, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 35, 'competition': 'HIGH'},
-                {'name': 'Nature', 'indie': 30, 'competition': 'HIGH'},
             ],
-            
-            # RENEWABLE ENERGY
             'renewable': [
                 {'name': 'Renewable Energy', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Science & Nature', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Environment', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
             ],
-            'energy': [
-                {'name': 'Energy', 'indie': 50, 'competition': 'LOW'},
-                {'name': 'Renewable Energy', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 40, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 35, 'competition': 'HIGH'},
-                {'name': 'Business & Money', 'indie': 30, 'competition': 'HIGH'},
-            ],
-            
-            # MEAL PREP
-            'meal prep': [
-                {'name': 'Meal Prep', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Weight Loss', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            
-            # PROVENANCE
             'provenance': [
                 {'name': 'Data Science', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Science & Nature', 'indie': 35, 'competition': 'HIGH'},
             ],
-            
-            # SCALING
-            'scaling': [
-                {'name': 'Business', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Management', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Computer Science', 'indie': 35, 'competition': 'HIGH'},
+            'meal prep': [
+                {'name': 'Meal Prep', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
             ],
         }
         
@@ -5413,7 +5157,6 @@ def category_research():
         
         for key, categories in category_mapping.items():
             key_words = key.lower().split()
-            # Count how many words match
             match_count = 0
             for kw in keyword_words:
                 for key_word in key_words:
@@ -5442,20 +5185,16 @@ def category_research():
         # If still no match, generate default categories
         if not matched_categories:
             print("⚠️ No match found, using default categories")
-            
-            # Try to extract a meaningful category from the keyword
             if len(keyword_words) >= 3:
                 matched_categories = [
-                    {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'How-to', 'indie': 55, 'competition': 'LOW'},
                     {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
                     {'name': 'Nonfiction', 'indie': 45, 'competition': 'MEDIUM'},
-                    {'name': 'General Interest', 'indie': 40, 'competition': 'HIGH'},
                 ]
             elif len(keyword_words) >= 2:
                 matched_categories = [
                     {'name': 'Self-Help', 'indie': 55, 'competition': 'LOW'},
                     {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
-                    {'name': 'How-to', 'indie': 45, 'competition': 'MEDIUM'},
                 ]
             else:
                 matched_categories = [
@@ -5468,7 +5207,6 @@ def category_research():
         # ============================================
         analyzed_categories = []
         total_products = len(products)
-        print(f"📊 Total products: {total_products}")
         
         for cat in matched_categories:
             cat_name = cat['name']
@@ -5563,7 +5301,39 @@ def category_research():
                     'name': 'Personal Development',
                     'score': 65,
                     'grade': 'B',
-                    '
+                    'competition': 'LOW',
+                    'indie_percent': 55,
+                    'trad_percent': 45,
+                    'recommendation': '✅ Good opportunity - Consider targeting this category.',
+                    'book_count': 80,
+                    'avg_bsr': 'N/A',
+                    'avg_reviews': 40
+                },
+                {
+                    'name': 'Nonfiction',
+                    'score': 55,
+                    'grade': 'C',
+                    'competition': 'MEDIUM',
+                    'indie_percent': 45,
+                    'trad_percent': 55,
+                    'recommendation': '📌 Moderate opportunity - Research further before deciding.',
+                    'book_count': 200,
+                    'avg_bsr': 'N/A',
+                    'avg_reviews': 60
+                }
+            ]
+        
+        return jsonify({
+            'success': True,
+            'categories': analyzed_categories,
+            'total_categories': len(analyzed_categories)
+        })
+        
+    except Exception as e:
+        print(f"❌ Category research error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)})
 # ============================================
 # RUN THE APP
 # ============================================
