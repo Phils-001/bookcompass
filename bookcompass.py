@@ -4872,108 +4872,125 @@ def category_research():
             return jsonify({'error': f'API error: Status {response.status_code}'})
         
         result = response.json()
-
-   
-    
-        # ===== ADD THIS DEBUG CODE =====
-        print(f"🔍 FULL API RESPONSE KEYS: {result.keys()}")
-        print(f"🔍 DATA KEYS: {result.get('data', {}).keys()}")
-        sample = result.get('data', {}).get('shallow_parts', [])[:1]
-        if sample:
-            print(f"🔍 SAMPLE PRODUCT KEYS: {sample[0].keys()}")
-        # ===== END DEBUG CODE =====
-    
-    
-        
-        # Get products
         products = result.get('data', {}).get('shallow_parts', [])
         print(f"📦 Found {len(products)} products")
         
-        if not products:
-            return jsonify({'error': 'No products found for this keyword'})
+        # ============================================
+        # GET CATEGORIES FROM DEPARTMENTS
+        # ============================================
+        departments = result.get('data', {}).get('departments', [])
+        print(f"📂 Found {len(departments)} departments")
+        
+        if not departments:
+            return jsonify({'error': 'No categories found for this keyword'})
         
         # ============================================
-        # EXTRACT AND ANALYZE CATEGORIES
-        # ============================================
-        category_data = {}
-        
-        for product in products:
-            # Get category from browse_node or other fields
-            category = product.get('browse_node', '')
-            if not category:
-                category = product.get('department', '')
-            if not category:
-                category = product.get('category', '')
-            if not category or category == 'Unknown':
-                continue
-            
-            # Clean up category name
-            if '>' in category:
-                # Take the last part (most specific)
-                parts = category.split('>')
-                category = parts[-1].strip()
-            
-            if category not in category_data:
-                category_data[category] = {
-                    'name': category,
-                    'count': 0,
-                    'indie_count': 0,
-                    'trad_count': 0,
-                    'avg_bsr': 0,
-                    'bsr_sum': 0,
-                    'bsr_count': 0,
-                    'total_reviews': 0,
-                    'review_count': 0
-                }
-            
-            stats = category_data[category]
-            stats['count'] += 1
-            
-            # Check if indie or traditional
-            publisher = product.get('publisher', '')
-            is_indie = False
-            if publisher:
-                publisher_lower = publisher.lower()
-                indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
-                for indicator in indie_indicators:
-                    if indicator in publisher_lower:
-                        is_indie = True
-                        break
-            
-            if is_indie:
-                stats['indie_count'] += 1
-            else:
-                stats['trad_count'] += 1
-            
-            # Track BSR
-            bsr = product.get('bought_past_month', 0)
-            if bsr and bsr > 0:
-                stats['bsr_sum'] += bsr
-                stats['bsr_count'] += 1
-            
-            # Track reviews
-            reviews = product.get('reviews', 0)
-            if reviews and reviews > 0:
-                stats['total_reviews'] += reviews
-                stats['review_count'] += 1
-        
-        print(f"📂 Found {len(category_data)} categories")
-        
-        # ============================================
-        # ANALYZE EACH CATEGORY
+        # ANALYZE EACH DEPARTMENT/CATEGORY
         # ============================================
         analyzed_categories = []
         
-        for cat_name, stats in category_data.items():
-            total = stats['count']
-            indie_pct = (stats['indie_count'] / total * 100) if total > 0 else 0
-            trad_pct = (stats['trad_count'] / total * 100) if total > 0 else 0
+        for dept in departments:
+            dept_name = dept.get('name', '')
+            if not dept_name:
+                continue
             
-            # Calculate average BSR
-            avg_bsr = stats['bsr_sum'] / stats['bsr_count'] if stats['bsr_count'] > 0 else 999999
+            # Clean up the name
+            dept_name = dept_name.strip()
             
-            # Calculate average reviews
-            avg_reviews = stats['total_reviews'] / stats['review_count'] if stats['review_count'] > 0 else 0
+            # Count how many products in this department
+            product_count = 0
+            dept_bsr_sum = 0
+            dept_bsr_count = 0
+            indie_count = 0
+            trad_count = 0
+            total_reviews = 0
+            review_count = 0
+            
+            # Check each product to see if it belongs to this department
+            # Since we don't have direct mapping, we'll use the products we have
+            # and check if their browse node matches
+            for product in products:
+                # Try to find department info in product
+                product_dept = product.get('department', '')
+                if not product_dept:
+                    product_dept = product.get('browse_node', '')
+                
+                # If product has no department, skip
+                if not product_dept:
+                    continue
+                
+                # Check if this product belongs to this department
+                # (simple partial match)
+                if dept_name.lower() in product_dept.lower() or product_dept.lower() in dept_name.lower():
+                    product_count += 1
+                    
+                    # Track BSR (using bought_past_month as proxy)
+                    bsr = product.get('bought_past_month', 0)
+                    if bsr and bsr > 0:
+                        dept_bsr_sum += bsr
+                        dept_bsr_count += 1
+                    
+                    # Check if indie or traditional
+                    publisher = product.get('publisher', '')
+                    is_indie = False
+                    if publisher:
+                        publisher_lower = publisher.lower()
+                        indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
+                        for indicator in indie_indicators:
+                            if indicator in publisher_lower:
+                                is_indie = True
+                                break
+                    
+                    if is_indie:
+                        indie_count += 1
+                    else:
+                        trad_count += 1
+                    
+                    # Track reviews
+                    reviews = product.get('reviews', 0)
+                    if reviews and reviews > 0:
+                        total_reviews += reviews
+                        review_count += 1
+            
+            # If no products matched, use a default
+            if product_count == 0:
+                # Use overall product data for this department
+                product_count = len(products)
+                # Use all products for BSR
+                for product in products:
+                    bsr = product.get('bought_past_month', 0)
+                    if bsr and bsr > 0:
+                        dept_bsr_sum += bsr
+                        dept_bsr_count += 1
+                    
+                    # Check indie/trad for all products
+                    publisher = product.get('publisher', '')
+                    is_indie = False
+                    if publisher:
+                        publisher_lower = publisher.lower()
+                        indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
+                        for indicator in indie_indicators:
+                            if indicator in publisher_lower:
+                                is_indie = True
+                                break
+                    
+                    if is_indie:
+                        indie_count += 1
+                    else:
+                        trad_count += 1
+                    
+                    reviews = product.get('reviews', 0)
+                    if reviews and reviews > 0:
+                        total_reviews += reviews
+                        review_count += 1
+            
+            # Calculate metrics
+            total = product_count
+            indie_pct = (indie_count / total * 100) if total > 0 else 0
+            trad_pct = (trad_count / total * 100) if total > 0 else 0
+            
+            avg_bsr = dept_bsr_sum / dept_bsr_count if dept_bsr_count > 0 else 999999
+            avg_reviews = total_reviews / review_count if review_count > 0 else 0
             
             # ===== COMPETITION LEVEL =====
             if avg_bsr < 10000 and indie_pct < 30:
@@ -4986,7 +5003,7 @@ def category_research():
             # ===== OPPORTUNITY SCORE (0-100) =====
             score = 50  # Base
             
-            # Indie friendly (higher indie % is better for indie authors)
+            # Indie friendly
             if indie_pct >= 70:
                 score += 25
             elif indie_pct >= 50:
@@ -4994,7 +5011,7 @@ def category_research():
             elif indie_pct >= 30:
                 score += 5
             
-            # BSR (lower is better, but if too low competition is high)
+            # BSR adjustment
             if avg_bsr > 100000:
                 score += 15
             elif avg_bsr > 50000:
@@ -5002,9 +5019,9 @@ def category_research():
             elif avg_bsr > 20000:
                 score += 5
             elif avg_bsr < 5000:
-                score -= 10  # Very competitive
+                score -= 10
             
-            # Number of books (more books = more competitive)
+            # Book count adjustment
             if total <= 5:
                 score += 10
             elif total <= 10:
@@ -5012,7 +5029,6 @@ def category_research():
             elif total > 20:
                 score -= 5
             
-            # Cap at 0-100
             score = max(0, min(100, score))
             
             # ===== GRADE =====
@@ -5037,18 +5053,20 @@ def category_research():
             else:
                 recommendation = '⚠️ Low opportunity - Better categories available.'
             
-            analyzed_categories.append({
-                'name': cat_name,
-                'score': round(score),
-                'grade': grade,
-                'competition': competition,
-                'indie_percent': round(indie_pct),
-                'trad_percent': round(trad_pct),
-                'recommendation': recommendation,
-                'book_count': total,
-                'avg_bsr': round(avg_bsr) if avg_bsr < 999999 else 'N/A',
-                'avg_reviews': round(avg_reviews)
-            })
+            # Only add if we have some data
+            if total > 0:
+                analyzed_categories.append({
+                    'name': dept_name,
+                    'score': round(score),
+                    'grade': grade,
+                    'competition': competition,
+                    'indie_percent': round(indie_pct),
+                    'trad_percent': round(trad_pct),
+                    'recommendation': recommendation,
+                    'book_count': total,
+                    'avg_bsr': round(avg_bsr) if avg_bsr < 999999 else 'N/A',
+                    'avg_reviews': round(avg_reviews)
+                })
         
         # Sort by score (highest first)
         analyzed_categories.sort(key=lambda x: x['score'], reverse=True)
@@ -5057,6 +5075,9 @@ def category_research():
         top_categories = analyzed_categories[:20]
         
         print(f"✅ Returning {len(top_categories)} analyzed categories")
+        
+        if not top_categories:
+            return jsonify({'error': 'No categories could be analyzed'})
         
         return jsonify({
             'success': True,
