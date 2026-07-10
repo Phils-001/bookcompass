@@ -5008,52 +5008,10 @@ def category_research():
         print(f"🔍 Keyword lower: '{keyword_lower}'")
         
         # Category mapping with better keys (all lowercase)
-        category_mapping = {
-            # AI / TECHNOLOGY / DATA
-            'ai': [
-                {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'provenance': [
-                {'name': 'Data Science', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Science & Nature', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            'machine learning': [
-                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'data science': [
-                {'name': 'Data Science', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'technology': [
-                {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Engineering', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
-            ],
-            'programming': [
-                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Reference', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            
-            # DOG TRAINING
+                category_mapping = {
+            # ============================================
+            # DOG TRAINING / PETS
+            # ============================================
             'dog training': [
                 {'name': 'Dog Training', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Pets', 'indie': 55, 'competition': 'LOW'},
@@ -5069,46 +5027,41 @@ def category_research():
                 {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'MEDIUM'},
             ],
             
-            # CRYPTO / INVESTING
-            'crypto': [
-                {'name': 'Cryptocurrency & Blockchain', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
+            # ============================================
+            # FITNESS / KETTLEBELL / EXERCISE
+            # ============================================
+            'kettlebell': [
+                {'name': 'Weight Training', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Exercise & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
             ],
-            'investing': [
-                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Retirement Planning', 'indie': 35, 'competition': 'HIGH'},
+            'workout': [
+                {'name': 'Exercise & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 40, 'competition': 'HIGH'},
             ],
-            'finance': [
-                {'name': 'Finance', 'indie': 55, 'competition': 'LOW'},
-                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Investing', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
-                {'name': 'Economics', 'indie': 35, 'competition': 'HIGH'},
+            'fitness': [
+                {'name': 'Exercise & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
             ],
-            
-            # MUSHROOM GROWING
-            'mushroom': [
-                {'name': 'Mycology & Fungi', 'indie': 70, 'competition': 'LOW'},
-                {'name': 'Gardening', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Agriculture', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
-            ],
-            'gardening': [
-                {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
-                {'name': 'Organic Gardening', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Agriculture', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            'exercise': [
+                {'name': 'Exercise & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
             ],
             
+            # ============================================
             # MEDITATION / MINDFULNESS
+            # ============================================
             'meditation': [
                 {'name': 'Meditation', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Mindfulness', 'indie': 60, 'competition': 'LOW'},
@@ -5124,15 +5077,128 @@ def category_research():
                 {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
             ],
             
-            # SELF HELP
-            'self help': [
+            # ============================================
+            # COLORING BOOKS
+            # ============================================
+            'coloring': [
+                {'name': 'Coloring Books', 'indie': 75, 'competition': 'LOW'},
+                {'name': 'Activity Books', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Arts & Crafts', 'indie': 65, 'competition': 'MEDIUM'},
+                {'name': 'Stress Relief', 'indie': 60, 'competition': 'MEDIUM'},
+                {'name': "Children's Books", 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            
+            # ============================================
+            # KNITTING / CRAFTS
+            # ============================================
+            'knitting': [
+                {'name': 'Knitting', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Textile Arts', 'indie': 60, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Arts & Photography', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'crafts': [
+                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Arts & Photography', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Textile Arts', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Knitting', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            
+            # ============================================
+            # MEAL PREP / COOKING / COOKBOOKS
+            # ============================================
+            'meal prep': [
+                {'name': 'Meal Prep', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Weight Loss', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'cookbook': [
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Cooking', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'cooking': [
+                {'name': 'Cooking', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            
+            # ============================================
+            # FINANCIAL PLANNING / INVESTING / CRYPTO
+            # ============================================
+            'financial': [
+                {'name': 'Financial Planning', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Investing', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Retirement Planning', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'investing': [
+                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Retirement Planning', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'crypto': [
+                {'name': 'Cryptocurrency & Blockchain', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'cryptocurrency': [
+                {'name': 'Cryptocurrency & Blockchain', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Finance', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'finance': [
+                {'name': 'Finance', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Investing', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Economics', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            
+            # ============================================
+            # MUSHROOM / GARDENING / AGRICULTURE
+            # ============================================
+            'mushroom': [
+                {'name': 'Mycology & Fungi', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Gardening', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Agriculture', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'How-to & Home Improvements', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'gardening': [
+                {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Organic Gardening', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Agriculture', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            
+            # ============================================
+            # SELF HELP / PERSONAL DEVELOPMENT
+            # ============================================
+            'self': [
                 {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Motivational', 'indie': 55, 'competition': 'MEDIUM'},
                 {'name': 'Psychology', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
             ],
-            'self improvement': [
+            'self discipline': [
                 {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
                 {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Motivational', 'indie': 55, 'competition': 'MEDIUM'},
@@ -5140,7 +5206,9 @@ def category_research():
                 {'name': 'Health & Fitness', 'indie': 45, 'competition': 'MEDIUM'},
             ],
             
-            # CHRISTIAN
+            # ============================================
+            # CHRISTIAN / RELIGION
+            # ============================================
             'christian': [
                 {'name': 'Christian Books & Bibles', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Religion & Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
@@ -5169,14 +5237,30 @@ def category_research():
                 {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Personal Development', 'indie': 45, 'competition': 'MEDIUM'},
             ],
+            'prayer': [
+                {'name': 'Prayer Books', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Devotionals', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Christian Books & Bibles', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Religion & Spirituality', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Christian Living', 'indie': 40, 'competition': 'HIGH'},
+            ],
             
-            # FICTION
+            # ============================================
+            # FICTION / LITERATURE
+            # ============================================
             'fiction': [
                 {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Literary Fiction', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Genre Fiction', 'indie': 45, 'competition': 'MEDIUM'},
                 {'name': 'Literature', 'indie': 40, 'competition': 'HIGH'},
                 {'name': 'Contemporary Fiction', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'science fiction': [
+                {'name': 'Science Fiction', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Space Opera', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Dystopian Fiction', 'indie': 35, 'competition': 'HIGH'},
             ],
             'romance': [
                 {'name': 'Romance', 'indie': 60, 'competition': 'LOW'},
@@ -5185,40 +5269,24 @@ def category_research():
                 {'name': 'Contemporary Romance', 'indie': 45, 'competition': 'MEDIUM'},
                 {'name': 'Love Stories', 'indie': 40, 'competition': 'HIGH'},
             ],
-            
-            # COOKING
-            'cookbook': [
-                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Cooking', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            'mystery': [
+                {'name': 'Mystery', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Thriller', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Suspense', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Crime Fiction', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Detective Fiction', 'indie': 35, 'competition': 'HIGH'},
             ],
-            'cooking': [
-                {'name': 'Cooking', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Cookbooks', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Food & Wine', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'How-to & Home Improvements', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Health & Fitness', 'indie': 40, 'competition': 'HIGH'},
+            'fantasy': [
+                {'name': 'Fantasy', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science Fiction & Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Epic Fantasy', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Sword & Sorcery', 'indie': 35, 'competition': 'HIGH'},
             ],
             
-            # FITNESS
-            'fitness': [
-                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            'exercise': [
-                {'name': 'Exercise', 'indie': 60, 'competition': 'LOW'},
-                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
-                {'name': 'Weight Training', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'Sports & Outdoors', 'indie': 40, 'competition': 'HIGH'},
-            ],
-            
-            # BUSINESS
+            # ============================================
+            # BUSINESS / LEADERSHIP / ENTREPRENEURSHIP
+            # ============================================
             'business': [
                 {'name': 'Business', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
@@ -5233,8 +5301,91 @@ def category_research():
                 {'name': 'Self-Help', 'indie': 40, 'competition': 'MEDIUM'},
                 {'name': 'Entrepreneurship', 'indie': 35, 'competition': 'HIGH'},
             ],
+            'entrepreneur': [
+                {'name': 'Entrepreneurship', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Business', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Startup', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Leadership', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Personal Finance', 'indie': 40, 'competition': 'HIGH'},
+            ],
             
-            # HEALTH
+            # ============================================
+            # TECHNOLOGY / AI / DATA SCIENCE / PROVENANCE
+            # ============================================
+            'technology': [
+                {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Engineering', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'ai': [
+                {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'machine learning': [
+                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'data science': [
+                {'name': 'Data Science', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'provenance': [
+                {'name': 'Data Science', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Science & Nature', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'programming': [
+                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Reference', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'python': [
+                {'name': 'Python Programming', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Programming', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Computer Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'llm': [
+                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'scaling': [
+                {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Business & Money', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Entrepreneurship', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Management', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Computer Science', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'enterprise': [
+                {'name': 'Business & Money', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Management', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Entrepreneurship', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Computer Science', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            
+            # ============================================
+            # HEALTH / WELLNESS / NUTRITION
+            # ============================================
             'health': [
                 {'name': 'Health & Fitness', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Wellness', 'indie': 50, 'competition': 'MEDIUM'},
@@ -5249,8 +5400,17 @@ def category_research():
                 {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Nutrition', 'indie': 45, 'competition': 'MEDIUM'},
             ],
+            'nutrition': [
+                {'name': 'Nutrition', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Diet', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Science & Nature', 'indie': 40, 'competition': 'HIGH'},
+            ],
             
-            # PARENTING
+            # ============================================
+            # PARENTING / FAMILY
+            # ============================================
             'parenting': [
                 {'name': 'Parenting', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
@@ -5259,7 +5419,9 @@ def category_research():
                 {'name': 'Pregnancy', 'indie': 40, 'competition': 'HIGH'},
             ],
             
-            # TRAVEL
+            # ============================================
+            # TRAVEL / ADVENTURE
+            # ============================================
             'travel': [
                 {'name': 'Travel', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Travel Guides', 'indie': 50, 'competition': 'MEDIUM'},
@@ -5268,7 +5430,9 @@ def category_research():
                 {'name': 'Biography', 'indie': 35, 'competition': 'HIGH'},
             ],
             
-            # SCIENCE
+            # ============================================
+            # SCIENCE / NATURE
+            # ============================================
             'science': [
                 {'name': 'Science', 'indie': 50, 'competition': 'LOW'},
                 {'name': 'Physics', 'indie': 45, 'competition': 'MEDIUM'},
@@ -5276,14 +5440,30 @@ def category_research():
                 {'name': 'Technology', 'indie': 35, 'competition': 'HIGH'},
                 {'name': 'Nature', 'indie': 30, 'competition': 'HIGH'},
             ],
+            'nature': [
+                {'name': 'Nature', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Gardening', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Animals', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Environment', 'indie': 35, 'competition': 'HIGH'},
+            ],
             
-            # RENEWABLE ENERGY
+            # ============================================
+            # RENEWABLE ENERGY / ENVIRONMENT
+            # ============================================
             'renewable': [
                 {'name': 'Renewable Energy', 'indie': 55, 'competition': 'LOW'},
                 {'name': 'Science & Nature', 'indie': 50, 'competition': 'MEDIUM'},
                 {'name': 'Environment', 'indie': 45, 'competition': 'MEDIUM'},
                 {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
                 {'name': 'Business & Money', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'energy': [
+                {'name': 'Renewable Energy', 'indie': 50, 'competition': 'LOW'},
+                {'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'MEDIUM'},
+                {'name': 'Environment', 'indie': 35, 'competition': 'HIGH'},
+                {'name': 'Business & Money', 'indie': 30, 'competition': 'HIGH'},
             ],
         }
         
