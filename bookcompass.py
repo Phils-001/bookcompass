@@ -4872,6 +4872,18 @@ def category_research():
             return jsonify({'error': f'API error: Status {response.status_code}'})
         
         result = response.json()
+
+   
+    
+        # ===== ADD THIS DEBUG CODE =====
+        print(f"🔍 FULL API RESPONSE KEYS: {result.keys()}")
+        print(f"🔍 DATA KEYS: {result.get('data', {}).keys()}")
+        sample = result.get('data', {}).get('shallow_parts', [])[:1]
+        if sample:
+            print(f"🔍 SAMPLE PRODUCT KEYS: {sample[0].keys()}")
+        # ===== END DEBUG CODE =====
+    
+    
         
         # Get products
         products = result.get('data', {}).get('shallow_parts', [])
