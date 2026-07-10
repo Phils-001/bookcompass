@@ -5559,118 +5559,112 @@ def category_research():
             # ============================================
             generated_categories = []
             
-            # Define keyword patterns and their categories
+                        # Define keyword patterns and their categories (ordered by priority)
             pattern_mapping = [
-                # Technology patterns
-                (['ai', 'artificial intelligence', 'machine learning', 'data science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer'],
-                 [
-                    {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
-                    {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
-                    {'name': 'Data Science', 'indie': 45, 'competition': 'MEDIUM'},
-                 ]),
-                
-                # Business patterns
-                (['business', 'money', 'finance', 'investing', 'crypto', 'cryptocurrency', 'entrepreneur', 'startup', 'management', 'leadership', 'marketing', 'sales', 'strategy'],
-                 [
-                    {'name': 'Business & Money', 'indie': 55, 'competition': 'LOW'},
-                    {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
-                    {'name': 'Personal Finance', 'indie': 45, 'competition': 'MEDIUM'},
-                 ]),
-                
-                # Fitness patterns
-                (['fitness', 'exercise', 'workout', 'kettlebell', 'weight', 'gym', 'training', 'yoga', 'pilates', 'cardio', 'strength'],
-                 [
-                    {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
-                    {'name': 'Exercise & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
-                    {'name': 'Sports & Outdoors', 'indie': 50, 'competition': 'MEDIUM'},
-                 ]),
-                
-                # Health patterns
-                (['health', 'wellness', 'nutrition', 'diet', 'weight loss', 'meal prep', 'cooking', 'recipes', 'food', 'vitamins', 'supplements'],
-                 [
-                    {'name': 'Health & Fitness', 'indie': 55, 'competition': 'LOW'},
-                    {'name': 'Nutrition', 'indie': 50, 'competition': 'MEDIUM'},
-                    {'name': 'Cookbooks', 'indie': 45, 'competition': 'MEDIUM'},
-                 ]),
-                
-                # Self Help patterns
-                (['self', 'help', 'improvement', 'personal development', 'motivation', 'mindset', 'psychology', 'mental health', 'anxiety', 'depression', 'therapy'],
+                # ===== HIGHEST PRIORITY: Self Help / Psychology =====
+                (['self', 'help', 'improvement', 'personal development', 'motivation', 'mindset', 'psychology', 'mental health', 'anxiety', 'depression', 'therapy', 'success', 'emotional intelligence', 'habits', 'discipline', 'focus', 'productivity', 'mindfulness', 'gratitude', 'confidence', 'self esteem', 'positive thinking'],
                  [
                     {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
                     {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
                     {'name': 'Psychology', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Motivational', 'indie': 50, 'competition': 'MEDIUM'},
                  ]),
                 
-                # Meditation patterns
-                (['meditation', 'mindfulness', 'spirituality', 'zen', 'buddhism', 'yoga', 'breathing', 'calm', 'stress relief'],
+                # ===== MEDITATION / MINDFULNESS =====
+                (['meditation', 'mindfulness', 'spirituality', 'zen', 'buddhism', 'yoga', 'breathing', 'calm', 'stress relief', 'relaxation'],
                  [
                     {'name': 'Meditation', 'indie': 65, 'competition': 'LOW'},
                     {'name': 'Mindfulness', 'indie': 60, 'competition': 'LOW'},
                     {'name': 'Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
                  ]),
                 
-                # Christian patterns
-                (['christian', 'bible', 'prayer', 'devotional', 'jesus', 'faith', 'church', 'gospel', 'worship', 'biblical'],
+                # ===== CHRISTIAN / RELIGION =====
+                (['christian', 'bible', 'prayer', 'devotional', 'jesus', 'faith', 'church', 'gospel', 'worship', 'biblical', 'religion', 'spiritual', 'god'],
                  [
                     {'name': 'Christian Books & Bibles', 'indie': 60, 'competition': 'LOW'},
                     {'name': 'Religion & Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
                     {'name': 'Christian Living', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Devotionals', 'indie': 45, 'competition': 'MEDIUM'},
                  ]),
                 
-                # Fiction patterns
-                (['fiction', 'novel', 'story', 'romance', 'mystery', 'thriller', 'sci-fi', 'fantasy', 'horror', 'adventure', 'dystopian'],
+                # ===== FICTION =====
+                (['fiction', 'novel', 'story', 'romance', 'mystery', 'thriller', 'sci-fi', 'fantasy', 'horror', 'adventure', 'dystopian', 'suspense', 'crime', 'detective', 'love', 'drama'],
                  [
                     {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
                     {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
                     {'name': 'Literary Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                    {'name': 'Genre Fiction', 'indie': 40, 'competition': 'HIGH'},
                  ]),
                 
-                # Crafts patterns
-                (['knitting', 'crochet', 'craft', 'sewing', 'quilting', 'embroidery', 'needlework', 'textile', 'yarn', 'scrapbooking'],
+                # ===== HEALTH / NUTRITION / COOKING =====
+                (['health', 'wellness', 'nutrition', 'diet', 'weight loss', 'meal prep', 'cooking', 'recipes', 'food', 'vitamins', 'supplements', 'exercise', 'fitness', 'workout', 'kettlebell', 'training', 'yoga', 'cardio', 'strength'],
+                 [
+                    {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Exercise & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Nutrition', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Cookbooks', 'indie': 45, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # ===== BUSINESS / FINANCE =====
+                (['business', 'money', 'finance', 'investing', 'crypto', 'cryptocurrency', 'entrepreneur', 'startup', 'management', 'leadership', 'marketing', 'sales', 'strategy', 'financial', 'trading', 'economics'],
+                 [
+                    {'name': 'Business & Money', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Personal Finance', 'indie': 45, 'competition': 'MEDIUM'},
+                    {'name': 'Investing', 'indie': 40, 'competition': 'HIGH'},
+                 ]),
+                
+                # ===== TECHNOLOGY / AI / DATA =====
+                (['ai', 'artificial intelligence', 'machine learning', 'data science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer', 'computer science', 'technology', 'engineering', 'cyber', 'security'],
+                 [
+                    {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Data Science', 'indie': 45, 'competition': 'MEDIUM'},
+                    {'name': 'Artificial Intelligence', 'indie': 40, 'competition': 'HIGH'},
+                 ]),
+                
+                # ===== CRAFTS / KNITTING / COLORING =====
+                (['knitting', 'crochet', 'craft', 'sewing', 'quilting', 'embroidery', 'needlework', 'textile', 'yarn', 'scrapbooking', 'coloring', 'color', 'adult coloring', 'activity book', 'puzzle', 'maze'],
                  [
                     {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
                     {'name': 'Knitting', 'indie': 60, 'competition': 'LOW'},
-                    {'name': 'Arts & Crafts', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Coloring Books', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Arts & Crafts', 'indie': 50, 'competition': 'MEDIUM'},
                  ]),
                 
-                # Coloring patterns
-                (['coloring', 'color', 'adult coloring', 'activity book', 'puzzle', 'maze', 'dot to dot'],
-                 [
-                    {'name': 'Coloring Books', 'indie': 75, 'competition': 'LOW'},
-                    {'name': 'Activity Books', 'indie': 70, 'competition': 'LOW'},
-                    {'name': 'Arts & Crafts', 'indie': 65, 'competition': 'MEDIUM'},
-                 ]),
-                
-                # Gardening patterns
-                (['garden', 'grow', 'plant', 'mushroom', 'mycology', 'agriculture', 'farming', 'horticulture', 'herb', 'vegetable'],
+                # ===== GARDENING / NATURE =====
+                (['garden', 'grow', 'plant', 'mushroom', 'mycology', 'agriculture', 'farming', 'horticulture', 'herb', 'vegetable', 'nature', 'wildlife', 'environment', 'ecosystem'],
                  [
                     {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
                     {'name': 'Agriculture', 'indie': 60, 'competition': 'LOW'},
                     {'name': 'Science & Nature', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Environment', 'indie': 50, 'competition': 'MEDIUM'},
                  ]),
                 
-                # Science patterns
-                (['science', 'physics', 'chemistry', 'biology', 'astronomy', 'geology', 'experiment', 'research', 'discovery'],
+                # ===== SCIENCE (LOWEST PRIORITY - ONLY IF NOTHING ELSE MATCHES) =====
+                (['science', 'physics', 'chemistry', 'biology', 'astronomy', 'geology', 'experiment', 'research', 'discovery', 'renewable', 'energy'],
                  [
                     {'name': 'Science & Nature', 'indie': 50, 'competition': 'LOW'},
                     {'name': 'Technology', 'indie': 45, 'competition': 'MEDIUM'},
                     {'name': 'Science', 'indie': 40, 'competition': 'HIGH'},
                  ]),
                 
-                # Travel patterns
-                (['travel', 'trip', 'vacation', 'adventure', 'explore', 'destination', 'guide', 'map', 'backpack'],
+                # ===== TRAVEL =====
+                (['travel', 'trip', 'vacation', 'adventure', 'explore', 'destination', 'guide', 'map', 'backpack', 'tour', 'wander'],
                  [
                     {'name': 'Travel', 'indie': 55, 'competition': 'LOW'},
                     {'name': 'Travel Guides', 'indie': 50, 'competition': 'MEDIUM'},
                     {'name': 'Adventure', 'indie': 45, 'competition': 'MEDIUM'},
                  ]),
                 
-                # Parenting patterns
-                (['parent', 'child', 'baby', 'toddler', 'family', 'pregnancy', 'mother', 'father', 'infant', 'caring'],
+                # ===== PARENTING =====
+                (['parent', 'child', 'baby', 'toddler', 'family', 'pregnancy', 'mother', 'father', 'infant', 'caring', 'upbringing', 'maternity', 'newborn'],
                  [
                     {'name': 'Parenting', 'indie': 60, 'competition': 'LOW'},
                     {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
                     {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Pregnancy', 'indie': 45, 'competition': 'MEDIUM'},
                  ]),
             ]
             
