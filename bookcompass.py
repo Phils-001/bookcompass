@@ -5549,7 +5549,7 @@ def category_research():
             # If no specific phrase match, use pattern analysis
             if not matched_categories:
                 # ===== PATTERN ANALYSIS =====
-                # Define keyword patterns (ordered by priority)
+                                # Define keyword patterns (ordered by priority)
                 pattern_mapping = [
                     # SELF HELP / PSYCHOLOGY
                     (['self', 'help', 'improvement', 'personal development', 'motivation', 'mindset', 'psychology', 'mental health', 'anxiety', 'depression', 'therapy', 'success', 'emotional intelligence', 'habits', 'discipline', 'focus', 'productivity', 'gratitude', 'confidence', 'self esteem', 'positive thinking', 'happiness', 'fulfillment'],
@@ -5576,15 +5576,6 @@ def category_research():
                         {'name': 'Religion & Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
                         {'name': 'Christian Living', 'indie': 50, 'competition': 'MEDIUM'},
                         {'name': 'Devotionals', 'indie': 45, 'competition': 'MEDIUM'},
-                     ]),
-                    
-                    # FICTION (only if keywords are clearly fiction-related)
-                    (['fiction', 'novel', 'romance', 'mystery', 'thriller', 'fantasy', 'horror', 'dystopian', 'suspense', 'crime', 'detective', 'love story', 'science fiction'],
-                     [
-                        {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
-                        {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
-                        {'name': 'Literary Fiction', 'indie': 45, 'competition': 'MEDIUM'},
-                        {'name': 'Genre Fiction', 'indie': 40, 'competition': 'HIGH'},
                      ]),
                     
                     # GARDENING / NATURE / GROWING
@@ -5624,12 +5615,21 @@ def category_research():
                      ]),
                     
                     # TECHNOLOGY (only if keywords are clearly tech-related)
-                    (['artificial intelligence', 'machine learning', 'data science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer', 'computer science', 'engineering', 'cyber', 'security', 'algorithm', 'data analysis', 'tech'],
+                    (['artificial intelligence', 'machine learning', 'data science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer', 'computer science', 'engineering', 'cyber', 'security', 'algorithm', 'data analysis', 'tech', 'computer', 'science', 'computing'],
                      [
                         {'name': 'Computer Science', 'indie': 60, 'competition': 'LOW'},
                         {'name': 'Technology', 'indie': 55, 'competition': 'MEDIUM'},
                         {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
                         {'name': 'Programming', 'indie': 45, 'competition': 'HIGH'},
+                     ]),
+                    
+                    # FICTION (Moved LOWER - only if clearly fiction)
+                    (['fiction novel', 'romance novel', 'fantasy novel', 'thriller novel', 'mystery novel', 'love story', 'historical fiction', 'young adult fiction', 'science fiction book', 'fantasy book'],
+                     [
+                        {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
+                        {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+                        {'name': 'Literary Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                        {'name': 'Genre Fiction', 'indie': 40, 'competition': 'HIGH'},
                      ]),
                     
                     # CRAFTS / KNITTING / COLORING
@@ -5657,6 +5657,14 @@ def category_research():
                         {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
                         {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
                         {'name': 'Pregnancy', 'indie': 45, 'competition': 'MEDIUM'},
+                     ]),
+                    
+                    # FICTION - SECONDARY (generic fiction words, but only as last resort)
+                    (['fiction', 'novel', 'story', 'romance', 'mystery', 'thriller', 'fantasy', 'horror', 'dystopian', 'suspense', 'crime', 'detective'],
+                     [
+                        {'name': 'Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+                        {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                        {'name': 'Literary Fiction', 'indie': 40, 'competition': 'HIGH'},
                      ]),
                     
                     # GENERAL HOW-TO
