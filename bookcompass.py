@@ -5143,6 +5143,28 @@ def category_research():
                 {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
                 {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
             ],
+                        # AI / PROVENANCE
+            'ai': [
+                {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 40, 'competition': 'HIGH'},
+            ],
+            'provenance': [
+                {'name': 'Data Science', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Technology', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Business & Money', 'indie': 40, 'competition': 'HIGH'},
+                {'name': 'Science & Nature', 'indie': 35, 'competition': 'HIGH'},
+            ],
+            'machine learning': [
+                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 45, 'competition': 'MEDIUM'},
+                {'name': 'Technology', 'indie': 40, 'competition': 'HIGH'},
+            ],
         }
         
         # ============================================
@@ -5185,21 +5207,50 @@ def category_research():
         # If still no match, generate default categories
         if not matched_categories:
             print("⚠️ No match found, using default categories")
-            if len(keyword_words) >= 3:
-                matched_categories = [
-                    {'name': 'How-to', 'indie': 55, 'competition': 'LOW'},
-                    {'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'},
-                    {'name': 'Nonfiction', 'indie': 45, 'competition': 'MEDIUM'},
-                ]
-            elif len(keyword_words) >= 2:
-                matched_categories = [
-                    {'name': 'Self-Help', 'indie': 55, 'competition': 'LOW'},
-                    {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
-                ]
+            
+            # Try to extract meaningful categories from keyword
+            default_categories = []
+            
+            # Check for common terms in the keyword
+            if 'guide' in keyword_lower or 'how to' in keyword_lower or 'manual' in keyword_lower:
+                default_categories.append({'name': 'How-to & Home Improvements', 'indie': 55, 'competition': 'LOW'})
+            
+            if 'self' in keyword_lower or 'help' in keyword_lower or 'improvement' in keyword_lower:
+                default_categories.append({'name': 'Self-Help', 'indie': 50, 'competition': 'MEDIUM'})
+            
+            if 'science' in keyword_lower or 'tech' in keyword_lower or 'technology' in keyword_lower:
+                default_categories.append({'name': 'Science & Nature', 'indie': 45, 'competition': 'MEDIUM'})
+                default_categories.append({'name': 'Technology', 'indie': 40, 'competition': 'MEDIUM'})
+            
+            if 'business' in keyword_lower or 'money' in keyword_lower or 'finance' in keyword_lower:
+                default_categories.append({'name': 'Business & Money', 'indie': 45, 'competition': 'MEDIUM'})
+            
+            if 'fiction' in keyword_lower or 'story' in keyword_lower or 'novel' in keyword_lower:
+                default_categories.append({'name': 'Fiction', 'indie': 45, 'competition': 'MEDIUM'})
+            
+            if 'history' in keyword_lower or 'historical' in keyword_lower:
+                default_categories.append({'name': 'History', 'indie': 40, 'competition': 'MEDIUM'})
+            
+            if 'cook' in keyword_lower or 'recipe' in keyword_lower or 'food' in keyword_lower:
+                default_categories.append({'name': 'Cookbooks', 'indie': 55, 'competition': 'LOW'})
+            
+            if 'health' in keyword_lower or 'fitness' in keyword_lower or 'exercise' in keyword_lower:
+                default_categories.append({'name': 'Health & Fitness', 'indie': 50, 'competition': 'MEDIUM'})
+            
+            if 'prayer' in keyword_lower or 'bible' in keyword_lower or 'christian' in keyword_lower:
+                default_categories.append({'name': 'Christian Books & Bibles', 'indie': 55, 'competition': 'LOW'})
+                default_categories.append({'name': 'Religion & Spirituality', 'indie': 50, 'competition': 'MEDIUM'})
+            
+            # If we have some categories from the keyword analysis, use them
+            if default_categories:
+                matched_categories = default_categories
             else:
+                # If no specific categories found, use generic ones
+                # but make them relevant to the keyword
                 matched_categories = [
-                    {'name': 'Self-Help', 'indie': 50, 'competition': 'LOW'},
-                    {'name': 'Nonfiction', 'indie': 45, 'competition': 'MEDIUM'},
+                    {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                    {'name': 'General Interest', 'indie': 40, 'competition': 'HIGH'},
                 ]
         
         # ============================================
