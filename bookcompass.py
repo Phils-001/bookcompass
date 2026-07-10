@@ -1089,6 +1089,106 @@ def dashboard():
                 alert('Error: ' + error.message);
             }});
         }}
+        // ====== DISPLAY CATEGORY RESULTS ======
+        function displayCategoryResults(categories) {{
+            var container = document.getElementById('categoryResults');
+            container.innerHTML = '';
+            container.style.display = 'block';
+            
+            categories.sort(function(a, b) {{ return b.score - a.score; }});
+            
+            for (var i = 0; i < categories.length; i++) {{
+                var cat = categories[i];
+                var score = cat.score || 0;
+                
+                var grade = 'F';
+                var color = '#f44336';
+                var emoji = '⛔';
+                var recommendation = 'AVOID';
+                if (score >= 80) {{ grade = 'A'; color = '#4CAF50'; emoji = '🏆'; recommendation = '⭐ TARGET THIS CATEGORY'; }}
+                else if (score >= 60) {{ grade = 'B'; color = '#8BC34A'; emoji = '🥈'; recommendation = '✅ Consider this category'; }}
+                else if (score >= 40) {{ grade = 'C'; color = '#ff9800'; emoji = '🥉'; recommendation = '🟡 Only if strong differentiator'; }}
+                else {{ grade = 'D'; color = '#f44336'; emoji = '❌'; recommendation = '⚠️ Avoid this category'; }}
+                
+                var card = document.createElement('div');
+                card.style.cssText = 'background: white; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 5px solid ' + color + ';';
+                
+                card.innerHTML = 
+                    '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">' +
+                        '<div>' +
+                            '<div style="font-size:24px; font-weight:bold; color:' + color + ';">' + emoji + ' ' + grade + ' (Score: ' + score + '/100)</div>' +
+                            '<div style="font-size:16px; color:#232f3e; margin:5px 0;"><strong>📁 ' + (cat.name || 'Unknown Category') + '</strong></div>' +
+                            '<div style="font-size:13px; color:#666;">Category ID: ' + (cat.id || 'N/A') + '</div>' +
+                        '</div>' +
+                        '<div style="margin-top:10px;">' +
+                            '<span style="background:' + color + '; color:white; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:bold;">' + grade + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="margin-top:10px; font-size:14px; color:#555;">' +
+                        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">' +
+                            '<div>📈 #1 BSR: ' + (cat.top_bsr || 'N/A') + '</div>' +
+                            '<div>📚 Indie: ' + (cat.indie_percent || '0') + '% / Trad: ' + (cat.trad_percent || '0') + '%</div>' +
+                            '<div>🎯 Competition: ' + (cat.competition || 'N/A') + '</div>' +
+                            '<div>💡 Recommendation: ' + recommendation + '</div>' +
+                        '</div>' +
+                        '<div style="margin-top:8px; font-size:12px; color:#888;">' +
+                            '🔑 Themes: ' + (cat.themes || 'N/A') +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="margin-top:12px;">' +
+                        '<button onclick="copyCategoryPath(\'' + (cat.name || '') + '\')" style="background:#2196F3; color:white; border:none; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:12px; margin-right:8px;">📋 Copy Path</button>' +
+                        '<button onclick="viewCategoryBooks(\'' + (cat.id || '') + '\')" style="background:#ff9900; color:white; border:none; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:12px;">🔍 View Books</button>' +
+                    '</div>';
+                
+                container.appendChild(card);
+            }}
+        }}
+
+        // ====== DISPLAY CATEGORY SUMMARY ======
+        function displayCategorySummary(categories) {{
+            var container = document.getElementById('categorySummary');
+            container.style.display = 'block';
+            
+            var best = categories[0];
+            var worst = categories[categories.length - 1];
+            
+            container.innerHTML = 
+                '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px;">' +
+                    '<div style="background:#e8f5e9; padding:15px; border-radius:8px; text-align:center;">' +
+                        '<div style="font-size:28px;">🏆</div>' +
+                        '<div style="font-weight:bold;">Best Category</div>' +
+                        '<div style="font-size:13px; color:#555;">' + (best ? best.name : 'N/A') + '</div>' +
+                        '<div style="font-size:20px; color:#4CAF50; font-weight:bold;">' + (best ? best.score : '0') + '/100</div>' +
+                    '</div>' +
+                    '<div style="background:#fff3e0; padding:15px; border-radius:8px; text-align:center;">' +
+                        '<div style="font-size:28px;">📊</div>' +
+                        '<div style="font-weight:bold;">Categories Found</div>' +
+                        '<div style="font-size:24px; color:#ff9800; font-weight:bold;">' + categories.length + '</div>' +
+                    '</div>' +
+                    '<div style="background:#ffebee; padding:15px; border-radius:8px; text-align:center;">' +
+                        '<div style="font-size:28px;">⚠️</div>' +
+                        '<div style="font-weight:bold;">Category to Avoid</div>' +
+                        '<div style="font-size:13px; color:#555;">' + (worst ? worst.name : 'N/A') + '</div>' +
+                        '<div style="font-size:20px; color:#f44336; font-weight:bold;">' + (worst ? worst.score : '0') + '/100</div>' +
+                    '</div>' +
+                '</div>';
+        }}
+
+        // ====== COPY CATEGORY PATH ======
+        function copyCategoryPath(name) {{
+            navigator.clipboard.writeText(name)
+                .then(function() {{ alert('✅ Category path copied to clipboard!'); }})
+                .catch(function() {{ alert('❌ Failed to copy. Please copy manually.'); }});
+        }}
+
+        // ====== VIEW BOOKS IN CATEGORY ======
+        function viewCategoryBooks(categoryId) {{
+            if (categoryId) {{
+                window.open('https://www.amazon.com/s?rh=n%3A' + categoryId, '_blank');
+            }} else {{
+                alert('No category ID available');
+            }}
+        }}
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
 <div id="categoryResearchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow-y:auto; padding:20px;">
