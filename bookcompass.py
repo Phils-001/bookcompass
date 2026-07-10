@@ -5550,14 +5550,175 @@ def category_research():
                 matched_categories = generated_categories
                 print(f"✅ Generated categories from keyword analysis")
         
-        # If still no match, use default
+        # If still no match, generate default categories
         if not matched_categories:
-            print("⚠️ No match, using default categories")
-            matched_categories = [
-                {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
-                {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                {'name': 'General Interest', 'indie': 40, 'competition': 'HIGH'},
+            print("⚠️ No match found, using default categories")
+            
+            # ============================================
+            # SMART KEYWORD ANALYSIS FOR FALLBACK
+            # ============================================
+            generated_categories = []
+            
+            # Define keyword patterns and their categories
+            pattern_mapping = [
+                # Technology patterns
+                (['ai', 'artificial intelligence', 'machine learning', 'data science', 'llm', 'algorithm', 'provenance', 'scaling', 'enterprise', 'software', 'programming', 'python', 'code', 'developer'],
+                 [
+                    {'name': 'Technology', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Data Science', 'indie': 45, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Business patterns
+                (['business', 'money', 'finance', 'investing', 'crypto', 'cryptocurrency', 'entrepreneur', 'startup', 'management', 'leadership', 'marketing', 'sales', 'strategy'],
+                 [
+                    {'name': 'Business & Money', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Entrepreneurship', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Personal Finance', 'indie': 45, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Fitness patterns
+                (['fitness', 'exercise', 'workout', 'kettlebell', 'weight', 'gym', 'training', 'yoga', 'pilates', 'cardio', 'strength'],
+                 [
+                    {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Exercise & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Sports & Outdoors', 'indie': 50, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Health patterns
+                (['health', 'wellness', 'nutrition', 'diet', 'weight loss', 'meal prep', 'cooking', 'recipes', 'food', 'vitamins', 'supplements'],
+                 [
+                    {'name': 'Health & Fitness', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Nutrition', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Cookbooks', 'indie': 45, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Self Help patterns
+                (['self', 'help', 'improvement', 'personal development', 'motivation', 'mindset', 'psychology', 'mental health', 'anxiety', 'depression', 'therapy'],
+                 [
+                    {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                    {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Psychology', 'indie': 55, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Meditation patterns
+                (['meditation', 'mindfulness', 'spirituality', 'zen', 'buddhism', 'yoga', 'breathing', 'calm', 'stress relief'],
+                 [
+                    {'name': 'Meditation', 'indie': 65, 'competition': 'LOW'},
+                    {'name': 'Mindfulness', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Christian patterns
+                (['christian', 'bible', 'prayer', 'devotional', 'jesus', 'faith', 'church', 'gospel', 'worship', 'biblical'],
+                 [
+                    {'name': 'Christian Books & Bibles', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Religion & Spirituality', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Christian Living', 'indie': 50, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Fiction patterns
+                (['fiction', 'novel', 'story', 'romance', 'mystery', 'thriller', 'sci-fi', 'fantasy', 'horror', 'adventure', 'dystopian'],
+                 [
+                    {'name': 'Fiction', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Literary Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Crafts patterns
+                (['knitting', 'crochet', 'craft', 'sewing', 'quilting', 'embroidery', 'needlework', 'textile', 'yarn', 'scrapbooking'],
+                 [
+                    {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
+                    {'name': 'Knitting', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Arts & Crafts', 'indie': 55, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Coloring patterns
+                (['coloring', 'color', 'adult coloring', 'activity book', 'puzzle', 'maze', 'dot to dot'],
+                 [
+                    {'name': 'Coloring Books', 'indie': 75, 'competition': 'LOW'},
+                    {'name': 'Activity Books', 'indie': 70, 'competition': 'LOW'},
+                    {'name': 'Arts & Crafts', 'indie': 65, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Gardening patterns
+                (['garden', 'grow', 'plant', 'mushroom', 'mycology', 'agriculture', 'farming', 'horticulture', 'herb', 'vegetable'],
+                 [
+                    {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
+                    {'name': 'Agriculture', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Science & Nature', 'indie': 55, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Science patterns
+                (['science', 'physics', 'chemistry', 'biology', 'astronomy', 'geology', 'experiment', 'research', 'discovery'],
+                 [
+                    {'name': 'Science & Nature', 'indie': 50, 'competition': 'LOW'},
+                    {'name': 'Technology', 'indie': 45, 'competition': 'MEDIUM'},
+                    {'name': 'Science', 'indie': 40, 'competition': 'HIGH'},
+                 ]),
+                
+                # Travel patterns
+                (['travel', 'trip', 'vacation', 'adventure', 'explore', 'destination', 'guide', 'map', 'backpack'],
+                 [
+                    {'name': 'Travel', 'indie': 55, 'competition': 'LOW'},
+                    {'name': 'Travel Guides', 'indie': 50, 'competition': 'MEDIUM'},
+                    {'name': 'Adventure', 'indie': 45, 'competition': 'MEDIUM'},
+                 ]),
+                
+                # Parenting patterns
+                (['parent', 'child', 'baby', 'toddler', 'family', 'pregnancy', 'mother', 'father', 'infant', 'caring'],
+                 [
+                    {'name': 'Parenting', 'indie': 60, 'competition': 'LOW'},
+                    {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
+                    {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
+                 ]),
             ]
+            
+            # Check each pattern against the keyword
+            keyword_words = keyword_lower.split()
+            for patterns, categories in pattern_mapping:
+                matched = False
+                for pattern in patterns:
+                    if pattern in keyword_lower:
+                        generated_categories = categories
+                        matched = True
+                        print(f"✅ Fallback: Found pattern '{pattern}' in keyword")
+                        break
+                    # Also check individual word matches
+                    for word in keyword_words:
+                        if word in pattern or pattern in word:
+                            generated_categories = categories
+                            matched = True
+                            print(f"✅ Fallback: Found word '{word}' matches pattern '{pattern}'")
+                            break
+                    if matched:
+                        break
+                if matched:
+                    break
+            
+            # If still no categories, use a smart default
+            if not generated_categories:
+                # Use the keyword itself to create categories
+                word_count = len(keyword_words)
+                if word_count >= 3:
+                    # Longer keywords often mean more specific niches
+                    generated_categories = [
+                        {'name': 'Nonfiction', 'indie': 55, 'competition': 'LOW'},
+                        {'name': 'How-to', 'indie': 50, 'competition': 'MEDIUM'},
+                        {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                    ]
+                elif word_count >= 2:
+                    generated_categories = [
+                        {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
+                        {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
+                    ]
+                else:
+                    generated_categories = [
+                        {'name': 'Nonfiction', 'indie': 45, 'competition': 'MEDIUM'},
+                    ]
+            
+            matched_categories = generated_categories
+            print(f"✅ Fallback categories: {[c['name'] for c in matched_categories]}")
         
         # ============================================
         # ANALYZE AND SCORE CATEGORIES
