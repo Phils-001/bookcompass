@@ -5002,16 +5002,20 @@ def category_research():
             return jsonify({'error': 'No products found for this keyword'})
         
         # ============================================
-        # EXTRACT CATEGORIES FROM MULTIPLE SOURCES
+        # EXTRACT REAL CATEGORIES FROM PRODUCTS
         # ============================================
         category_counts = {}
         
-        # Method 1: Get from departments
+        # Method 1: Get from departments (Amazon's category hierarchy)
         departments = result.get('data', {}).get('departments', [])
         print(f"📂 Found {len(departments)} departments")
         
+        # Print departments to see what we're getting
         for dept in departments:
             dept_name = dept.get('name', '').strip()
+            print(f"   📂 Department: {dept_name}")
+            
+            # Skip generic "Books" but keep sub-departments
             if dept_name and dept_name != 'Books':
                 if dept_name not in category_counts:
                     category_counts[dept_name] = {
@@ -5020,161 +5024,272 @@ def category_research():
                         'indie_count': 0,
                         'trad_count': 0,
                         'bsr_values': [],
-                        'review_values': []
+                        'review_values': [],
+                        'is_real': True
                     }
         
-        # Method 2: Get from product browse nodes
+        # Method 2: Extract categories from each product's metadata
         for product in products:
-            categories = []
+            # Try to get category from various fields
+            product_categories = []
             
-            for field in ['browse_node', 'department', 'category']:
-                value = product.get(field, '')
-                if value and value != 'Unknown' and value != '':
-                    categories.append(value)
+            # Check if product has a category path
+            if 'category_path' in product:
+                product_categories.append(product.get('category_path', ''))
             
-            if 'meta' in product:
-                meta = product.get('meta', {})
-                for field in ['category', 'browse_node', 'department']:
-                    value = meta.get(field, '')
-                    if value and value != 'Unknown' and value != '':
-                        categories.append(value)
+            # Check browse_node
+            browse_node = product.get('browse_node', '')
+            if browse_node and browse_node != 'Unknown' and browse_node != '':
+                product_categories.append(browse_node)
             
-            for cat_name in categories:
-                if '>' in cat_name:
-                    parts = cat_name.split('>')
-                    cat_name = parts[-1].strip()
-                
-                if cat_name.lower() in ['books', 'book', 'unknown', '']:
+            # Check department
+            department = product.get('department', '')
+            if department and department != 'Unknown' and department != '':
+                product_categories.append(department)
+            
+            # Check categories array if it exists
+            if 'categories' in product and isinstance(product['categories'], list):
+                for cat in product['categories']:
+                    if isinstance(cat, dict) and 'name' in cat:
+                        product_categories.append(cat['name'])
+                    elif isinstance(cat, str):
+                        product_categories.append(cat)
+            
+            for cat_name in product_categories:
+                if not cat_name or cat_name == 'Unknown':
                     continue
                 
-                if cat_name not in category_counts:
-                    category_counts[cat_name] = {
-                        'name': cat_name,
-                        'count': 0,
-                        'indie_count': 0,
-                        'trad_count': 0,
-                        'bsr_values': [],
-                        'review_values': []
-                    }
+                # Clean up the category name
+                # If it has >, take the most specific part
+                if '>' in cat_name:
+                    parts = [p.strip() for p in cat_name.split('>')]
+                    # Try to keep the most specific (last) and second most specific
+                    if len(parts) >= 2:
+                        # Add both the most specific and the parent
+                        specific_cat = parts[-1]
+                        parent_cat = parts[-2]
+                        
+                        # Add specific category
+                        if specific_cat and specific_cat != 'Books':
+                            if specific_cat not in category_counts:
+                                category_counts[specific_cat] = {
+                                    'name': specific_cat,
+                                    'count': 0,
+                                    'indie_count': 0,
+                                    'trad_count': 0,
+                                    'bsr_values': [],
+                                    'review_values': [],
+                                    'is_real': True
+                                }
+                        
+                        # Add parent category if it's not generic
+                        if parent_cat and parent_cat not in ['Books', '']:
+                            if parent_cat not in category_counts:
+                                category_counts[parent_cat] = {
+                                    'name': parent_cat,
+                                    'count': 0,
+                                    'indie_count': 0,
+                                    'trad_count': 0,
+                                    'bsr_values': [],
+                                    'review_values': [],
+                                    'is_real': True
+                                }
+                    else:
+                        # Just use the single category
+                        cat_name = cat_name.strip()
+                        if cat_name and cat_name != 'Books':
+                            if cat_name not in category_counts:
+                                category_counts[cat_name] = {
+                                    'name': cat_name,
+                                    'count': 0,
+                                    'indie_count': 0,
+                                    'trad_count': 0,
+                                    'bsr_values': [],
+                                    'review_values': [],
+                                    'is_real': True
+                                }
                 
-                stats = category_counts[cat_name]
-                stats['count'] += 1
-                
-                publisher = product.get('publisher', '')
-                is_indie = False
-                if publisher:
-                    publisher_lower = publisher.lower()
-                    indie_indicators = ['independently published', 'self-published', 'kindle', 'createspace']
-                    for indicator in indie_indicators:
-                        if indicator in publisher_lower:
-                            is_indie = True
-                            break
-                
-                if is_indie:
-                    stats['indie_count'] += 1
-                else:
-                    stats['trad_count'] += 1
-                
-                bsr = product.get('bought_past_month', 0)
-                if bsr and bsr > 0:
-                    stats['bsr_values'].append(bsr)
-                
-                reviews = product.get('reviews', 0)
-                if reviews and reviews > 0:
-                    stats['review_values'].append(reviews)
+                # Also try to extract from browse_node which often has hierarchy
+                if '›' in cat_name:
+                    parts = [p.strip() for p in cat_name.split('›')]
+                    if len(parts) >= 2:
+                        specific_cat = parts[-1]
+                        if specific_cat and specific_cat != 'Books':
+                            if specific_cat not in category_counts:
+                                category_counts[specific_cat] = {
+                                    'name': specific_cat,
+                                    'count': 0,
+                                    'indie_count': 0,
+                                    'trad_count': 0,
+                                    'bsr_values': [],
+                                    'review_values': [],
+                                    'is_real': True
+                                }
         
         # ============================================
-        # GENERATE SMART CATEGORIES FROM KEYWORD
+        # IF NO CATEGORIES FOUND, USE KEYWORD-BASED
         # ============================================
-        # If no categories found, generate them from the keyword
         if not category_counts:
-            print("🔄 No categories found, generating from keyword...")
+            print("⚠️ No real categories found, using keyword-based mapping...")
             
+            # Use the smart keyword mapping to generate relevant categories
             keyword_lower = keyword.lower()
             generated_categories = []
             
-            # Category mapping based on keywords
+            # Detailed category mapping for specific niches
             category_mapping = {
-                'mushroom': ['Gardening', 'Science & Nature', 'Self-Help', 'How-to'],
-                'meditation': ['Self-Help', 'Health & Wellness', 'Spirituality', 'Mindfulness'],
-                'science fiction': ['Science Fiction & Fantasy', 'Literature', 'Fiction'],
-                'fiction': ['Literature & Fiction', 'Genre Fiction', 'Literary Fiction'],
-                'crypto': ['Business & Money', 'Investing', 'Finance', 'Personal Finance'],
-                'investing': ['Business & Money', 'Investing', 'Finance', 'Personal Finance'],
-                'dog training': ['Pets', 'Home & Garden', 'Sports & Outdoors', 'How-to'],
-                'knitting': ['Crafts & Hobbies', 'Home & Garden', 'How-to', 'Textile Arts'],
-                'coloring book': ['Children\'s Books', 'Activity Books', 'Arts & Crafts', 'Stress Relief'],
-                'cryptocurrency': ['Business & Money', 'Investing', 'Finance', 'Personal Finance'],
-                'kettlebell': ['Health & Fitness', 'Exercise', 'Sports & Outdoors', 'Self-Help'],
-                'self discipline': ['Self-Help', 'Personal Development', 'Motivational', 'Psychology'],
-                'meal prep': ['Cookbooks', 'Health & Fitness', 'Self-Help', 'Weight Loss'],
-                'renewable energy': ['Science & Nature', 'Technology', 'Business & Money', 'Environment'],
-                'leadership': ['Business & Money', 'Leadership', 'Self-Help', 'Personal Development'],
-                'financial planning': ['Business & Money', 'Investing', 'Personal Finance', 'Finance'],
-                'LLM': ['Technology', 'Science & Nature', 'Business & Money', 'Computer Science'],
-                'provenance': ['Business & Money', 'Science & Nature', 'Technology', 'Self-Help'],
-                'AI': ['Technology', 'Science & Nature', 'Business & Money', 'Computer Science'],
+                'dog training': ['Dog Training', 'Pets', 'Animal Care', 'How-to'],
+                'crypto investing': ['Cryptocurrency', 'Investing', 'Finance', 'Personal Finance'],
+                'cryptocurrency': ['Cryptocurrency', 'Investing', 'Finance', 'Personal Finance'],
+                'mushroom growing': ['Gardening', 'Mycology', 'Agriculture', 'How-to'],
+                'meditation': ['Meditation', 'Mindfulness', 'Self-Help', 'Spirituality'],
+                'gardening': ['Gardening', 'Organic Gardening', 'Landscaping', 'How-to'],
+                'cooking': ['Cookbooks', 'Cooking', 'Food & Wine', 'How-to'],
+                'paleo': ['Paleo Diet', 'Cookbooks', 'Health & Fitness', 'Special Diets'],
+                'vegan': ['Vegan Cooking', 'Cookbooks', 'Health & Fitness', 'Plant Based'],
+                'keto': ['Keto Diet', 'Cookbooks', 'Health & Fitness', 'Low Carb'],
+                'yoga': ['Yoga', 'Exercise', 'Health & Fitness', 'Mindfulness'],
+                'fitness': ['Exercise', 'Health & Fitness', 'Weight Training', 'Self-Help'],
+                'business': ['Business', 'Entrepreneurship', 'Management', 'Leadership'],
+                'marketing': ['Marketing', 'Business', 'Advertising', 'Social Media'],
+                'photography': ['Photography', 'Arts & Photography', 'How-to', 'Reference'],
+                'coding': ['Programming', 'Computer Science', 'Technology', 'Reference'],
+                'python': ['Programming', 'Python', 'Computer Science', 'Technology'],
+                'journal': ['Journals', 'Writing', 'Self-Help', 'Creative Writing'],
+                'coloring': ['Coloring Books', 'Activity Books', 'Arts & Crafts', 'Stress Relief'],
+                'knitting': ['Knitting', 'Crafts & Hobbies', 'Textile Arts', 'How-to'],
+                'crochet': ['Crocheting', 'Crafts & Hobbies', 'Textile Arts', 'How-to'],
+                'woodworking': ['Woodworking', 'Crafts & Hobbies', 'DIY', 'Home Improvement'],
+                'self improvement': ['Self-Help', 'Personal Development', 'Motivational', 'Psychology'],
+                'leadership': ['Leadership', 'Business', 'Self-Help', 'Management'],
+                'finance': ['Finance', 'Investing', 'Business & Money', 'Personal Finance'],
+                'investing': ['Investing', 'Finance', 'Business & Money', 'Personal Finance'],
+                'real estate': ['Real Estate', 'Investing', 'Business & Money', 'Home'],
+                'psychology': ['Psychology', 'Self-Help', 'Health & Fitness', 'Science'],
+                'history': ['History', 'World History', 'Biography', 'Nonfiction'],
+                'science': ['Science', 'Physics', 'Biology', 'Technology'],
+                'fiction': ['Fiction', 'Literary Fiction', 'Genre Fiction', 'Literature'],
+                'romance': ['Romance', 'Romantic Fiction', 'Literature & Fiction', 'Love'],
+                'mystery': ['Mystery', 'Thriller', 'Suspense', 'Crime Fiction'],
+                'sci-fi': ['Science Fiction', 'Fantasy', 'Fiction', 'Space Opera'],
+                'fantasy': ['Fantasy', 'Science Fiction & Fantasy', 'Epic Fantasy', 'Fiction'],
+                'horror': ['Horror', 'Thriller', 'Fiction', 'Suspense'],
+                'christian': ['Christian Books & Bibles', 'Religion & Spirituality', 'Christian Living', 'Bible Study'],
+                'bible': ['Bible Study', 'Christian Books & Bibles', 'Religion & Spirituality', 'Devotionals'],
+                'prayer': ['Prayer Books', 'Devotionals', 'Christian Books & Bibles', 'Religion & Spirituality'],
+                'gratitude': ['Gratitude Journals', 'Self-Help', 'Journaling', 'Personal Development'],
+                'mindfulness': ['Mindfulness', 'Self-Help', 'Meditation', 'Health & Fitness'],
+                'anxiety': ['Anxiety', 'Self-Help', 'Mental Health', 'Psychology'],
+                'depression': ['Depression', 'Self-Help', 'Mental Health', 'Psychology'],
+                'trauma': ['Trauma', 'Self-Help', 'Psychology', 'Mental Health'],
+                'parenting': ['Parenting', 'Family', 'Child Development', 'Self-Help'],
+                'pregnancy': ['Pregnancy', 'Parenting', 'Health & Fitness', 'Women\'s Health'],
+                'weight loss': ['Weight Loss', 'Health & Fitness', 'Self-Help', 'Dieting'],
+                'exercise': ['Exercise', 'Health & Fitness', 'Workouts', 'Self-Help'],
+                'nutrition': ['Nutrition', 'Health & Fitness', 'Diet', 'Self-Help'],
+                'cookbook': ['Cookbooks', 'Cooking', 'Food & Wine', 'How-to'],
+                'recipe': ['Cookbooks', 'Cooking', 'Recipes', 'Food & Wine'],
+                'sourdough': ['Baking', 'Cookbooks', 'Bread', 'How-to'],
+                'bread': ['Baking', 'Cookbooks', 'Bread', 'How-to'],
+                'pasta': ['Cookbooks', 'Italian Cooking', 'Pasta', 'How-to'],
+                'cocktail': ['Cookbooks', 'Beverages', 'Cocktails', 'Entertaining'],
+                'wine': ['Wine', 'Cookbooks', 'Beverages', 'Entertaining'],
+                'travel': ['Travel', 'Travel Guides', 'Adventure', 'Photography'],
+                'adventure': ['Travel', 'Adventure', 'Exploration', 'Biography'],
+                'biography': ['Biography', 'Autobiography', 'Memoir', 'Nonfiction'],
+                'memoir': ['Memoir', 'Biography', 'Autobiography', 'Nonfiction'],
+                'business': ['Business', 'Entrepreneurship', 'Management', 'Leadership'],
+                'entrepreneur': ['Entrepreneurship', 'Business', 'Startup', 'Leadership'],
+                'startup': ['Startup', 'Entrepreneurship', 'Business', 'Innovation'],
+                'innovation': ['Innovation', 'Business', 'Creativity', 'Entrepreneurship'],
+                'technology': ['Technology', 'Computer Science', 'Engineering', 'Science'],
+                'programming': ['Programming', 'Computer Science', 'Technology', 'Reference'],
+                'data': ['Data Science', 'Technology', 'Computer Science', 'Business'],
+                'machine learning': ['Machine Learning', 'Data Science', 'Computer Science', 'Technology'],
+                'AI': ['Artificial Intelligence', 'Machine Learning', 'Computer Science', 'Technology'],
+                'artificial intelligence': ['Artificial Intelligence', 'Machine Learning', 'Computer Science', 'Technology'],
+                'LLM': ['Machine Learning', 'Data Science', 'Computer Science', 'Technology'],
+                'provenance': ['Technology', 'Data Science', 'Computer Science', 'Business'],
+                'enterprise': ['Enterprise', 'Business', 'Technology', 'Management'],
+                'scaling': ['Business', 'Entrepreneurship', 'Technology', 'Management'],
             }
             
-            # Check if keyword matches any mapping
+            # Find matching category mapping
             matched = False
             for key, categories in category_mapping.items():
-                if key in keyword_lower:
+                if key in keyword_lower or keyword_lower in key:
                     generated_categories = categories
                     matched = True
+                    print(f"   ✅ Matched keyword to: {key} → {categories}")
                     break
             
-            # If no match, create categories from keyword
+            # If no match, try to generate from keyword parts
             if not matched:
-                # Split keyword into words
+                print("   ⚠️ No direct match, generating from keyword parts...")
+                
+                # Extract key concepts from keyword
                 words = keyword_lower.split()
+                primary_concepts = []
                 
-                # Common category patterns
-                if len(words) >= 3:
-                    # Long-tail keyword - often low competition
-                    generated_categories = [
-                        'Self-Help',
-                        'Personal Development',
-                        'How-to',
-                        'Nonfiction'
-                    ]
-                elif len(words) >= 2:
-                    generated_categories = [
-                        'Self-Help',
-                        'Personal Development',
-                        'Nonfiction'
-                    ]
+                # Check for common topics
+                topic_mapping = {
+                    'grow': 'Gardening',
+                    'plant': 'Gardening',
+                    'garden': 'Gardening',
+                    'cook': 'Cookbooks',
+                    'recipe': 'Cookbooks',
+                    'food': 'Cookbooks',
+                    'fitness': 'Health & Fitness',
+                    'health': 'Health & Fitness',
+                    'workout': 'Exercise',
+                    'business': 'Business',
+                    'finance': 'Finance',
+                    'invest': 'Investing',
+                    'tech': 'Technology',
+                    'code': 'Programming',
+                    'program': 'Programming',
+                    'science': 'Science',
+                    'history': 'History',
+                    'self': 'Self-Help',
+                    'help': 'Self-Help',
+                    'guide': 'How-to',
+                    'manual': 'How-to',
+                    'step': 'How-to'
+                }
+                
+                for word in words:
+                    for key, category in topic_mapping.items():
+                        if key in word:
+                            if category not in primary_concepts:
+                                primary_concepts.append(category)
+                
+                if primary_concepts:
+                    generated_categories = primary_concepts[:4]
                 else:
-                    generated_categories = [
-                        'Books',
-                        'Nonfiction',
-                        'Self-Help'
-                    ]
+                    # Default categories based on keyword length
+                    if len(words) >= 3:
+                        generated_categories = ['Self-Help', 'How-to', 'Nonfiction', 'Personal Development']
+                    elif len(words) >= 2:
+                        generated_categories = ['Self-Help', 'Nonfiction', 'How-to']
+                    else:
+                        generated_categories = ['Self-Help', 'Nonfiction']
                 
-                # Add keyword-specific categories
-                if 'guide' in keyword_lower:
-                    generated_categories.insert(1, 'How-to')
-                if 'beginner' in keyword_lower:
-                    generated_categories.insert(1, 'Educational')
-                if 'complete' in keyword_lower:
-                    generated_categories.insert(1, 'Comprehensive')
+                print(f"   ✅ Generated categories: {generated_categories}")
             
             # Add the generated categories
             for cat_name in generated_categories:
-                if cat_name not in category_counts:
-                    # Estimate data based on products
-                    total_products = len(products)
-                    indie_estimate = total_products // 2 if total_products > 0 else 10
-                    
+                if cat_name and cat_name not in category_counts:
                     category_counts[cat_name] = {
                         'name': cat_name,
-                        'count': total_products if total_products > 0 else 20,
-                        'indie_count': indie_estimate,
-                        'trad_count': total_products - indie_estimate if total_products > 0 else 10,
+                        'count': len(products) or 20,
+                        'indie_count': (len(products) // 2) if products else 10,
+                        'trad_count': (len(products) // 2) if products else 10,
                         'bsr_values': [],
-                        'review_values': []
+                        'review_values': [],
+                        'is_real': False
                     }
-                    print(f"   ✅ Generated category: {cat_name}")
+        
+        print(f"📂 Total categories found: {len(category_counts)}")
         
         # ============================================
         # ANALYZE EACH CATEGORY
@@ -5182,7 +5297,7 @@ def category_research():
         analyzed_categories = []
         
         for cat_name, stats in category_counts.items():
-            total = stats['count']
+            total = stats.get('count', 1)
             
             if total == 0:
                 continue
@@ -5193,7 +5308,7 @@ def category_research():
             if stats['bsr_values']:
                 avg_bsr = sum(stats['bsr_values']) / len(stats['bsr_values'])
             else:
-                # Estimate based on indie percentage
+                # Estimate BSR based on indie percentage
                 if indie_pct > 70:
                     avg_bsr = 80000
                 elif indie_pct > 50:
@@ -5217,6 +5332,7 @@ def category_research():
             # ===== OPPORTUNITY SCORE (0-100) =====
             score = 50
             
+            # Indie friendly
             if indie_pct >= 70:
                 score += 25
             elif indie_pct >= 50:
@@ -5224,6 +5340,7 @@ def category_research():
             elif indie_pct >= 30:
                 score += 5
             
+            # BSR adjustment
             if avg_bsr > 100000:
                 score += 15
             elif avg_bsr > 50000:
@@ -5233,6 +5350,7 @@ def category_research():
             elif avg_bsr < 5000:
                 score -= 10
             
+            # Book count adjustment
             if total <= 5:
                 score += 10
             elif total <= 10:
@@ -5240,9 +5358,15 @@ def category_research():
             elif total > 20:
                 score -= 5
             
-            # Boost score for generated categories
-            if cat_name in generated_categories:
+            # Boost score for real categories
+            if stats.get('is_real', False):
                 score += 10
+            
+            # Boost score for categories that match the keyword
+            keyword_lower = keyword.lower()
+            cat_lower = cat_name.lower()
+            if any(word in cat_lower for word in keyword_lower.split()):
+                score += 15
             
             score = max(0, min(100, score))
             
@@ -5278,18 +5402,37 @@ def category_research():
                 'recommendation': recommendation,
                 'book_count': total,
                 'avg_bsr': round(avg_bsr) if avg_bsr < 999999 else 'N/A',
-                'avg_reviews': round(avg_reviews)
+                'avg_reviews': round(avg_reviews),
+                'is_real': stats.get('is_real', False)
             })
         
         # Sort by score
         analyzed_categories.sort(key=lambda x: x['score'], reverse=True)
-        top_categories = analyzed_categories[:20]
+        
+        # Prioritize real categories over generated ones
+        real_categories = [c for c in analyzed_categories if c.get('is_real', False)]
+        generated_categories = [c for c in analyzed_categories if not c.get('is_real', False)]
+        
+        # Combine: real categories first, then generated
+        sorted_categories = real_categories + generated_categories
+        
+        # Remove duplicates (keep first occurrence)
+        seen = set()
+        unique_categories = []
+        for cat in sorted_categories:
+            if cat['name'] not in seen:
+                seen.add(cat['name'])
+                unique_categories.append(cat)
+        
+        # Take top 20
+        top_categories = unique_categories[:20]
         
         print(f"✅ Returning {len(top_categories)} analyzed categories")
+        for cat in top_categories[:5]:
+            print(f"   📊 {cat['name']}: Score {cat['score']}, Grade {cat['grade']}, Real: {cat.get('is_real', False)}")
         
         if not top_categories:
-            # If still no categories, return a default set
-            print("❌ Still no categories, returning defaults...")
+            # Return a default set
             top_categories = [
                 {
                     'name': 'Self-Help',
@@ -5301,7 +5444,8 @@ def category_research():
                     'recommendation': '⭐ TARGET THIS CATEGORY - High opportunity, low competition!',
                     'book_count': 100,
                     'avg_bsr': 'N/A',
-                    'avg_reviews': 50
+                    'avg_reviews': 50,
+                    'is_real': False
                 },
                 {
                     'name': 'Personal Development',
@@ -5313,7 +5457,8 @@ def category_research():
                     'recommendation': '✅ Good opportunity - Consider targeting this category.',
                     'book_count': 80,
                     'avg_bsr': 'N/A',
-                    'avg_reviews': 40
+                    'avg_reviews': 40,
+                    'is_real': False
                 },
                 {
                     'name': 'Nonfiction',
@@ -5325,9 +5470,14 @@ def category_research():
                     'recommendation': '📌 Moderate opportunity - Research further before deciding.',
                     'book_count': 200,
                     'avg_bsr': 'N/A',
-                    'avg_reviews': 60
+                    'avg_reviews': 60,
+                    'is_real': False
                 }
             ]
+        
+        # Remove is_real from response (it's for internal use)
+        for cat in top_categories:
+            cat.pop('is_real', None)
         
         return jsonify({
             'success': True,
