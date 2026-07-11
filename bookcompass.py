@@ -1057,18 +1057,18 @@ def dashboard():
         }}
 
         // ============================================
-        // DISPLAY CATEGORY RESULTS
+        // DISPLAY CATEGORY RESULTS (UPDATED WITH FULL PATH)
         // ============================================
         function displayCategoryResults(categories) {{
             var container = document.getElementById('categoryResults');
             
             if (!categories || categories.length === 0) {{
-                container.innerHTML = '<p style=\"color: #666; padding: 20px; text-align: center;\">No categories found. Try different keywords.</p>';
+                container.innerHTML = '<p style="color: #666; padding: 20px; text-align: center;">No categories found. Try different keywords.</p>';
                 container.style.display = 'block';
                 return;
             }}
             
-            var html = '<div style=\"display: grid; grid-template-columns: 1fr 1fr; gap: 15px;\">';
+            var html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
             
             categories.forEach(function(cat) {{
                 var scoreColor = cat.score >= 70 ? '#27ae60' : (cat.score >= 40 ? '#f39c12' : '#e74c3c');
@@ -1092,16 +1092,27 @@ def dashboard():
                     indieText = ' ✅ INDIE FRIENDLY';
                 }}
                 
-                html += '<div style=\"border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06);\">';
-                html += '<div style=\"display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;\">';
-                html += '<span style=\"font-size: 20px; font-weight: 700; color: ' + scoreColor + ';\">' + gradeIcon + ' ' + cat.grade + ' (' + cat.score + '/100)</span>';
-                html += '<span style=\"background: ' + compColor + '; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;\">' + compText + '</span>';
+                // Use full_path if available, otherwise use name
+                var displayPath = cat.full_path || cat.name;
+                var pathForCopy = displayPath.replace(/'/g, "\\\\'");
+                
+                html += '<div style="border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+                html += '<span style="font-size: 20px; font-weight: 700; color: ' + scoreColor + ';">' + gradeIcon + ' ' + cat.grade + ' (' + cat.score + '/100)</span>';
+                html += '<span style="background: ' + compColor + '; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">' + compText + '</span>';
                 html += '</div>';
-                html += '<div style=\"font-weight: 600; color: #333; margin-bottom: 8px; font-size: 15px;\">📁 ' + cat.name + '</div>';
-                html += '<div style=\"font-size: 13px; color: #666; margin-bottom: 8px;\">📚 Indie: ' + cat.indie_percent + '% / Trad: ' + cat.trad_percent + '%' + indieText + '</div>';
-                html += '<div style=\"font-size: 13px; color: #333; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px;\">💡 ' + cat.recommendation + '</div>';
-                html += '<div style=\"display: flex; gap: 10px;\">';
-                html += '<button onclick=\"copyCategoryPath(\\'' + cat.name.replace(/'/g, "\\\\'") + '\\')\" style=\"padding: 6px 14px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px;\">📋 Copy Path</button>';
+                // SHOW FULL PATH WITH ARROWS
+                html += '<div style="font-weight: 600; color: #333; margin-bottom: 8px; font-size: 14px;">';
+                html += '📁 ' + displayPath;
+                html += '</div>';
+                html += '<div style="font-size: 13px; color: #666; margin-bottom: 8px;">';
+                html += '📚 Indie: ' + cat.indie_percent + '% / Trad: ' + cat.trad_percent + '%' + indieText;
+                html += '</div>';
+                html += '<div style="font-size: 13px; color: #333; background: #f8f9fa; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px;">';
+                html += '💡 ' + cat.recommendation;
+                html += '</div>';
+                html += '<div style="display: flex; gap: 10px;">';
+                html += '<button onclick="copyCategoryPath(\\'' + pathForCopy + '\\')" style="padding: 6px 14px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 13px;">📋 Copy Path</button>';
                 html += '</div>';
                 html += '</div>';
             }});
@@ -1155,11 +1166,11 @@ def dashboard():
         }}
 
         // ============================================
-        // COPY CATEGORY PATH
+        // COPY CATEGORY PATH (UPDATED)
         // ============================================
         function copyCategoryPath(path) {{
             navigator.clipboard.writeText(path).then(function() {{
-                alert('✅ Category path copied to clipboard!');
+                alert('✅ Category path copied to clipboard!\\n\\n' + path);
             }}).catch(function() {{
                 var textArea = document.createElement('textarea');
                 textArea.value = path;
@@ -1167,7 +1178,7 @@ def dashboard():
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                alert('✅ Category path copied to clipboard!');
+                alert('✅ Category path copied to clipboard!\\n\\n' + path);
             }});
         }}
 
