@@ -6008,8 +6008,10 @@ def category_research():
                 
                 # If still no categories, use a smart default
                 if not generated_categories:
+                    # Use the keyword itself to create categories
                     word_count = len(keyword_words)
                     if word_count >= 3:
+                        # Longer keywords often mean more specific niches
                         generated_categories = [
                             {'name': 'Nonfiction', 'indie': 55, 'competition': 'LOW'},
                             {'name': 'How-to', 'indie': 50, 'competition': 'MEDIUM'},
@@ -6028,15 +6030,6 @@ def category_research():
                     # Add full_path to default categories
                     for cat in generated_categories:
                         cat['full_path'] = get_category_path(cat['name'], None)
-                    elif word_count >= 2:
-                        generated_categories = [
-                            {'name': 'Nonfiction', 'indie': 50, 'competition': 'MEDIUM'},
-                            {'name': 'Self-Help', 'indie': 45, 'competition': 'MEDIUM'},
-                        ]
-                    else:
-                        generated_categories = [
-                            {'name': 'Nonfiction', 'indie': 45, 'competition': 'MEDIUM'},
-                        ]
                 
                 matched_categories = generated_categories
                 print(f"✅ Fallback categories: {[c['name'] for c in matched_categories]}")
