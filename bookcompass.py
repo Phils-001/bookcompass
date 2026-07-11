@@ -5802,59 +5802,266 @@ def category_research():
             return 'Books > Nonfiction'
 
         # ============================================
-        # FIND MATCHING CATEGORIES - EXACT WORD MATCHING
+        # FIND MATCHING CATEGORIES - SMART MATCHING
         # ============================================
         matched_categories = []
+        keyword_lower = keyword.lower()
         keyword_words = keyword_lower.split()
         print(f"📝 Keyword words: {keyword_words}")
         
-        best_match = None
-        best_match_score = 0
-        best_match_key = None
-        
-        for key, categories in category_mapping.items():
-            key_lower = key.lower()
-            key_words = key_lower.split()
+        # ===== Step 1: Check for specific phrases first =====
+        specific_phrases = {
+            # ===== TRAVEL =====
+            'paris travel guide': [
+                {'name': 'Paris Travel Guides', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Europe Travel', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Budget Travel', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'paris travel': [
+                {'name': 'Paris Travel Guides', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Europe Travel', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'France Travel', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'france travel': [
+                {'name': 'France Travel', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Europe Travel', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Paris Travel Guides', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'europe travel': [
+                {'name': 'Europe Travel', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Paris Travel Guides', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'France Travel', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
             
-            if len(key_words) > 1:
-                all_found = True
-                for kw in key_words:
-                    if kw not in keyword_words:
-                        all_found = False
-                        break
-                if all_found:
-                    match_score = len(key_words) * 10 + len(key_lower)
-                    if match_score > best_match_score:
-                        best_match_score = match_score
-                        best_match = categories
-                        best_match_key = key
-                        print(f"✅ Found all words of key '{key}' in keyword")
-            else:
-                if key_lower in keyword_words:
-                    match_score = len(key_lower)
-                    if match_score > best_match_score:
-                        best_match_score = match_score
-                        best_match = categories
-                        best_match_key = key
-                        print(f"✅ Found exact key '{key}' in keyword")
+            # ===== TECHNOLOGY =====
+            'computer science': [
+                {'name': 'Computer Science', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Technology', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Programming', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'science fiction': [
+                {'name': 'Science Fiction', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'artificial intelligence': [
+                {'name': 'Artificial Intelligence', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Data Science', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'machine learning': [
+                {'name': 'Machine Learning', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Data Science', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Artificial Intelligence', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'data science': [
+                {'name': 'Data Science', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Machine Learning', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Computer Science', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== SELF-HELP =====
+            'emotional intelligence': [
+                {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Psychology', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            'self discipline': [
+                {'name': 'Self-Help', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Psychology', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            'personal development': [
+                {'name': 'Personal Development', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Self-Help', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Motivational', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== CHRISTIAN =====
+            'christian prayer journal': [
+                {'name': 'Prayer Books', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Devotionals', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Christian Books & Bibles', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'bible study': [
+                {'name': 'Bible Study', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Christian Books & Bibles', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Religion & Spirituality', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'gratitude journal': [
+                {'name': 'Gratitude Journals', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Self-Help', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Journaling', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== HEALTH & FITNESS =====
+            'kettlebell workouts': [
+                {'name': 'Weight Training', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Exercise & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            'weight loss': [
+                {'name': 'Weight Loss', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Dieting', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            'meal prep': [
+                {'name': 'Meal Prep', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Cookbooks', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Health & Fitness', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== CRAFTS =====
+            'knitting patterns': [
+                {'name': 'Knitting', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Crafts & Hobbies', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Textile Arts', 'indie': 60, 'competition': 'MEDIUM'},
+            ],
+            'coloring book': [
+                {'name': 'Coloring Books', 'indie': 75, 'competition': 'LOW'},
+                {'name': 'Activity Books', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Arts & Crafts', 'indie': 65, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== GARDENING =====
+            'how to grow tomatoes': [
+                {'name': 'Gardening', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Agriculture', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'How-to', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            'mushroom growing': [
+                {'name': 'Mycology', 'indie': 70, 'competition': 'LOW'},
+                {'name': 'Gardening', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Agriculture', 'indie': 55, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== BUSINESS =====
+            'financial planning': [
+                {'name': 'Financial Planning', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Investing', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'crypto investing': [
+                {'name': 'Cryptocurrency', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Investing', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Personal Finance', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'leadership': [
+                {'name': 'Leadership', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Business', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Management', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'renewable energy': [
+                {'name': 'Renewable Energy', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science & Nature', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Environment', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== DOG TRAINING =====
+            'dog training': [
+                {'name': 'Dog Training', 'indie': 65, 'competition': 'LOW'},
+                {'name': 'Pets', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Animal Care', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== PARENTING =====
+            'parenting': [
+                {'name': 'Parenting', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Family', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Child Development', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'pregnancy': [
+                {'name': 'Pregnancy', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Parenting', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Health & Fitness', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            
+            # ===== FICTION =====
+            'romance': [
+                {'name': 'Romance', 'indie': 60, 'competition': 'LOW'},
+                {'name': 'Romantic Fiction', 'indie': 55, 'competition': 'MEDIUM'},
+                {'name': 'Literature & Fiction', 'indie': 50, 'competition': 'MEDIUM'},
+            ],
+            'mystery': [
+                {'name': 'Mystery', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Thriller', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Suspense', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+            'fantasy': [
+                {'name': 'Fantasy', 'indie': 55, 'competition': 'LOW'},
+                {'name': 'Science Fiction & Fantasy', 'indie': 50, 'competition': 'MEDIUM'},
+                {'name': 'Epic Fantasy', 'indie': 45, 'competition': 'MEDIUM'},
+            ],
+        }
         
-        if not best_match:
+        # Check specific phrases first (longest phrases get priority)
+        matched_phrase = None
+        matched_phrase_categories = None
+        
+        for phrase, categories in specific_phrases.items():
+            if phrase in keyword_lower:
+                # Prefer longer phrases (more specific)
+                if matched_phrase is None or len(phrase) > len(matched_phrase):
+                    matched_phrase = phrase
+                    matched_phrase_categories = categories
+        
+        if matched_phrase_categories:
+            matched_categories = matched_phrase_categories
+            print(f"✅ Specific phrase match: '{matched_phrase}'")
+        
+        # ===== Step 2: If no specific phrase, try category mapping =====
+        if not matched_categories:
+            best_match = None
+            best_match_score = 0
+            best_match_key = None
+            
+            for key, categories in category_mapping.items():
+                key_lower = key.lower()
+                key_words = key_lower.split()
+                
+                # Check if ALL key words are in the keyword
+                if len(key_words) > 1:
+                    all_found = True
+                    for kw in key_words:
+                        if kw not in keyword_words:
+                            all_found = False
+                            break
+                    if all_found:
+                        # More specific = higher score (longer key)
+                        match_score = len(key_lower)
+                        if match_score > best_match_score:
+                            best_match_score = match_score
+                            best_match = categories
+                            best_match_key = key
+                            print(f"✅ Found all words of key '{key}' in keyword")
+                else:
+                    # Single word key - check if it's in the keyword
+                    if key_lower in keyword_words:
+                        match_score = len(key_lower)
+                        if match_score > best_match_score:
+                            best_match_score = match_score
+                            best_match = categories
+                            best_match_key = key
+                            print(f"✅ Found exact key '{key}' in keyword")
+            
+            if best_match:
+                matched_categories = best_match
+                print(f"✅ Using match from: {best_match_key}")
+        
+        # ===== Step 3: If still no match, use fallback =====
+        if not matched_categories:
+            # Check if any key word is in the keyword (partial match)
             for key, categories in category_mapping.items():
                 key_lower = key.lower()
                 key_words = key_lower.split()
                 for kw in key_words:
                     if kw in keyword_words:
                         if len(kw) >= 3:
-                            match_score = len(kw)
-                            if match_score > best_match_score:
-                                best_match_score = match_score
-                                best_match = categories
-                                best_match_key = key
-                                print(f"✅ Found word '{kw}' from key '{key}' in keyword")
-        
-        if best_match:
-            matched_categories = best_match
-            print(f"✅ Using match from: {best_match_key}")
+                            matched_categories = categories
+                            print(f"✅ Found word '{kw}' from key '{key}' in keyword")
+                            break
+                if matched_categories:
+                    break
 
         # ============================================
         # FALLBACK: If no match found, use keyword analysis
