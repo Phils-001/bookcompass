@@ -6103,14 +6103,14 @@ def category_research():
             
             analyzed_categories.append({
                 'name': cat_name,
-                'full_path': full_path,  # <-- ADD THIS LINE
+                'full_path': full_path,
                 'score': round(score),
                 'grade': grade,
                 'competition': competition,
                 'indie_percent': round(indie_pct),
                 'trad_percent': round(trad_pct),
                 'recommendation': recommendation,
-                'book_count': total,
+                'book_count': stats['count'],  # <-- FIXED: use stats['count']
                 'avg_bsr': 'N/A',
                 'avg_reviews': 50
             })
