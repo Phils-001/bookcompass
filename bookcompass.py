@@ -5306,7 +5306,38 @@ def category_research():
         # CATEGORY PATH MAPPING (Pre-defined paths)
         # ============================================
         CATEGORY_PATHS = {
-            # Technology / AI
+            # ============================================
+            # TRAVEL (DETAILED SUB-CATEGORIES)
+            # ============================================
+            'Travel': 'Books > Travel',
+            'Travel Guides': 'Books > Travel > Travel Guides',
+            'Paris Travel Guides': 'Books > Travel > Europe > France > Paris Travel Guides',
+            'Paris Travel': 'Books > Travel > Europe > France > Paris Travel Guides',
+            'France Travel': 'Books > Travel > Europe > France',
+            'Europe Travel': 'Books > Travel > Europe',
+            'Budget Travel': 'Books > Travel > Budget Travel',
+            'Adventure Travel': 'Books > Travel > Adventure',
+            'Adventure': 'Books > Travel > Adventure',
+            'Tourist Destinations': 'Books > Travel > Special Interest > Tourist Destinations',
+            'Museums': 'Books > Travel > Special Interest > Museums',
+            'Backpacking': 'Books > Travel > Adventure > Backpacking',
+            'Italy Travel': 'Books > Travel > Europe > Italy',
+            'London Travel': 'Books > Travel > Europe > United Kingdom > London',
+            'Japan Travel': 'Books > Travel > Asia > Japan',
+            'Road Trips': 'Books > Travel > Road Trips',
+            'National Parks': 'Books > Travel > Parks & Campgrounds',
+            'Paris': 'Books > Travel > Europe > France > Paris Travel Guides',
+            'France': 'Books > Travel > Europe > France',
+            'Europe': 'Books > Travel > Europe',
+            'Cruise Travel': 'Books > Travel > Cruises',
+            'Beach Travel': 'Books > Travel > Beaches',
+            'Family Travel': 'Books > Travel > Family Travel',
+            'Solo Travel': 'Books > Travel > Solo Travel',
+            'Luxury Travel': 'Books > Travel > Luxury Travel',
+            
+            # ============================================
+            # TECHNOLOGY / AI (DETAILED SUB-CATEGORIES)
+            # ============================================
             'Artificial Intelligence': 'Books > Computers & Technology > Programming > Artificial Intelligence',
             'Machine Learning': 'Books > Computers & Technology > Data Science > Machine Learning',
             'Data Science': 'Books > Computers & Technology > Data Science',
@@ -5315,12 +5346,29 @@ def category_research():
             'Programming': 'Books > Computers & Technology > Programming',
             'Software Engineering': 'Books > Computers & Technology > Software Engineering',
             'Database Management': 'Books > Computers & Technology > Databases & Big Data',
+            'Network Security': 'Books > Computers & Technology > Security & Encryption',
             'Python': 'Books > Computers & Technology > Programming > Python',
+            'Java': 'Books > Computers & Technology > Programming > Java',
+            'JavaScript': 'Books > Computers & Technology > Programming > JavaScript',
+            'C++': 'Books > Computers & Technology > Programming > C++',
             'Web Development': 'Books > Computers & Technology > Web Development',
             'Cloud Computing': 'Books > Computers & Technology > Cloud Computing',
             'Cybersecurity': 'Books > Computers & Technology > Security & Encryption',
+            'DevOps': 'Books > Computers & Technology > DevOps',
+            'Data Engineering': 'Books > Computers & Technology > Data Engineering',
+            'Data Analytics': 'Books > Computers & Technology > Data Analytics',
+            'SQL': 'Books > Computers & Technology > Databases & Big Data > SQL',
+            'NoSQL': 'Books > Computers & Technology > Databases & Big Data > NoSQL',
+            'Microservices': 'Books > Computers & Technology > Software Engineering > Microservices',
+            'Cloud Architecture': 'Books > Computers & Technology > Cloud Architecture',
+            'AWS': 'Books > Computers & Technology > Cloud Computing > AWS',
+            'Azure': 'Books > Computers & Technology > Cloud Computing > Azure',
+            'Google Cloud': 'Books > Computers & Technology > Cloud Computing > Google Cloud',
+            'API Design': 'Books > Computers & Technology > Programming > API Design',
             
-            # Self-Help / Psychology
+            # ============================================
+            # SELF-HELP / PSYCHOLOGY (DETAILED)
+            # ============================================
             'Self-Help': 'Books > Self-Help',
             'Personal Development': 'Books > Self-Help > Personal Development',
             'Psychology': 'Books > Health, Fitness & Dieting > Psychology & Counseling',
@@ -5331,8 +5379,15 @@ def category_research():
             'Happiness': 'Books > Self-Help > Happiness',
             'Success': 'Books > Self-Help > Success',
             'Emotional Intelligence': 'Books > Self-Help > Emotions',
+            'Anxiety': 'Books > Health, Fitness & Dieting > Mental Health > Anxiety',
+            'Depression': 'Books > Health, Fitness & Dieting > Mental Health > Depression',
+            'Stress Management': 'Books > Health, Fitness & Dieting > Stress Management',
+            'Sleep': 'Books > Health, Fitness & Dieting > Sleep',
+            'Gratitude': 'Books > Self-Help > Personal Development > Gratitude',
             
-            # Christian / Religion
+            # ============================================
+            # CHRISTIAN / RELIGION (DETAILED)
+            # ============================================
             'Christian Books & Bibles': 'Books > Christian Books & Bibles',
             'Religion & Spirituality': 'Books > Religion & Spirituality',
             'Christian Living': 'Books > Christian Books & Bibles > Christian Living',
@@ -5341,8 +5396,18 @@ def category_research():
             'Prayer Books': 'Books > Christian Books & Bibles > Prayer',
             'Gratitude Journals': 'Books > Christian Books & Bibles > Devotionals > Gratitude Journals',
             'Journals': 'Books > Christian Books & Bibles > Journals',
+            'Christian Women': 'Books > Christian Books & Bibles > Christian Living > Women',
+            'Christian Men': 'Books > Christian Books & Bibles > Christian Living > Men',
+            'Christian Teens': 'Books > Christian Books & Bibles > Christian Living > Teens',
+            'Christian Marriage': 'Books > Christian Books & Bibles > Christian Living > Marriage',
+            'Christian Parenting': 'Books > Christian Books & Bibles > Christian Living > Parenting',
+            'Biblical Commentary': 'Books > Christian Books & Bibles > Bible Study & Reference > Commentary',
+            'Apologetics': 'Books > Christian Books & Bibles > Theology > Apologetics',
+            'Catholicism': 'Books > Christian Books & Bibles > Catholicism',
             
-            # Fiction
+            # ============================================
+            # FICTION (DETAILED)
+            # ============================================
             'Fiction': 'Books > Literature & Fiction > Fiction',
             'Literature & Fiction': 'Books > Literature & Fiction',
             'Literary Fiction': 'Books > Literature & Fiction > Literary Fiction',
@@ -5356,8 +5421,22 @@ def category_research():
             'Dystopian': 'Books > Science Fiction & Fantasy > Dystopian',
             'Historical Fiction': 'Books > Literature & Fiction > Historical Fiction',
             'Contemporary Fiction': 'Books > Literature & Fiction > Contemporary Fiction',
+            'Crime Fiction': 'Books > Mystery, Thriller & Suspense > Crime Fiction',
+            'Detective Fiction': 'Books > Mystery, Thriller & Suspense > Detective Fiction',
+            'Young Adult Fiction': 'Books > Young Adult Fiction',
+            'Young Adult Fantasy': 'Books > Young Adult Fiction > Fantasy',
+            'Young Adult Romance': 'Books > Young Adult Fiction > Romance',
+            'Romantic Suspense': 'Books > Romance > Romantic Suspense',
+            'Contemporary Romance': 'Books > Romance > Contemporary Romance',
+            'Historical Romance': 'Books > Romance > Historical Romance',
+            'Space Opera': 'Books > Science Fiction & Fantasy > Science Fiction > Space Opera',
+            'Cyberpunk': 'Books > Science Fiction & Fantasy > Science Fiction > Cyberpunk',
+            'Urban Fantasy': 'Books > Science Fiction & Fantasy > Fantasy > Urban Fantasy',
+            'Epic Fantasy': 'Books > Science Fiction & Fantasy > Fantasy > Epic Fantasy',
             
-            # Health & Fitness
+            # ============================================
+            # HEALTH & FITNESS (DETAILED)
+            # ============================================
             'Health & Fitness': 'Books > Health, Fitness & Dieting',
             'Exercise & Fitness': 'Books > Health, Fitness & Dieting > Exercise & Fitness',
             'Weight Training': 'Books > Sports & Outdoors > Coaching > Weight Training',
@@ -5367,10 +5446,18 @@ def category_research():
             'Dieting': 'Books > Health, Fitness & Dieting > Dieting',
             'Yoga': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Yoga',
             'Wellness': 'Books > Health, Fitness & Dieting > Wellness',
-            'Kettlebell': 'Books > Sports & Outdoors > Coaching > Weight Training',
+            'Kettlebell': 'Books > Sports & Outdoors > Coaching > Weight Training > Kettlebell',
             'Exercise': 'Books > Health, Fitness & Dieting > Exercise & Fitness',
+            'Pilates': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Pilates',
+            'Running': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Running',
+            'Walking': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Walking',
+            'Swimming': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Swimming',
+            'Cycling': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Cycling',
+            'Bodybuilding': 'Books > Sports & Outdoors > Coaching > Bodybuilding',
             
-            # Cooking / Food
+            # ============================================
+            # COOKING / FOOD (DETAILED)
+            # ============================================
             'Cookbooks': 'Books > Cookbooks, Food & Wine',
             'Cooking': 'Books > Cookbooks, Food & Wine > Cooking',
             'Food & Wine': 'Books > Cookbooks, Food & Wine',
@@ -5379,8 +5466,21 @@ def category_research():
             'Paleo': 'Books > Cookbooks, Food & Wine > Special Diet > Paleo',
             'Vegan': 'Books > Cookbooks, Food & Wine > Special Diet > Vegan',
             'Keto': 'Books > Cookbooks, Food & Wine > Special Diet > Keto',
+            'Air Fryer': 'Books > Cookbooks, Food & Wine > Appliances > Air Fryer',
+            'Bread Baking': 'Books > Cookbooks, Food & Wine > Baking > Bread',
+            'Instant Pot': 'Books > Cookbooks, Food & Wine > Appliances > Instant Pot',
+            'Slow Cooker': 'Books > Cookbooks, Food & Wine > Appliances > Slow Cooker',
+            'Gluten-Free': 'Books > Cookbooks, Food & Wine > Special Diet > Gluten-Free',
+            'Vegetarian': 'Books > Cookbooks, Food & Wine > Special Diet > Vegetarian',
+            'Desserts': 'Books > Cookbooks, Food & Wine > Desserts',
+            'Cocktails': 'Books > Cookbooks, Food & Wine > Beverages > Cocktails',
+            'Quick & Easy': 'Books > Cookbooks, Food & Wine > Quick & Easy',
+            'Grilling': 'Books > Cookbooks, Food & Wine > Grilling',
+            'BBQ': 'Books > Cookbooks, Food & Wine > BBQ',
             
-            # Business / Finance
+            # ============================================
+            # BUSINESS / FINANCE (DETAILED)
+            # ============================================
             'Business & Money': 'Books > Business & Money',
             'Entrepreneurship': 'Books > Business & Money > Entrepreneurship',
             'Personal Finance': 'Books > Business & Money > Personal Finance',
@@ -5395,23 +5495,16 @@ def category_research():
             'Marketing': 'Books > Business & Money > Marketing & Sales',
             'Sales': 'Books > Business & Money > Marketing & Sales > Sales',
             'Real Estate': 'Books > Business & Money > Real Estate',
+            'Wealth': 'Books > Business & Money > Personal Finance > Wealth Management',
+            'Retirement': 'Books > Business & Money > Personal Finance > Retirement',
+            'Stock Market': 'Books > Business & Money > Investing > Stock Market',
+            'Options Trading': 'Books > Business & Money > Investing > Options Trading',
+            'Small Business': 'Books > Business & Money > Small Business',
+            'Business Plans': 'Books > Business & Money > Entrepreneurship > Business Plans',
             
-            # Travel
-            'Travel': 'Books > Travel',
-            'Travel Guides': 'Books > Travel > Travel Guides',
-            'Paris Travel Guides': 'Books > Travel > Europe > France > Paris Travel Guides',
-            'Europe Travel': 'Books > Travel > Europe',
-            'France Travel': 'Books > Travel > Europe > France',
-            'Budget Travel': 'Books > Travel > Budget Travel',
-            'Adventure Travel': 'Books > Travel > Adventure',
-            'Tourist Destinations': 'Books > Travel > Special Interest > Tourist Destinations',
-            'Museums': 'Books > Travel > Special Interest > Museums',
-            'Backpacking': 'Books > Travel > Adventure > Backpacking',
-            'Italy Travel': 'Books > Travel > Europe > Italy',
-            'London Travel': 'Books > Travel > Europe > United Kingdom > London',
-            'Japan Travel': 'Books > Travel > Asia > Japan',
-            
-            # Crafts / Hobbies
+            # ============================================
+            # CRAFTS / HOBBIES (DETAILED)
+            # ============================================
             'Crafts & Hobbies': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies',
             'Knitting': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Knitting',
             'Crocheting': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Crocheting',
@@ -5423,12 +5516,17 @@ def category_research():
             'Embroidery': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Embroidery',
             'Scrapbooking': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Scrapbooking',
             'DIY': 'Books > Crafts, Hobbies & Home > DIY',
-            'Puzzles': 'Books > Crafts, Hobbies & Home > Puzzles',
-            'Activity Books': 'Books > Crafts, Hobbies & Home > Activity Books',
             'Woodworking': 'Books > Crafts, Hobbies & Home > Woodworking',
             'Home Improvement': 'Books > Crafts, Hobbies & Home > Home Improvement',
+            'Paper Crafts': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Paper Crafts',
+            'Jewelry Making': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Jewelry Making',
+            'Painting': 'Books > Arts & Photography > Painting',
+            'Drawing': 'Books > Arts & Photography > Drawing',
+            'Calligraphy': 'Books > Arts & Photography > Calligraphy',
             
-            # Gardening / Nature
+            # ============================================
+            # GARDENING / NATURE (DETAILED)
+            # ============================================
             'Gardening': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture',
             'Agriculture': 'Books > Crafts, Hobbies & Home > Agriculture',
             'Science & Nature': 'Books > Science & Nature',
@@ -5438,8 +5536,19 @@ def category_research():
             'Organic Gardening': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Organic',
             'Hydroponics': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Hydroponics',
             'Mushroom Growing': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Mushroom',
+            'Vegetable Gardening': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Vegetables',
+            'Flower Gardening': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Flowers',
+            'Container Gardening': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Container',
+            'Landscaping': 'Books > Crafts, Hobbies & Home > Garden Design > Landscaping',
+            'Composting': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Composting',
+            'Botany': 'Books > Science & Nature > Biology > Botany',
+            'Ecology': 'Books > Science & Nature > Environment > Ecology',
+            'Wildlife': 'Books > Science & Nature > Nature > Wildlife',
+            'Renewable Energy': 'Books > Science & Nature > Environment > Renewable Energy',
             
-            # Parenting / Family
+            # ============================================
+            # PARENTING / FAMILY (DETAILED)
+            # ============================================
             'Parenting': 'Books > Parenting & Relationships > Parenting',
             'Family': 'Books > Parenting & Relationships > Family',
             'Child Development': 'Books > Parenting & Relationships > Child Development',
@@ -5447,8 +5556,16 @@ def category_research():
             'Baby': 'Books > Parenting & Relationships > Baby',
             'Toddler': 'Books > Parenting & Relationships > Toddler',
             'Teen': 'Books > Parenting & Relationships > Teen',
+            'Newborn': 'Books > Parenting & Relationships > Baby > Newborn',
+            'Single Parenting': 'Books > Parenting & Relationships > Single Parenting',
+            'Adoption': 'Books > Parenting & Relationships > Adoption',
+            'Child Psychology': 'Books > Health, Fitness & Dieting > Psychology & Counseling > Child Psychology',
+            'Marriage': 'Books > Parenting & Relationships > Marriage',
+            'Relationships': 'Books > Parenting & Relationships > Relationships',
             
-            # Science
+            # ============================================
+            # SCIENCE (DETAILED)
+            # ============================================
             'Science': 'Books > Science & Nature > Science',
             'Physics': 'Books > Science & Nature > Physics',
             'Biology': 'Books > Science & Nature > Biology',
@@ -5457,97 +5574,232 @@ def category_research():
             'Geology': 'Books > Science & Nature > Earth Sciences > Geology',
             'Mathematics': 'Books > Science & Nature > Mathematics',
             'Engineering': 'Books > Science & Nature > Engineering',
+            'Biochemistry': 'Books > Science & Nature > Biology > Biochemistry',
+            'Molecular Biology': 'Books > Science & Nature > Biology > Molecular',
+            'Genetics': 'Books > Science & Nature > Biology > Genetics',
+            'Evolution': 'Books > Science & Nature > Biology > Evolution',
+            'Zoology': 'Books > Science & Nature > Biology > Zoology',
+            'Neuroscience': 'Books > Science & Nature > Biology > Neuroscience',
+            'Anatomy': 'Books > Science & Nature > Biology > Anatomy',
+            'Astrophysics': 'Books > Science & Nature > Physics > Astrophysics',
+            'Quantum Physics': 'Books > Science & Nature > Physics > Quantum',
+            'Thermodynamics': 'Books > Science & Nature > Physics > Thermodynamics',
             
-            # General / Fallback
+            # ============================================
+            # HISTORY (DETAILED)
+            # ============================================
+            'History': 'Books > History',
+            'World History': 'Books > History > World History',
+            'Ancient History': 'Books > History > Ancient History',
+            'Medieval History': 'Books > History > Medieval History',
+            'Modern History': 'Books > History > Modern History',
+            'US History': 'Books > History > US History',
+            'American History': 'Books > History > US History',
+            'European History': 'Books > History > European History',
+            'Military History': 'Books > History > Military History',
+            'Civil War': 'Books > History > US History > Civil War',
+            'World War I': 'Books > History > Military History > WWI',
+            'World War II': 'Books > History > Military History > WWII',
+            'Renaissance': 'Books > History > Medieval History > Renaissance',
+            'Cold War': 'Books > History > Modern History > Cold War',
+            'Biography': 'Books > Biography',
+            'Autobiography': 'Books > Biography > Autobiography',
+            'Memoir': 'Books > Biography > Memoir',
+            
+            # ============================================
+            # GENERAL / FALLBACK (KEEP AT THE END)
+            # ============================================
             'How-to': 'Books > How-to',
             'Nonfiction': 'Books > Nonfiction',
             'General Interest': 'Books > General',
             'Reference': 'Books > Reference',
             'Education': 'Books > Education',
-            'History': 'Books > History',
-            'Biography': 'Books > Biography',
-            'Memoir': 'Books > Biography > Memoir',
-            'Autobiography': 'Books > Biography > Autobiography',
+            'Journaling': 'Books > Health, Fitness & Dieting > Journaling',
         }
         
         # ============================================
-        # HELPER: Get Full Category Path
+        # HELPER: Get Best Category Path (Smart Detection)
         # ============================================
-        def get_category_path(category_name, departments=None):
-            """Get the full category path using multiple methods."""
-            
-            # Method 1: Check pre-mapped paths
+        def get_category_path(category_name, departments=None, keyword=None):
+            """
+            Get the full category path using multiple methods.
+            Returns the most specific category path possible.
+            """
+            # ===== METHOD 1: Check pre-mapped paths =====
             if category_name in CATEGORY_PATHS:
                 return CATEGORY_PATHS[category_name]
             
-            # Method 2: Try to build from departments
+            # Check if any part of category_name matches a mapping
+            for cat_name, path in CATEGORY_PATHS.items():
+                if cat_name.lower() in category_name.lower() or category_name.lower() in cat_name.lower():
+                    return path
+            
+            # ===== METHOD 2: Try to build from departments =====
             if departments and isinstance(departments, list):
                 for dept in departments:
                     dept_name = dept.get('name', '')
-                    if dept_name and category_name in dept_name:
+                    if dept_name and category_name.lower() in dept_name.lower():
                         if '>' in dept_name:
                             return 'Books > ' + dept_name
                         return 'Books > ' + dept_name
             
-            # Method 3: Smart construction from category name
-            category_lower = category_name.lower()
-            parents = {
-                'travel': 'Books > Travel',
-                'paris': 'Books > Travel > Europe > France',
-                'france': 'Books > Travel > Europe > France',
-                'europe': 'Books > Travel > Europe',
-                'adventure': 'Books > Travel > Adventure',
-                'artificial intelligence': 'Books > Computers & Technology > Programming',
-                'machine learning': 'Books > Computers & Technology > Data Science',
-                'data science': 'Books > Computers & Technology',
-                'computer science': 'Books > Computers & Technology',
-                'programming': 'Books > Computers & Technology',
-                'self-help': 'Books',
-                'personal development': 'Books > Self-Help',
-                'psychology': 'Books > Health, Fitness & Dieting',
-                'christian': 'Books > Christian Books & Bibles',
-                'bible': 'Books > Christian Books & Bibles',
-                'fiction': 'Books > Literature & Fiction',
-                'science fiction': 'Books > Science Fiction & Fantasy',
-                'fantasy': 'Books > Science Fiction & Fantasy',
-                'romance': 'Books',
-                'health': 'Books > Health, Fitness & Dieting',
-                'fitness': 'Books > Health, Fitness & Dieting > Exercise & Fitness',
-                'cookbook': 'Books > Cookbooks, Food & Wine',
-                'business': 'Books > Business & Money',
-                'investing': 'Books > Business & Money > Investing',
-                'gardening': 'Books > Crafts, Hobbies & Home > Gardening & Horticulture',
-                'knitting': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies',
-                'coloring': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Coloring Books',
-                'parenting': 'Books > Parenting & Relationships',
-                'science': 'Books > Science & Nature',
-                'history': 'Books > History',
-                'biography': 'Books > Biography',
-                'photography': 'Books > Arts & Photography',
-                'diy': 'Books > Crafts, Hobbies & Home > DIY',
-                'crafts': 'Books > Crafts, Hobbies & Home > Crafts & Hobbies',
-                'leadership': 'Books > Business & Money > Leadership',
-                'management': 'Books > Business & Money > Management',
-                'finance': 'Books > Business & Money > Finance',
-                'crypto': 'Books > Business & Money > Investing > Cryptocurrency',
-                'yoga': 'Books > Health, Fitness & Dieting > Exercise & Fitness > Yoga',
-                'meditation': 'Books > Health, Fitness & Dieting > Alternative Medicine > Meditation',
-                'mindfulness': 'Books > Self-Help > Personal Development > Mindfulness',
-                'spirituality': 'Books > Religion & Spirituality > Spirituality',
-                'devotional': 'Books > Christian Books & Bibles > Devotionals',
-                'prayer': 'Books > Christian Books & Bibles > Prayer',
-                'gratitude': 'Books > Christian Books & Bibles > Devotionals > Gratitude Journals',
-                'journal': 'Books > Christian Books & Bibles > Journals',
-                'tourist': 'Books > Travel > Special Interest > Tourist Destinations',
-                'museum': 'Books > Travel > Special Interest > Museums',
-                'budget': 'Books > Travel > Budget Travel',
-            }
+            # ===== METHOD 3: Smart construction from keyword =====
+            if keyword:
+                keyword_lower = keyword.lower()
+                keyword_words = keyword_lower.split()
+                
+                # ===== TRAVEL DETECTION =====
+                if 'travel' in keyword_lower or 'guide' in keyword_lower:
+                    if 'paris' in keyword_lower:
+                        return 'Books > Travel > Europe > France > Paris Travel Guides'
+                    elif 'france' in keyword_lower:
+                        return 'Books > Travel > Europe > France'
+                    elif 'europe' in keyword_lower:
+                        return 'Books > Travel > Europe'
+                    elif 'budget' in keyword_lower:
+                        return 'Books > Travel > Budget Travel'
+                    elif 'adventure' in keyword_lower:
+                        return 'Books > Travel > Adventure'
+                    else:
+                        return 'Books > Travel > Travel Guides'
+                
+                # ===== TECHNOLOGY DETECTION =====
+                if 'ai' in keyword_lower or 'artificial' in keyword_lower:
+                    return 'Books > Computers & Technology > Programming > Artificial Intelligence'
+                elif 'machine learning' in keyword_lower or 'ml' in keyword_lower:
+                    return 'Books > Computers & Technology > Data Science > Machine Learning'
+                elif 'data science' in keyword_lower:
+                    return 'Books > Computers & Technology > Data Science'
+                elif 'computer science' in keyword_lower:
+                    return 'Books > Computers & Technology > Computer Science'
+                elif 'programming' in keyword_lower or 'python' in keyword_lower:
+                    return 'Books > Computers & Technology > Programming'
+                elif 'cloud' in keyword_lower:
+                    return 'Books > Computers & Technology > Cloud Computing'
+                elif 'security' in keyword_lower or 'cyber' in keyword_lower:
+                    return 'Books > Computers & Technology > Security & Encryption'
+                
+                # ===== CHRISTIAN DETECTION =====
+                if 'christian' in keyword_lower:
+                    if 'devotional' in keyword_lower:
+                        return 'Books > Christian Books & Bibles > Devotionals'
+                    elif 'bible' in keyword_lower:
+                        return 'Books > Christian Books & Bibles > Bible Study & Reference'
+                    elif 'prayer' in keyword_lower:
+                        return 'Books > Christian Books & Bibles > Prayer'
+                    else:
+                        return 'Books > Christian Books & Bibles'
+                
+                # ===== SELF-HELP DETECTION =====
+                if 'self' in keyword_lower or 'help' in keyword_lower:
+                    if 'discipline' in keyword_lower or 'habit' in keyword_lower:
+                        return 'Books > Self-Help > Personal Development'
+                    elif 'emotional' in keyword_lower or 'psychology' in keyword_lower:
+                        return 'Books > Health, Fitness & Dieting > Psychology & Counseling'
+                    else:
+                        return 'Books > Self-Help'
+                
+                # ===== FICTION DETECTION =====
+                if 'science fiction' in keyword_lower:
+                    return 'Books > Science Fiction & Fantasy > Science Fiction'
+                elif 'fantasy' in keyword_lower:
+                    return 'Books > Science Fiction & Fantasy > Fantasy'
+                elif 'romance' in keyword_lower:
+                    return 'Books > Romance'
+                elif 'mystery' in keyword_lower or 'thriller' in keyword_lower:
+                    return 'Books > Mystery, Thriller & Suspense'
+                elif 'fiction' in keyword_lower:
+                    return 'Books > Literature & Fiction > Fiction'
+                
+                # ===== COOKING DETECTION =====
+                if 'cookbook' in keyword_lower or 'cooking' in keyword_lower or 'recipe' in keyword_lower:
+                    if 'vegan' in keyword_lower:
+                        return 'Books > Cookbooks, Food & Wine > Special Diet > Vegan'
+                    elif 'keto' in keyword_lower:
+                        return 'Books > Cookbooks, Food & Wine > Special Diet > Keto'
+                    elif 'paleo' in keyword_lower:
+                        return 'Books > Cookbooks, Food & Wine > Special Diet > Paleo'
+                    else:
+                        return 'Books > Cookbooks, Food & Wine'
+                
+                # ===== HEALTH & FITNESS DETECTION =====
+                if 'yoga' in keyword_lower:
+                    return 'Books > Health, Fitness & Dieting > Exercise & Fitness > Yoga'
+                elif 'weight loss' in keyword_lower or 'diet' in keyword_lower:
+                    return 'Books > Health, Fitness & Dieting > Weight Loss'
+                elif 'fitness' in keyword_lower or 'exercise' in keyword_lower:
+                    return 'Books > Health, Fitness & Dieting > Exercise & Fitness'
+                elif 'health' in keyword_lower:
+                    return 'Books > Health, Fitness & Dieting'
+                
+                # ===== CRAFTS DETECTION =====
+                if 'knitting' in keyword_lower:
+                    return 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Knitting'
+                elif 'coloring' in keyword_lower:
+                    return 'Books > Crafts, Hobbies & Home > Crafts & Hobbies > Coloring Books'
+                elif 'craft' in keyword_lower:
+                    return 'Books > Crafts, Hobbies & Home > Crafts & Hobbies'
+                
+                # ===== GARDENING DETECTION =====
+                if 'garden' in keyword_lower or 'grow' in keyword_lower:
+                    if 'mushroom' in keyword_lower:
+                        return 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Mushroom'
+                    elif 'tomato' in keyword_lower:
+                        return 'Books > Crafts, Hobbies & Home > Gardening & Horticulture > Vegetables'
+                    else:
+                        return 'Books > Crafts, Hobbies & Home > Gardening & Horticulture'
+                
+                # ===== BUSINESS DETECTION =====
+                if 'business' in keyword_lower:
+                    if 'finance' in keyword_lower:
+                        return 'Books > Business & Money > Finance'
+                    elif 'investing' in keyword_lower or 'invest' in keyword_lower:
+                        return 'Books > Business & Money > Investing'
+                    elif 'entrepreneur' in keyword_lower:
+                        return 'Books > Business & Money > Entrepreneurship'
+                    elif 'leadership' in keyword_lower:
+                        return 'Books > Business & Money > Leadership'
+                    else:
+                        return 'Books > Business & Money'
+                
+                # ===== PARENTING DETECTION =====
+                if 'parenting' in keyword_lower or 'parent' in keyword_lower:
+                    return 'Books > Parenting & Relationships > Parenting'
+                elif 'pregnancy' in keyword_lower:
+                    return 'Books > Parenting & Relationships > Pregnancy'
+                
+                # ===== SCIENCE DETECTION =====
+                if 'science' in keyword_lower:
+                    if 'physics' in keyword_lower:
+                        return 'Books > Science & Nature > Physics'
+                    elif 'biology' in keyword_lower:
+                        return 'Books > Science & Nature > Biology'
+                    elif 'chemistry' in keyword_lower:
+                        return 'Books > Science & Nature > Chemistry'
+                    elif 'astronomy' in keyword_lower:
+                        return 'Books > Science & Nature > Astronomy'
+                    else:
+                        return 'Books > Science & Nature > Science'
+                
+                # ===== HISTORY DETECTION =====
+                if 'history' in keyword_lower:
+                    if 'world' in keyword_lower:
+                        return 'Books > History > World History'
+                    elif 'us' in keyword_lower or 'american' in keyword_lower:
+                        return 'Books > History > US History'
+                    else:
+                        return 'Books > History'
             
-            for key, parent in parents.items():
-                if key in category_lower:
-                    return parent + ' > ' + category_name
+            # ===== METHOD 4: Smart guess from category_name =====
+            # Try to extract meaningful words from category_name
+            words = category_name.split()
+            if len(words) >= 2:
+                return f'Books > {words[0]} > {" ".join(words[1:3])}'
+            elif len(words) >= 1:
+                return f'Books > {words[0]}'
             
-            return 'Books > ' + category_name
+            # ===== METHOD 5: Default =====
+            return 'Books > Nonfiction'
 
         # ============================================
         # FIND MATCHING CATEGORIES - EXACT WORD MATCHING
@@ -5723,7 +5975,7 @@ def category_research():
                 
                 # Add full_path to generated categories
                 for cat in generated_categories:
-                    cat['full_path'] = get_category_path(cat['name'], None)
+                    cat['full_path'] = get_category_path(cat['name'], None, keyword)
                 
                 matched_categories = generated_categories
                 print(f"✅ Fallback categories: {[c['name'] for c in matched_categories]}")
@@ -5790,9 +6042,9 @@ def category_research():
             else:
                 recommendation = '⚠️ Low opportunity - Better categories available.'
             
-            # Get the full category path
+            # Get the full category path (pass keyword for smart detection)
             departments = result.get('data', {}).get('departments', [])
-            full_path = get_category_path(cat_name, departments)
+            full_path = get_category_path(cat_name, departments, keyword)
             
             analyzed_categories.append({
                 'name': cat_name,
