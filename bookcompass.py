@@ -1255,6 +1255,10 @@ def dashboard():
                 alert('Error: ' + error.message);
             }});
         }}
+        // ====== OPEN METADATA GPT ======
+        function openMetadataGPT() {
+            window.open('https://chatgpt.com/g/YOUR-UNIQUE-GPT-ID', '_blank');
+        }
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
 <div id="categoryResearchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; overflow-y:auto; padding:20px;">
