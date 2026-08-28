@@ -823,7 +823,8 @@ def dashboard():
                 <button onclick="researchKeywords()" style="margin-right: 10px;">🔍 Research Keywords</button>
 <button onclick="showCategoryResearch()" style="background: #ff6f00; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer;">📂 Category Research</button>
             </div>
-                        <!-- ====== METADATA GENERATOR ====== -->
+            <!-- ====== METADATA GENERATOR ====== -->
+            {f'''
             <div style="background: linear-gradient(135deg, #7B1FA2, #9C27B0); border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
                 <div>
                     <div style="font-weight: bold; font-size: 18px; color: white;">
@@ -839,22 +840,42 @@ def dashboard():
             </div>
 
             <!-- ====== HOW TO USE ====== -->
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #7B1FA2;">
-                <strong style="color: #232f3e;">📝 How to Use</strong>
-                <ol style="font-size: 14px; color: #555; margin: 8px 0 0 20px; line-height: 1.8;">
+            <div style="background: #f8f9fa; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #7B1FA2;">
+                <strong style="color: #232f3e; font-size: 15px;">📝 How to Use</strong>
+                <ol style="font-size: 14px; color: #555; margin: 8px 0 0 20px; line-height: 1.8; padding-left: 20px;">
                     <li>Click <strong>"Generate Metadata"</strong> above</li>
+                    <li>Copy the access token provided</li>
+                    <li>Paste the token when asked by the AI</li>
                     <li>Enter your <strong>Book Title</strong> and <strong>Author Name</strong></li>
-                    <li>Get your complete metadata in seconds:</li>
+                    <li>Get your complete metadata in seconds</li>
                 </ol>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
-                    <span style="background: #e3f2fd; padding: 3px 10px; border-radius: 12px; font-size: 12px;">📄 Book Description</span>
-                    <span style="background: #e8f5e9; padding: 3px 10px; border-radius: 12px; font-size: 12px;">🔑 7 Backend Keywords</span>
-                    <span style="background: #fff3e0; padding: 3px 10px; border-radius: 12px; font-size: 12px;">📂 6 Categories</span>
-                    <span style="background: #f3e5f5; padding: 3px 10px; border-radius: 12px; font-size: 12px;">🎨 Cover Prompts</span>
-                    <span style="background: #fce4ec; padding: 3px 10px; border-radius: 12px; font-size: 12px;">📊 Competitor Analysis</span>
-                    <span style="background: #fff8e1; padding: 3px 10px; border-radius: 12px; font-size: 12px;">📱 A+ Content</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                    <span style="background: #e3f2fd; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #1565C0;">📄 Book Description</span>
+                    <span style="background: #e8f5e9; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #2e7d32;">🔑 7 Backend Keywords</span>
+                    <span style="background: #fff3e0; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #e65100;">📂 6 Categories</span>
+                    <span style="background: #f3e5f5; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #6A1B9A;">🎨 Cover Prompts</span>
+                    <span style="background: #fce4ec; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #c62828;">📊 Competitor Analysis</span>
+                    <span style="background: #fff8e1; padding: 3px 12px; border-radius: 12px; font-size: 12px; color: #f57f17;">📱 A+ Content</span>
                 </div>
             </div>
+            ''' if plan != 'free' else f'''
+            <div style="background: linear-gradient(135deg, #7B1FA2, #9C27B0); border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; opacity: 0.7;">
+                <div>
+                    <div style="font-weight: bold; font-size: 18px; color: white;">
+                        🤖 Generate Complete Book Metadata
+                    </div>
+                    <div style="font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 5px;">
+                        Get AI-generated description, keywords, categories, cover prompts, and more
+                    </div>
+                    <div style="font-size: 12px; color: #ffcc80; margin-top: 3px;">
+                        ⭐ Upgrade to <strong>Starter</strong> or <strong>Pro</strong> to unlock
+                    </div>
+                </div>
+                <a href="/upgrade" style="background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 10px; display: inline-block;">
+                    ⬆️ Upgrade to Access
+                </a>
+            </div>
+            '''}
             
             <div id="loading" style="display:none; text-align:center;">
                 <div class="spinner"></div>
