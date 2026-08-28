@@ -6427,7 +6427,19 @@ def generate_gpt_token():
 
 @app.route('/api/verify-gpt-token')
 def verify_gpt_token():
+    # === ADD THESE 8 LINES OF CODE ===
+    # Check for API key in Authorization header
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return jsonify({'valid': False, 'error': 'Missing API key'}), 401
+    
+    api_key = auth_header.split(' ')[1]
+    if api_key != os.environ.get('GPT_API_SECRET'):
+        return jsonify({'valid': False, 'error': 'Invalid API key'}), 401
+    # === END OF ADDED CODE ===
+    
     token = request.args.get('token', '')
+    # ... rest of your existing code stays exactly the same ...
     
     if not token:
         return jsonify({'valid': False, 'error': 'No token provided'})
