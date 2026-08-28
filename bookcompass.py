@@ -766,11 +766,11 @@ def dashboard():
                 🚀 Upgrade to Starter Plan – Special Offer!
             </div>
             <div style="font-size: 14px; color: #555;">
-                Get <strong>20 searches/day</strong> for just <strong style="color: #ff9900;">$5 / ₦5,000</strong> 
+                Get <strong>20 searches/day</strong> + <strong>Complete Book Metadata</strong> for just <strong style="color: #ff9900;">$5 / ₦5,000</strong> 
                 (regular <span style="text-decoration: line-through; color: #999;">$12</span>/month)
             </div>
             <div style="font-size: 12px; color: #999; margin-top: 4px;">
-                📅 Offer valid until July 31, 2026
+                📅 Offer Ends Soon.
             </div>
         </div>
     </div>
