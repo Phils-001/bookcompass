@@ -1282,7 +1282,7 @@ def dashboard():
         }}
         // ====== OPEN METADATA GPT ======
         function openMetadataGPT() {{
-            window.open('https://chatgpt.com/g/YOUR-UNIQUE-GPT-ID', '_blank');
+            window.open('/metadata-gpt', '_blank');
         }}
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
