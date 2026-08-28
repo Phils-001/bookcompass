@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, session, render_template_string
 import requests
+import secrets
 import time
 from datetime import date, datetime, timedelta
 import os
@@ -178,6 +179,9 @@ usage_tracker = {}
 
 # Payment tracking
 payments = []  # List to store all payment records
+
+# Token storage for GPT access
+active_tokens = {}
 
 # Contact messages storage
 contact_messages = []  # List to store all contact form messages
@@ -6362,6 +6366,163 @@ def category_research():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)})
+# ============================================
+# GPT TOKEN GENERATION
+# ============================================
+
+@app.route('/api/generate-gpt-token')
+def generate_gpt_token():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not logged in'})
+    
+    email = session['user_id']
+    plan = users[email]['plan']
+    
+    # Check if user has paid plan
+    if plan == 'free':
+        return jsonify({'error': 'Upgrade to Starter or Pro to access this feature'})
+    
+    # Generate a unique token
+    token = secrets.token_urlsafe(32)
+    timestamp = time.time()
+    
+    # Store token with user info (valid for 5 minutes)
+    active_tokens[token] = {
+        'email': email,
+        'plan': plan,
+        'created_at': timestamp,
+        'expires_at': timestamp + 300  # 5 minutes
+    }
+    
+    return jsonify({
+        'success': True,
+        'token': token,
+        'expires_in': 300
+    })
+# ============================================
+# GPT TOKEN VERIFICATION
+# ============================================
+
+@app.route('/api/verify-gpt-token')
+def verify_gpt_token():
+    token = request.args.get('token', '')
+    
+    if not token:
+        return jsonify({'valid': False, 'error': 'No token provided'})
+    
+    # Check if token exists
+    if token not in active_tokens:
+        return jsonify({'valid': False, 'error': 'Invalid token'})
+    
+    token_data = active_tokens[token]
+    
+    # Check if token expired
+    if time.time() > token_data['expires_at']:
+        # Remove expired token
+        del active_tokens[token]
+        return jsonify({'valid': False, 'error': 'Token expired'})
+    
+    # Token is valid
+    return jsonify({
+        'valid': True,
+        'email': token_data['email'],
+        'plan': token_data['plan']
+    })
+# ============================================
+# GPT REDIRECT PAGE
+# ============================================
+
+@app.route('/metadata-gpt')
+def metadata_gpt():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return '<script>window.location.href="/login"</script>'
+    
+    email = session['user_id']
+    plan = users[email]['plan']
+    
+    if plan == 'free':
+        return '<script>window.location.href="/upgrade"</script>'
+    
+    # Generate a fresh token
+    token = secrets.token_urlsafe(32)
+    timestamp = time.time()
+    
+    active_tokens[token] = {
+        'email': email,
+        'plan': plan,
+        'created_at': timestamp,
+        'expires_at': timestamp + 300  # 5 minutes
+    }
+    
+    # Get your GPT link
+    GPT_LINK = os.environ.get('GPT_LINK', 'https://chatgpt.com/g/YOUR-GPT-ID')
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Metadata Generator - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; text-align: center; }}
+            .container {{ max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            h2 {{ color: #232f3e; }}
+            .gpt-btn {{ background: #7B1FA2; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }}
+            .gpt-btn:hover {{ background: #6A1B9A; }}
+            .info {{ background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: left; }}
+            .info ol {{ margin: 8px 0 0 20px; line-height: 1.8; }}
+            .back-link {{ color: #7B1FA2; text-decoration: none; }}
+            .token-box {{ background: #e3f2fd; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; word-break: break-all; }}
+            .note {{ font-size: 13px; color: #666; margin-top: 10px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>🤖 Book Metadata Generator</h2>
+            <p>Generate complete book metadata using AI.</p>
+            
+            <button class="gpt-btn" onclick="openGPT()">🚀 Open Metadata Generator</button>
+            
+            <div class="info">
+                <strong>📝 How to Use:</strong>
+                <ol>
+                    <li>Click the button above to open the AI assistant</li>
+                    <li>You'll be asked for an access token</li>
+                    <li>Copy the token below and paste it into the chat</li>
+                    <li>Enter your <strong>Book Title</strong> and <strong>Author Name</strong></li>
+                    <li>Get your complete metadata in seconds</li>
+                </ol>
+            </div>
+            
+            <div class="token-box">
+                <strong>🔑 Your Access Token:</strong> <span id="tokenDisplay">{token}</span>
+                <br>
+                <button onclick="copyToken()" style="background: #2196F3; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer; margin-top: 5px;">📋 Copy Token</button>
+            </div>
+            
+            <p class="note">⏰ This token expires in 5 minutes. It's tied to your account and cannot be shared.</p>
+            
+            <br>
+            <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+        </div>
+        <script>
+            function openGPT() {{
+                var token = '{token}';
+                var gptLink = '{GPT_LINK}';
+                window.open(gptLink, '_blank');
+            }}
+            
+            function copyToken() {{
+                var token = document.getElementById('tokenDisplay').innerText;
+                navigator.clipboard.writeText(token)
+                    .then(function() {{ alert('✅ Token copied to clipboard!'); }})
+                    .catch(function() {{ alert('❌ Failed to copy. Please copy manually.'); }});
+            }}
+        </script>
+    </body>
+    </html>
+    '''
 # ============================================
 # RUN THE APP
 # ============================================
