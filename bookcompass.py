@@ -1282,7 +1282,7 @@ def dashboard():
         }}
         // ====== OPEN METADATA GPT ======
         function openMetadataGPT() {{
-            window.open('https://chatgpt.com/g/g-6a9078ced15881919ebc630ff840f1bd-bookcompass-book-metadata-pro', '_blank');
+            window.open('/metadata-gpt', '_blank');
         }}
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
