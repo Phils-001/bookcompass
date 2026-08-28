@@ -871,8 +871,8 @@ def dashboard():
                         ⭐ Upgrade to <strong>Starter</strong> or <strong>Pro</strong> to unlock
                     </div>
                 </div>
-                <a href="/upgrade" style="background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 10px; display: inline-block;">
-                    ⬆️ Upgrade to Access
+                <a href="/contact" style="background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 10px; display: inline-block;">
+                    📧 Contact Us to Upgrade
                 </a>
             </div>
             '''}
