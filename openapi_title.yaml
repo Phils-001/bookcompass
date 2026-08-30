@@ -1,0 +1,38 @@
+openapi: 3.1.0
+info:
+  title: BookCompass Title Generator Token API
+  description: API for verifying BookCompass access tokens for the Title Generator
+  version: 1.0.0
+servers:
+  - url: https://bookcompass.app
+    description: Production server
+
+paths:
+  /api/verify-gpt-token:
+    get:
+      operationId: verifyToken
+      summary: Verify a BookCompass access token
+      description: Checks if a token is valid and returns user details
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The access token from the user
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  email:
+                    type: string
+                  plan:
+                    type: string
+                  error:
+                    type: string
