@@ -823,6 +823,39 @@ def dashboard():
                 <button onclick="researchKeywords()" style="margin-right: 10px;">🔍 Research Keywords</button>
 <button onclick="showCategoryResearch()" style="background: #ff6f00; color: white; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer;">📂 Category Research</button>
             </div>
+            <!-- ====== TITLE GENERATOR ====== -->
+{f'''
+<div style="background: linear-gradient(135deg, #E65100, #F57C00); border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    <div>
+        <div style="font-weight: bold; font-size: 18px; color: white;">
+            📚 AI Book Title Generator
+        </div>
+        <div style="font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 5px;">
+            Generate 20+ book title ideas for your next KDP book
+        </div>
+    </div>
+    <button onclick="openTitleGenerator()" style="background: white; color: #E65100; padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 10px;">
+        📚 Generate Titles
+    </button>
+</div>
+''' if plan != 'free' else f'''
+<div style="background: linear-gradient(135deg, #E65100, #F57C00); border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; opacity: 0.7;">
+    <div>
+        <div style="font-weight: bold; font-size: 18px; color: white;">
+            📚 AI Book Title Generator
+        </div>
+        <div style="font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 5px;">
+            Generate 50+ book title ideas for your next KDP book
+        </div>
+        <div style="font-size: 12px; color: #ffcc80; margin-top: 3px;">
+            ⭐ Upgrade to <strong>Starter</strong> or <strong>Pro</strong> to unlock
+        </div>
+    </div>
+    <a href="/contact" style="background: #ff9900; color: white; padding: 12px 25px; border: none; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 10px; display: inline-block;">
+        📧 Contact Us to Upgrade
+    </a>
+</div>
+'''}
             <!-- ====== METADATA GENERATOR ====== -->
             {f'''
             <div style="background: linear-gradient(135deg, #7B1FA2, #9C27B0); border-radius: 10px; padding: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
@@ -1283,6 +1316,10 @@ def dashboard():
         // ====== OPEN METADATA GPT ======
         function openMetadataGPT() {{
             window.open('/metadata-gpt', '_blank');
+        }}
+        // ====== OPEN TITLE GENERATOR ======
+        function openTitleGenerator() {{
+            window.open('/title-generator', '_blank');
         }}
         </script>
         <!-- ====== CATEGORY RESEARCH MODAL ====== -->
@@ -6543,6 +6580,128 @@ def metadata_gpt():
             function openGPT() {{
                 var token = '{token}';
                 var gptLink = '{GPT_LINK}';
+                window.open(gptLink, '_blank');
+            }}
+            
+            function copyToken() {{
+                var token = document.getElementById('tokenDisplay').innerText;
+                navigator.clipboard.writeText(token)
+                    .then(function() {{ alert('✅ Token copied to clipboard!'); }})
+                    .catch(function() {{ alert('❌ Failed to copy. Please copy manually.'); }});
+            }}
+        </script>
+    </body>
+    </html>
+    '''
+# ============================================
+# TITLE GENERATOR REDIRECT PAGE (UPDATED)
+# ============================================
+
+@app.route('/title-generator')
+def title_generator():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return '<script>window.location.href="/login"</script>'
+    
+    email = session['user_id']
+    plan = users[email]['plan']
+    
+    if plan == 'free':
+        return '<script>window.location.href="/upgrade"</script>'
+    
+    # Generate a fresh token
+    token = secrets.token_urlsafe(32)
+    timestamp = time.time()
+    
+    active_tokens[token] = {
+        'email': email,
+        'plan': plan,
+        'created_at': timestamp,
+        'expires_at': timestamp + 300  # 5 minutes
+    }
+    
+    # Get your GPT link
+    TITLE_GPT_LINK = os.environ.get('TITLE_GPT_LINK', 'https://chatgpt.com/g/YOUR-TITLE-GPT-ID')
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Title Generator - BookCompass</title>
+        <style>
+            body {{ font-family: Arial; background: #f0f0f0; margin: 0; padding: 20px; text-align: center; }}
+            .container {{ max-width: 700px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            h2 {{ color: #232f3e; }}
+            .gpt-btn {{ background: #E65100; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }}
+            .gpt-btn:hover {{ background: #BF360C; }}
+            .info {{ background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: left; }}
+            .info ol {{ margin: 8px 0 0 20px; line-height: 1.8; }}
+            .back-link {{ color: #E65100; text-decoration: none; }}
+            .token-box {{ background: #fff3e0; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; word-break: break-all; }}
+            .note {{ font-size: 13px; color: #666; margin-top: 10px; }}
+            .features {{ display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }}
+            .feature {{ background: #f5f5f5; padding: 4px 12px; border-radius: 12px; font-size: 12px; color: #555; }}
+            .option-box {{ background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #E65100; }}
+            .option-box-green {{ border-left-color: #4CAF50; }}
+            .option-title {{ font-weight: bold; font-size: 15px; }}
+            .option-desc {{ color: #666; font-size: 13px; margin-top: 5px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>📚 AI Book Title Generator</h2>
+            <p>Generate book title ideas for your next KDP book.</p>
+            
+            <button class="gpt-btn" onclick="openGPT()">🚀 Open Title Generator</button>
+            
+            <div class="info">
+                <strong>📝 How to Use:</strong>
+                <ol>
+                    <li>Click the button above to open the AI assistant</li>
+                    <li>Paste your access token when asked</li>
+                    <li>Choose one of the two options below</li>
+                    <li>Get your title ideas in seconds</li>
+                </ol>
+                
+                <div style="margin-top: 15px;">
+                    <strong>Two Ways to Generate Titles:</strong>
+                </div>
+                
+                <div class="option-box">
+                    <div class="option-title">📌 Option A: Generate from Keyword</div>
+                    <div class="option-desc">Enter a keyword like "gratitude journal" → Get 20+ original title ideas</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">Example: "prayer journal", "knitting patterns", "travel guide"</div>
+                </div>
+                
+                <div class="option-box option-box-green">
+                    <div class="option-title">📌 Option B: Generate Variants from Selling Title</div>
+                    <div class="option-desc">Paste a bestselling title → Get 20+ variant titles with similar style</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">Example: "Atomic Habits", "The 5 AM Club", "Rich Dad Poor Dad"</div>
+                </div>
+                
+                <div class="features">
+                    <span class="feature">📖 Low-Content Books</span>
+                    <span class="feature">🎨 Craft & Hobby Books</span>
+                    <span class="feature">✈️ Travel Books</span>
+                    <span class="feature">📚 General Nonfiction</span>
+                    <span class="feature">💡 Title Variants</span>
+                </div>
+            </div>
+            
+            <div class="token-box">
+                <strong>🔑 Your Access Token:</strong> <span id="tokenDisplay">{token}</span>
+                <br>
+                <button onclick="copyToken()" style="background: #2196F3; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer; margin-top: 5px;">📋 Copy Token</button>
+            </div>
+            
+            <p class="note">⏰ This token expires in 5 minutes. It's tied to your account and cannot be shared.</p>
+            
+            <br>
+            <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+        </div>
+        <script>
+            function openGPT() {{
+                var gptLink = '{TITLE_GPT_LINK}';
                 window.open(gptLink, '_blank');
             }}
             
